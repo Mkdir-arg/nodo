@@ -33,6 +33,17 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
 - `frontend/`: aplicación cliente.
 - `dbdata/`: datos persistentes de MySQL.
 
+## Arquitectura
+Este monorepo está compuesto por tres servicios principales, cada uno ejecutado en su propio contenedor Docker:
+- `frontend/`: interfaz de usuario que se comunica con el backend.
+- `backend/`: API y lógica de negocio que interactúa con la base de datos.
+- `mysql`: servicio de base de datos que persiste la información.
+
+Flujo de datos:
+```text
+Frontend → Backend → Base de datos
+```
+
 ## Mantenimiento
 - Reinicia los contenedores para aplicar cambios con:
   ```bash
