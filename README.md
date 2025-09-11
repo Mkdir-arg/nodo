@@ -42,3 +42,21 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
 - `frontend/`: aplicación cliente.
 - `dbdata/`: datos persistentes de MySQL.
 
+
+## Tecnologías
+- **Django + DRF**: API backend y administración de autenticación.
+- **MySQL**: Base de datos relacional.
+- **Next.js (React)**: Frontend con renderizado del lado del servidor.
+- **TailwindCSS**: Estilado del frontend.
+- **Docker + docker-compose**: Orquestación de servicios y dependencias.
+
+## Mantenimiento
+- Reinicia los contenedores para aplicar cambios con:
+  ```bash
+  docker-compose restart
+  ```
+- Los datos de MySQL se guardan en `dbdata/`. Para reiniciar la base desde cero, elimina este directorio o usa:
+  ```bash
+  docker-compose down -v
+  ```
+
