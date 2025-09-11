@@ -7,31 +7,41 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
 - Python 3 y pip
 - Node.js y npm
 
-## Inicio rápido
+## Despliegue e inicio
 1. Copia el archivo de ejemplo y ajusta las variables:
    ```bash
    cp .env.example .env
    ```
-   Si usas Docker, asegúrate de que `DB_HOST` sea `mysql`.
-2. Construye y levanta los contenedores de apoyo:
+2. Levanta MySQL, el backend y el frontend:
    ```bash
-   docker-compose up --build -d
+   docker-compose up --build
    ```
-3. Aplica las migraciones de la base de datos:
+3. Aplica las migraciones y crea un superusuario:
    ```bash
    docker-compose exec backend python manage.py migrate
+   docker-compose exec backend python manage.py createsuperuser
    ```
-4. Accede a los servicios:
-   - Backend: http://localhost:8000
-   - Frontend: http://localhost:3000
-   - Adminer: http://localhost:8080
-   - **Nota:** si el frontend se ejecuta dentro de Docker, su URL de API debe apuntar a `http://backend:8000`.
-5. Ejecuta los servicios del backend y frontend según corresponda.
+4. Comandos de desarrollo local:
+   - Backend:
+     ```bash
+     python manage.py runserver
+     ```
+   - Frontend:
+     ```bash
+     npm run dev
+     npm run build
+     ```
+5. Comandos de mantenimiento:
+   ```bash
+   docker-compose restart
+   docker-compose down -v
+   ```
 
 ## Estructura
 - `backend/`: código de la API y lógica de negocio.
 - `frontend/`: aplicación cliente.
 - `dbdata/`: datos persistentes de MySQL.
+
 
 ## Tecnologías
 - **Django + DRF**: API backend y administración de autenticación.
@@ -49,3 +59,4 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
   ```bash
   docker-compose down -v
   ```
+
