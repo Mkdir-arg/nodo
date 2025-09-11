@@ -6,7 +6,7 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASS}
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - ./dbdata:/var/lib/mysql
   backend:
@@ -27,5 +27,5 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "3008:3000"
     env_file: .env
