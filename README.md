@@ -12,6 +12,7 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
    ```bash
    cp .env.example .env
    ```
+   Si usas Docker, asegúrate de que `DB_HOST` sea `mysql`.
 2. Construye y levanta los contenedores de apoyo:
    ```bash
    docker-compose up --build -d
