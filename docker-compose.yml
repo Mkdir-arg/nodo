@@ -11,7 +11,8 @@ services:
       - ./dbdata:/var/lib/mysql
   backend:
     build: ./backend
-    entrypoint: ["/app/entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     ports:
       - "8000:8000"
     env_file: .env
