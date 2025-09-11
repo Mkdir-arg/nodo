@@ -1,22 +1,37 @@
+version: "3.9"
+
 services:
   mysql:
     image: mysql:8
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
     ports:
       - "3308:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DATABASE_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   backend:
     build: ./backend
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-    ports:
-      - "8000:8000"
     env_file: .env
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "
+      python manage.py migrate --no-input &&
+      python manage.py collectstatic --no-input --clear --no-post-process || true &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - "8000:8000"
+
   adminer:
     image: adminer
     restart: unless-stopped
@@ -24,11 +39,13 @@ services:
       - "8080:8080"
     depends_on:
       - mysql
+
   frontend:
     build: ./frontend
+    env_file: .env
+    command: sh -c "npm ci && npm run dev -- -p 3000 -H 0.0.0.0"
     ports:
       - "3008:3000"
-    env_file: .env
 
 volumes:
   db_data:

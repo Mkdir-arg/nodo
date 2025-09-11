@@ -11,7 +11,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -61,13 +61,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASS'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ['DB_PORT'],
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("DATABASE_NAME", "nodo"),
+        "USER": os.getenv("DATABASE_USER", "root"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD", "root"),
+        "HOST": os.getenv("DATABASE_HOST", "mysql"),
+        "PORT": os.getenv("DATABASE_PORT", "3306"),
+        "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
 
