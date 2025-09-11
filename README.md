@@ -12,15 +12,21 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
    ```bash
    cp .env.example .env
    ```
+   Si usas Docker, asegúrate de que `DB_HOST` sea `mysql`.
 2. Construye y levanta los contenedores de apoyo:
    ```bash
    docker-compose up --build -d
    ```
-3. Accede a los servicios:
+3. Aplica las migraciones de la base de datos:
+   ```bash
+   docker-compose exec backend python manage.py migrate
+   ```
+4. Accede a los servicios:
    - Backend: http://localhost:8000
    - Frontend: http://localhost:3000
    - Adminer: http://localhost:8080
-4. Ejecuta los servicios del backend y frontend según corresponda.
+   - **Nota:** si el frontend se ejecuta dentro de Docker, su URL de API debe apuntar a `http://backend:8000`.
+5. Ejecuta los servicios del backend y frontend según corresponda.
 
 ## Estructura
 - `backend/`: código de la API y lógica de negocio.
