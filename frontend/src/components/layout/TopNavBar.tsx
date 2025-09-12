@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Bell, Menu, PanelRightOpen, Search, Sun, Moon, User } from 'lucide-react';
+import { logout } from '@/lib/auth';
 
 interface TopNavBarProps {
   onToggleSideNav: () => void;
@@ -18,6 +19,7 @@ export default function TopNavBar({
   theme,
 }: TopNavBarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const section = pathname.split('/').filter(Boolean)[0];
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -80,7 +82,11 @@ export default function TopNavBar({
               <div className="absolute right-0 mt-2 w-40 rounded-md bg-white py-1 shadow-md dark:bg-slate-800">
                 <button
                   className="block w-full px-4 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  onClick={() => alert('Cerrar sesión')}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                    router.replace('/login');
+                  }}
                   role="menuitem"
                 >
                   Cerrar sesión
