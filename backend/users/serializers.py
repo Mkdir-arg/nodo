@@ -1,29 +1,46 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            "id", "username", "first_name", "last_name",
-            "email", "is_staff", "is_superuser", "date_joined", "last_login",
-        )
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_active",
+            "date_joined",
+            "last_login",
+        ]
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        # Extra claims útiles en el access token
-        token["username"] = user.username
-        token["email"] = user.email or ""
-        token["is_staff"] = user.is_staff
-        return token
+    """
+    Acepta username O email. Si viene 'identifier' o 'email', lo traduce a username
+    para que SimpleJWT valide normalmente.
+    """
 
     def validate(self, attrs):
-        data = super().validate(attrs)
-        # Devolvemos datos del usuario junto con los tokens
-        data["user"] = UserSerializer(self.user).data
-        return data
+        identifier = (
+            attrs.get("username")
+            or self.initial_data.get("identifier")
+            or self.initial_data.get("email")
+        )
+        password = attrs.get("password")
+        if identifier and "@" in identifier and not attrs.get("username"):
+            try:
+                user = User.objects.get(email__iexact=identifier)
+                attrs["username"] = getattr(
+                    user, User.USERNAME_FIELD, user.username
+                )
+            except User.DoesNotExist:
+                # Dejar que SimpleJWT falle con credenciales inválidas
+                pass
+        return super().validate(attrs)
