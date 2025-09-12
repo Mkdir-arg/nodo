@@ -1,12 +1,13 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import TopNavBar from './TopNavBar';
 import SideNav from './SideNav';
 import ControlSidebar from './ControlSidebar';
 import { getStored, setStored } from '@/lib/ui-state';
+import { getTokens, logout, me } from '@/lib/auth';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -18,13 +19,34 @@ interface MainLayoutProps {
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   if (pathname.startsWith('/login')) {
     return <>{children}</>;
   }
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
   const [isControlOpen, setIsControlOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const verify = async () => {
+      if (!getTokens()) {
+        router.replace('/login');
+        setCheckingAuth(false);
+        return;
+      }
+      try {
+        await me();
+      } catch {
+        logout();
+        router.replace('/login');
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+    verify();
+  }, [pathname, router]);
 
   useEffect(() => {
     setIsMini(getStored('sideCollapsed', false));
@@ -40,6 +62,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
     setStored('theme', theme);
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  if (checkingAuth) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen">
