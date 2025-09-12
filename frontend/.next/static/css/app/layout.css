@@ -2002,14 +2002,6 @@ input:checked + .toggle-bg {
     position: static;
   }
 
-  .md\:ml-16 {
-    margin-left: 4rem;
-  }
-
-  .md\:ml-64 {
-    margin-left: 16rem;
-  }
-
   .md\:block {
     display: block;
   }
