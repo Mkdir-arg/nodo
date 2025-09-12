@@ -1,9 +1,9 @@
-
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
-
 import clsx from 'clsx';
+import Sidebar from './Sidebar';
+import Topbar from './Topbar';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -12,24 +12,20 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const [sideOpen, setSideOpen] = useState(false);
 
-  const [controlOpen] = useState(false);
-
   useEffect(() => {
     const body = document.body;
-    if (sideOpen || controlOpen) {
+    if (sideOpen) {
       body.classList.add('overflow-hidden');
     } else {
       body.classList.remove('overflow-hidden');
     }
-
     return () => {
       body.classList.remove('overflow-hidden');
     };
-  }, [sideOpen, controlOpen]);
-
+  }, [sideOpen]);
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       {/** Overlay visible only on mobile when sidebar is open */}
       <div
         className={clsx(
@@ -38,7 +34,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
         )}
         onClick={() => setSideOpen(false)}
       />
-      <div className="flex-1">{children}</div>
+      <Sidebar open={sideOpen} onClose={() => setSideOpen(false)} />
+      <div className="flex-1 flex flex-col md:ml-64">
+        <Topbar onToggleSidebar={() => setSideOpen((o) => !o)} />
+        <main className="flex-1">{children}</main>
+      </div>
     </div>
   );
 }
