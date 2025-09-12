@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import TopNavBar from './TopNavBar';
 import SideNav from './SideNav';
@@ -12,6 +13,10 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
+  const pathname = usePathname();
+  if (pathname.startsWith('/login')) {
+    return <>{children}</>;
+  }
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
   const [isControlOpen, setIsControlOpen] = useState(false);
