@@ -21,15 +21,18 @@ services:
     env_file: .env
     depends_on:
       mysql:
-        condition: service_healthy
+        condition: service_healthy   # podés dejarlo, pero no confiamos sólo en esto
+    restart: unless-stopped          # para reintentos si algo falla
     command: >
       sh -c "
+      python wait_for_db.py &&
       python manage.py migrate --no-input &&
-      python manage.py collectstatic --no-input --clear &&
+      python manage.py collectstatic --no-input --clear --no-post-process || true &&
       gunicorn config.wsgi:application --bind 0.0.0.0:8000
       "
     ports:
       - "8000:8000"
+
 
   adminer:
     image: adminer

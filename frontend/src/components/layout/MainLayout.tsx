@@ -1,6 +1,8 @@
+
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
+
 import clsx from 'clsx';
 
 interface MainLayoutProps {
@@ -9,6 +11,7 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const [sideOpen, setSideOpen] = useState(false);
+
   const [controlOpen] = useState(false);
 
   useEffect(() => {
@@ -23,6 +26,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       body.classList.remove('overflow-hidden');
     };
   }, [sideOpen, controlOpen]);
+
 
   return (
     <div className="flex">
