@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useBuilder } from "@/lib/legajos/builder/store";
 import { repo } from "@/lib/legajos/repo";
 import DynamicForm from "@/lib/legajos/renderer/Renderer";
-import { FieldDef } from "@/lib/legajos/schema";
+import { FieldDef, LayoutNode } from "@/lib/legajos/schema";
 import { useRouter, useParams } from "next/navigation";
 import { useClientGuard } from "@/lib/useClientGuard";
 
@@ -66,7 +66,7 @@ export default function BuilderPage() {
           <div className="border border-dashed border-gray-700 rounded-xl p-4">
             <p className="text-sm text-gray-400 mb-2">Fila 1 / Columna única</p>
             <ul className="space-y-2">
-              {template.layout[0]?.children?.[0]?.children?.map((n,i)=>(
+              {template.layout[0]?.children?.[0]?.children?.map((n: LayoutNode, i: number)=>(
                 <li key={i} className="bg-gray-800 rounded-lg px-3 py-2 flex items-center justify-between">
                   <span>{n.type==="field" ? n.fieldKey : n.type}</span>
                 </li>
@@ -87,7 +87,7 @@ export default function BuilderPage() {
         {/* MVP: editar el último field */}
         {(() => {
           const kids = template.layout[0]?.children?.[0]?.children ?? [];
-          const last = kids.map(k=>k.fieldKey).filter(Boolean).pop();
+          const last = kids.map((k: LayoutNode)=>k.fieldKey).filter(Boolean).pop();
           const f = template.fields.find(x=>x.key===last);
           if (!f) return <p className="text-sm text-gray-500">No hay campo seleccionado.</p>;
           return (
