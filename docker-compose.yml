@@ -41,7 +41,7 @@ services:
   frontend:
     build: ./frontend
     env_file: .env
-    command: sh -c "npm ci && npm run dev -- -p 3000 -H 0.0.0.0"
+    command: npm run dev -- -p 3000 -H 0.0.0.0
     ports:
       - "3008:3000"
 
