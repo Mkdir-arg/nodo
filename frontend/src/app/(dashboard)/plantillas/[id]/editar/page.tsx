@@ -1,3 +1,4 @@
+"use client";
 import Builder from '@/components/builder/Builder';
 import { api } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
