@@ -18,24 +18,9 @@ interface MainLayoutProps {
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
-
-  // Rutas donde NO debe renderizarse el chrome (navbar + sidenav + control)
-  const isAuthRoute =
-    pathname?.startsWith('/login') ||
-    pathname?.startsWith('/register') ||
-    pathname?.startsWith('/forgot-password') ||
-    pathname === '/auth';
-
-  if (isAuthRoute) {
-    // Página "limpia" para auth
-    return <div className="min-h-screen">{children}</div>;
+  if (pathname.startsWith('/login')) {
+    return <>{children}</>;
   }
-
-  return <Chrome>{children}</Chrome>;
-}
-
-/** Chrome de la app: TopNavBar + SideNav + ControlSidebar */
-function Chrome({ children }: { children: ReactNode }) {
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
   const [isControlOpen, setIsControlOpen] = useState(false);
