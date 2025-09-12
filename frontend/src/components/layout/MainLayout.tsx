@@ -88,12 +88,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       <SideNav open={isSideOpen} mini={isMini} onToggleMini={() => setIsMini((m) => !m)} />
 
-      <div
-        className={clsx(
-          'flex min-h-screen flex-1 flex-col transition-all duration-200',
-          isMini ? 'md:ml-16' : 'md:ml-64'
-        )}
-      >
+      <div className="flex min-h-screen flex-1 flex-col transition-all duration-200">
         <TopNavBar
           onToggleSideNav={() => setIsSideOpen((o) => !o)}
           onToggleControl={() => setIsControlOpen(true)}
