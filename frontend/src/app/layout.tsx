@@ -9,14 +9,15 @@ export const metadata: Metadata = {
   description: 'Next.js frontend',
 };
 
-  export default function RootLayout({ children }: { children: ReactNode }) {
-    return (
-      <html lang="es" suppressHydrationWarning>
-        <body className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
-          <Providers>
-            <MainLayout>{children}</MainLayout>
-          </Providers>
-        </body>
-      </html>
-    );
-  }
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="es" suppressHydrationWarning>
+      <body className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 antialiased">
+        <Providers>
+          {/* MainLayout se monta UNA sola vez acá */}
+          <MainLayout>{children}</MainLayout>
+        </Providers>
+      </body>
+    </html>
+  );
+}

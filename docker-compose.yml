@@ -14,15 +14,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 15s 
+      start_period: 15s
 
   backend:
     build: ./backend
     env_file: .env
     depends_on:
       mysql:
-        condition: service_healthy   # podés dejarlo, pero no confiamos sólo en esto
-    restart: unless-stopped          # para reintentos si algo falla
+        condition: service_healthy
+    restart: unless-stopped
     command: >
       sh -c "
       python wait_for_db.py &&
@@ -32,7 +32,6 @@ services:
       "
     ports:
       - "8000:8000"
-
 
   adminer:
     image: adminer
@@ -50,6 +49,15 @@ services:
     command: npm run dev -- -p 3000 -H 0.0.0.0
     ports:
       - "3008:3000"
+    # 🔸 Monta el código del host + evita pisar node_modules
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # 🔸 Forzá polling para que el watcher detecte cambios en Windows/WSL/Docker Desktop
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=300
 
 volumes:
   db_data:
