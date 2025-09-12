@@ -1,6 +1,5 @@
 'use client';
 import { create } from 'zustand';
-import { nanoid } from 'nanoid';
 import { Template } from '@/lib/schema';
 
 type State = {
@@ -13,6 +12,7 @@ type State = {
 
 export const useTemplateStore = create<State>((set) => ({
   nodes: [],
+  selected: undefined,
   addNode: (n) => set((s) => ({ nodes: [...s.nodes, n] })),
   updateNode: (id, patch) => set((s) => ({ nodes: s.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)), selected: s.selected && s.selected.id === id ? { ...s.selected, ...patch } : s.selected })),
   setTemplate: (t) => set(() => ({ nodes: t.nodes })),
