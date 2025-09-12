@@ -33,8 +33,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             or self.initial_data.get("identifier")
             or self.initial_data.get("email")
         )
-        password = attrs.get("password")
-        if identifier and "@" in identifier and not attrs.get("username"):
+
+        if identifier and "@" in identifier:
             try:
                 user = User.objects.get(email__iexact=identifier)
                 attrs["username"] = getattr(
@@ -43,4 +43,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             except User.DoesNotExist:
                 # Dejar que SimpleJWT falle con credenciales inválidas
                 pass
+        else:
+            attrs["username"] = identifier
+
         return super().validate(attrs)
