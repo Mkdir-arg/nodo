@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-blue-500;
+  }
+}

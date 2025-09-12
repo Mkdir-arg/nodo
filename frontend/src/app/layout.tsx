@@ -2,18 +2,21 @@ import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import '../styles/globals.css';
 import Providers from './providers';
+import MainLayout from '@/components/layout/MainLayout';
 
 export const metadata: Metadata = {
   title: 'Nodo',
   description: 'Next.js frontend',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
-}
+  export default function RootLayout({ children }: { children: ReactNode }) {
+    return (
+      <html lang="es" suppressHydrationWarning>
+        <body className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+          <Providers>
+            <MainLayout>{children}</MainLayout>
+          </Providers>
+        </body>
+      </html>
+    );
+  }

@@ -1,13 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import HomePage from './page';
 
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
-import { redirect } from "next/navigation";
-import HomePage from "./page";
-
-describe("HomePage", () => {
-  it("redirects to /login", () => {
-    HomePage();
-    expect(redirect).toHaveBeenCalledWith("/login");
+describe('HomePage', () => {
+  it('muestra el saludo', () => {
+    render(<HomePage />);
+    expect(screen.getByRole('heading', { name: /hola, matias/i })).toBeInTheDocument();
   });
 });
-
