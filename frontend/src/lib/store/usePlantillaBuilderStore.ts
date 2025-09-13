@@ -32,7 +32,7 @@ export const useBuilderStore = create<State>((set, get) => ({
     const secIdx = state.sections.findIndex(s => s.id === sectionId);
     if (secIdx < 0) return state;
     const node = typeof typeOrNode === 'string' ? newField(typeOrNode as FieldType) : typeOrNode;
-    node.key = state.ensureUniqueKey(node.key || node.type);
+    node.key = get().ensureUniqueKey(node.key || node.type);
     const sections = [...state.sections];
     const section = sections[secIdx];
     sections[secIdx] = { ...section, children: [...(section.children || []), node] };
