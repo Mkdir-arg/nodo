@@ -11,6 +11,17 @@ interface State {
   sections: Section[];
   selected: Selected;
   dirty: boolean;
+
+  plantillaId?: string | null;
+  nombre: string;
+  version: number;
+  descripcion?: string | null;
+
+  setTemplate: (tpl: any) => void;
+  setNombre: (n: string) => void;
+  resetDirty: () => void;
+  buildSchema: () => any;
+
   addSection: () => string;
   addField: (sectionId: string, typeOrNode: FieldType | FieldNode) => string | undefined;
   updateNode: (id: string, patch: any) => void;
@@ -20,7 +31,6 @@ interface State {
   ensureUniqueKey: (base: string) => string;
   setSelected: (sel: Selected) => void;
   setDirty: (d: boolean) => void;
-  setTemplate: (t: any) => void;
   _locateNode: (id: string) => any;
 }
 
@@ -28,6 +38,11 @@ export const useBuilderStore = create<State>((set, get) => ({
   sections: [],
   selected: null,
   dirty: false,
+
+  plantillaId: null,
+  nombre: "",
+  version: 1,
+  descripcion: null,
   addSection: () => {
     let newId = '';
     set(state => {
@@ -178,5 +193,19 @@ export const useBuilderStore = create<State>((set, get) => ({
   },
 
   setDirty: (d) => set({ dirty: d }),
-  setTemplate: (t) => set(() => ({ sections: t.sections || [], dirty: false })),
+  setTemplate: (tpl) => set(() => ({
+    plantillaId: tpl?.id ?? null,
+    nombre: tpl?.nombre ?? "",
+    version: tpl?.version ?? 1,
+    descripcion: tpl?.descripcion ?? null,
+    sections: tpl?.schema?.nodes ?? tpl?.nodes ?? [],
+    selected: null,
+    dirty: false,
+  })),
+  setNombre: (n) => set({ nombre: n, dirty: true }),
+  resetDirty: () => set({ dirty: false }),
+  buildSchema: () => {
+    const nodes = get().sections || [];
+    return { id: get().plantillaId || undefined, name: get().nombre, version: get().version, nodes };
+  },
 }));

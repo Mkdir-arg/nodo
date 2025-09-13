@@ -1,5 +1,5 @@
 import Builder from '@/components/form/builder/Builder';
-import { PlantillasService } from '@/lib/PlantillasService';
+import { PlantillasService } from '@/lib/services/plantillas';
 
 export default async function EditarPlantillaPage({ params }:{params:{id:string}}) {
   const plantilla = await PlantillasService.fetchPlantilla(params.id);

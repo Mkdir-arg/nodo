@@ -1,7 +1,7 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { PlantillasService } from '@/lib/PlantillasService';
+import { PlantillasService } from '@/lib/services/plantillas';
 import { LegajosService } from '@/lib/LegajosService';
 import DynamicForm from '@/components/form/runtime/DynamicForm';
 
