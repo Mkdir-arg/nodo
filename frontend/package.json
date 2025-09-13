@@ -25,12 +25,7 @@
     "react-hook-form": "^7.62.0",
     "zod": "^3.25.8",
     "zustand": "^4.5.2",
-    "framer-motion": "11.18.1"
-  },
-  "overrides": {
-    "framer-motion": "11.18.1",
-    "motion-utils": "11.18.1",
-    "motion-dom": "11.18.1"
+    "lucide-react": "^0.458.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.13",

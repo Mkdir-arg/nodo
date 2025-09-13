@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { FolderClosed, FolderOpen, FilePlus2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FolderClosed, FolderOpen, FilePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
@@ -18,7 +18,6 @@ interface SideNavProps {
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
   const plantillasItem = NAV_ITEMS.find((i) => i.href === '/plantillas');
-
   return (
     <aside
       className={clsx(
@@ -37,12 +36,8 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={dashboardItem.label}
             >
-              <dashboardItem.icon className="h-5 w-5" aria-hidden="true" />
-              {mini ? (
-                <span className="sr-only">{dashboardItem.label}</span>
-              ) : (
-                <span>{dashboardItem.label}</span>
-              )}
+              <dashboardItem.icon className="h-5 w-5" aria-hidden />
+              {mini ? <span className="sr-only">{dashboardItem.label}</span> : <span>{dashboardItem.label}</span>}
             </ActiveLink>
           )}
 
@@ -54,12 +49,8 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={plantillasItem.label}
             >
-              <plantillasItem.icon className="h-5 w-5" aria-hidden="true" />
-              {mini ? (
-                <span className="sr-only">{plantillasItem.label}</span>
-              ) : (
-                <span>{plantillasItem.label}</span>
-              )}
+              <plantillasItem.icon className="h-5 w-5" aria-hidden />
+              {mini ? <span className="sr-only">{plantillasItem.label}</span> : <span>{plantillasItem.label}</span>}
             </ActiveLink>
           )}
         </div>
@@ -101,7 +92,7 @@ function LegajosMenu() {
         <span className="flex-1 text-left">Legajos</span>
       </button>
 
-      {/* Animación pura CSS: grid-rows y opacity (sin framer-motion) */}
+      {/* Animación sin framer-motion */}
       <div
         className={clsx(
           'pl-6 overflow-hidden transition-[grid-template-rows,opacity] duration-200 grid',
@@ -111,15 +102,12 @@ function LegajosMenu() {
         <ul className="min-h-0 overflow-hidden">
           <li className="mt-2 mb-1">
             <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
-              <FilePlus2 size={16} /> <span>Ver legajos</span>
+              <FilePlus size={16} /> <span>Ver legajos</span>
             </Link>
           </li>
 
           {isLoading && <li className="px-3 py-2 text-sm opacity-70">Cargando…</li>}
-
-          {!isLoading && items.length === 0 && (
-            <li className="px-3 py-2 text-sm opacity-60">No hay plantillas</li>
-          )}
+          {!isLoading && items.length === 0 && <li className="px-3 py-2 text-sm opacity-60">No hay plantillas</li>}
 
           {!isLoading &&
             items.map((p: any) => (
@@ -137,3 +125,4 @@ function LegajosMenu() {
     </div>
   );
 }
+
