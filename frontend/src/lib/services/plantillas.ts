@@ -7,26 +7,10 @@ export type FetchPlantillasParams = {
   page_size?: number;
 };
 
-async function getWithFallback(pathA: string, pathB: string) {
-  try {
-    return await http(pathA);
-  } catch {
-    return await http(pathB);
-  }
-}
-
-async function postPutWithFallback(
-  method: 'POST' | 'PUT',
-  pathA: string,
-  pathB: string,
-  payload: any
-) {
-  try {
-    return await http(pathA, { method, body: JSON.stringify(payload) });
-  } catch {
-    return await http(pathB, { method, body: JSON.stringify(payload) });
-  }
-}
+const postPutWithFallback = async (method:'POST'|'PUT', pathA:string, pathB:string, payload:any) => {
+  try { return await http(pathA, { method, body: JSON.stringify(payload) }); }
+  catch { return await http(pathB, { method, body: JSON.stringify(payload) }); }
+};
 
 export const PlantillasService = {
   fetchPlantillas: (p: FetchPlantillasParams = {}) => {
@@ -35,35 +19,21 @@ export const PlantillasService = {
     if (p.estado) q.set('estado', p.estado);
     if (p.page) q.set('page', String(p.page));
     if (p.page_size) q.set('page_size', String(p.page_size));
-    return getWithFallback(`/plantillas?${q}`, `/formularios?${q}`);
+    return http(`/plantillas?${q}`).catch(() => http(`/formularios?${q}`));
   },
-
-  fetchPlantilla: (id: string) =>
-    getWithFallback(`/plantillas/${id}`, `/formularios/${id}`),
-
-  existsNombre: async (nombre: string, excludeId?: string) => {
+  fetchPlantilla: (id: string) => http(`/plantillas/${id}`).catch(()=>http(`/formularios/${id}`)),
+  existsNombre: async (nombre:string, excludeId?:string) => {
     const q = new URLSearchParams({ nombre });
     if (excludeId) q.set('exclude_id', excludeId);
     try {
-      const r = await getWithFallback(
-        `/plantillas/exists?${q}`,
-        `/formularios/exists?${q}`
-      );
-      return !!r.exists; // true si YA existe
-    } catch (e) {
-      console.warn('existsNombre falló:', e);
-      return false;
+      const res = await http(`/plantillas/exists?${q}`);
+      return !!res.exists;
+    } catch {
+      const res = await http(`/formularios/exists?${q}`);
+      return !!res.exists;
     }
   },
-
-  savePlantilla: (payload: any) =>
-    postPutWithFallback('POST', `/plantillas`, `/formularios`, payload),
-
-  updatePlantilla: (id: string, payload: any) =>
-    postPutWithFallback('PUT', `/plantillas/${id}`, `/formularios/${id}`, payload),
-
-  deletePlantilla: (id: string) =>
-    http(`/plantillas/${id}`, { method: 'DELETE' }).catch(() =>
-      http(`/formularios/${id}`, { method: 'DELETE' })
-    ),
+  savePlantilla: (payload:any) => postPutWithFallback('POST', `/plantillas`, `/formularios`, payload),
+  updatePlantilla: (id:string, payload:any) => postPutWithFallback('PUT', `/plantillas/${id}`, `/formularios/${id}`, payload),
+  deletePlantilla: (id:string) => http(`/plantillas/${id}`, { method: 'DELETE' }).catch(() => http(`/formularios/${id}`, { method: 'DELETE' })),
 };

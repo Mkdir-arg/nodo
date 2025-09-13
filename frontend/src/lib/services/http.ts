@@ -1,60 +1,71 @@
 export type HttpOptions = RequestInit & { timeoutMs?: number; auth?: boolean };
 
-function getAccessToken() {
-  // ajustá a tu auth real:
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('access_token') || null;
-}
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '').replace(/\/$/, '');
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || '').replace(/\/$/, ''); // ej: http://localhost:8000/api
 
 export function buildUrl(path: string) {
   const p = path.startsWith('/') ? path : `/${path}`;
+  // si NO hay base => usamos relativo (lo manejará el rewrite de Next)
   return API_BASE ? `${API_BASE}${p}` : p;
 }
 
-export async function http<T = any>(path: string, options: HttpOptions = {}): Promise<T> {
-  const { timeoutMs = 8000, auth = false, headers, ...init } = options;
+function withTimeout<T>(p: Promise<T>, ms = 15000) {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(`Timeout ${ms}ms`)), ms);
+    p.then((v) => { clearTimeout(id); resolve(v); }, (e) => { clearTimeout(id); reject(e); });
+  });
+}
+
+export async function http(path: string, opts: HttpOptions = {}) {
   const url = buildUrl(path);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const cfg: RequestInit = {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+    },
+    credentials: 'include',
+  };
 
-  const finalHeaders = new Headers(headers || {});
-  if (!finalHeaders.has('Content-Type') && init.body && typeof init.body === 'string') {
-    finalHeaders.set('Content-Type', 'application/json');
-  }
-  if (auth) {
-    const token = getAccessToken();
-    if (token) finalHeaders.set('Authorization', `Bearer ${token}`);
-  }
-
+  // intento 1
   try {
-    console.log('[http]', init.method || 'GET', url);
-    const res = await fetch(url, {
-      ...init,
-      headers: finalHeaders,
-      signal: controller.signal,
-      credentials: 'include',
-    });
-    clearTimeout(timer);
+    console.info('[http]', opts.method || 'GET', url);
+    const res = await withTimeout(fetch(url, cfg), opts.timeoutMs || 15000);
 
-    const contentType = res.headers.get('content-type') || '';
+    const ct = res.headers.get('content-type') || '';
     const text = await res.text();
-    const data = contentType.includes('application/json') && text ? JSON.parse(text) : text;
 
     if (!res.ok) {
-      console.error('[http error]', res.status, data);
-      throw new Error(typeof data === 'string' && data ? data : `HTTP ${res.status}`);
+      if (ct.includes('text/html')) {
+        throw new Error(`Respuesta HTML ${res.status} desde ${url}. Verificá NEXT_PUBLIC_API_BASE o el rewrite.`);
+      }
+      try {
+        const json = text ? JSON.parse(text) : {};
+        throw new Error(json?.detail || json?.message || `HTTP ${res.status}`);
+      } catch {
+        throw new Error(text || `HTTP ${res.status}`);
+      }
     }
 
-    return data as T;
-  } catch (err: any) {
-    clearTimeout(timer);
-    if (err.name === 'AbortError') {
-      console.error('[http timeout]', url);
-      throw new Error(`Timeout after ${timeoutMs}ms`);
+    return ct.includes('application/json') ? (text ? JSON.parse(text) : {}) : (text as any);
+  } catch (e: any) {
+    console.error('[http failed]', e?.name || '', e?.message || e);
+
+    // Fallback: si estás usando sin querer "http://backend:puerto", reintenta con "http://localhost:puerto"
+    if (typeof url === 'string' && url.includes('://backend:')) {
+      const fallback = url.replace('://backend:', '://localhost:');
+      try {
+        console.warn('[http retry]', fallback);
+        const res = await withTimeout(fetch(fallback, cfg), opts.timeoutMs || 15000);
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const ct = res.headers.get('content-type') || '';
+        const text = await res.text();
+        return ct.includes('application/json') ? (text ? JSON.parse(text) : {}) : (text as any);
+      } catch (e2) {
+        console.error('[http retry failed]', e2);
+        throw e2;
+      }
     }
-    console.error('[http failed]', err);
-    throw err;
+
+    throw e;
   }
 }

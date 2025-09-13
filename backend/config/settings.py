@@ -97,18 +97,16 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3008")
-
 
 CORS_ALLOWED_ORIGINS = [
-    FRONTEND_URL,
+    "http://localhost:3000",
     "http://localhost:3008",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    FRONTEND_URL,
+    "http://localhost:3000",
     "http://localhost:3008",
 ]
 
