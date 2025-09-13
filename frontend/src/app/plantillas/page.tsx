@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { PlantillasService } from '@/lib/PlantillasService';
+import { PlantillasService } from '@/lib/services/plantillas';
 
 export default function PlantillasPage() {
   const { data } = useQuery<any>({

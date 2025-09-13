@@ -1,15 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
-import ComponentSidebar from './ComponentSidebar';
 import Canvas from './Canvas';
 import FloatingToolbar from './FloatingToolbar';
 import ComponentsModal from './ComponentsModal';
-import PropertiesPanel from './PropertiesPanel';
+import BuilderHeader from './BuilderHeader';
+import FieldPropertiesModal from './FieldPropertiesModal';
 
 export default function Builder({ template }: { template?: any }) {
-  const { setTemplate, dirty, sections, addSection } = useBuilderStore();
-  const [open, setOpen] = useState(false);
+  const { setTemplate, dirty, sections, addSection, selected } = useBuilderStore();
+  const [openComponents, setOpenComponents] = useState(false);
+  const [propsId, setPropsId] = useState<string | null>(null);
 
   useEffect(() => {
     if (template) setTemplate(template);
@@ -18,6 +19,10 @@ export default function Builder({ template }: { template?: any }) {
   useEffect(() => {
     if (!sections || sections.length === 0) addSection();
   }, [sections?.length, addSection]);
+
+  useEffect(() => {
+    if (selected?.type === 'field') setPropsId(selected.id);
+  }, [selected]);
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -30,16 +35,20 @@ export default function Builder({ template }: { template?: any }) {
   }, [dirty]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[20rem_1fr_20rem] gap-6">
-      <ComponentSidebar />
-      <div id="canvas" className="min-h-[70vh] border border-dashed rounded-2xl p-4">
-        <Canvas />
+    <>
+      <BuilderHeader />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-6">
+        {/* CANVAS grande */}
+        <div id="canvas" className="min-h-[70vh] border border-dashed rounded-2xl p-4 bg-white/40">
+          <Canvas />
+        </div>
+        {/* MENÚ chico (toolbar/“+” -> modal de componentes) */}
+        <div className="sticky top-24 h-fit">
+          <FloatingToolbar onPlus={() => setOpenComponents(true)} />
+        </div>
+        <ComponentsModal open={openComponents} onClose={() => setOpenComponents(false)} />
+        <FieldPropertiesModal open={!!propsId} fieldId={propsId} onClose={() => setPropsId(null)} />
       </div>
-      <div className="hidden lg:flex lg:flex-col lg:gap-4">
-        <FloatingToolbar onPlus={() => setOpen(true)} />
-        <PropertiesPanel />
-      </div>
-      <ComponentsModal open={open} onClose={() => setOpen(false)} />
-    </div>
+    </>
   );
 }
