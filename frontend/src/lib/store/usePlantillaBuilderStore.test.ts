@@ -12,4 +12,10 @@ describe('usePlantillaBuilderStore', () => {
     useBuilderStore.getState().addField('s1', 'text');
     expect(useBuilderStore.getState().dirty).toBe(true);
   });
+  it('addField accepts node objects and ensures unique key', () => {
+    useBuilderStore.setState({ sections: [{ id: 's1', children: [{ id: '1', key: 'a', type: 'text' }] }], selected: null, dirty: false });
+    useBuilderStore.getState().addField('s1', { id: '2', key: 'a', type: 'text' });
+    const children = useBuilderStore.getState().sections[0].children;
+    expect(children[1].key).toBe('a_1');
+  });
 });
