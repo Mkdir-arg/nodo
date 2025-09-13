@@ -54,7 +54,10 @@ export default function Builder({ template }: { template?: any }) {
       <BuilderHeader />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-6">
         {/* CANVAS grande */}
-        <div id="canvas" className="min-h-[70vh] border border-dashed rounded-2xl p-4 bg-white/40">
+        <div
+          id="canvas"
+          className="min-h-[70vh] border border-dashed rounded-2xl p-4 bg-white/40 dark:bg-slate-800/40 dark:border-slate-700"
+        >
           <Canvas />
         </div>
 

@@ -84,7 +84,7 @@ export default function PlantillasPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar por nombre…"
-            className="w-full border rounded-xl pl-9 pr-3 py-2"
+            className="w-full border rounded-xl pl-9 pr-3 py-2 dark:bg-slate-900 dark:border-slate-700"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">
             🔎
@@ -96,7 +96,7 @@ export default function PlantillasPage() {
             setEstado(e.target.value as Estado);
             setPage(1);
           }}
-          className="border rounded-xl px-3 py-2 w-full md:w-48"
+          className="border rounded-xl px-3 py-2 w-full md:w-48 dark:bg-slate-900 dark:border-slate-700"
         >
           <option value="TODAS">Todas</option>
           <option value="ACTIVO">Activas</option>
@@ -105,8 +105,8 @@ export default function PlantillasPage() {
       </div>
 
       {/* Tabla / Empty / Loader */}
-      <div className="rounded-2xl border bg-white overflow-hidden">
-        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-gray-50 ${cols}`}>
+      <div className="rounded-2xl border bg-white overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-gray-50 dark:bg-slate-700 ${cols}`}>
           <div>Nombre</div>
           <div>Versión</div>
           <div>Actualizado</div>
@@ -152,7 +152,7 @@ export default function PlantillasPage() {
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50"
+            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
           >
             Anterior
           </button>
@@ -162,7 +162,7 @@ export default function PlantillasPage() {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50"
+            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
           >
             Siguiente
           </button>
@@ -204,28 +204,28 @@ function Row({
   return (
     <div className={`px-4 py-3 ${cols}`}>
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 grid place-items-center rounded-lg bg-sky-100">
+        <div className="w-8 h-8 grid place-items-center rounded-lg bg-sky-100 dark:bg-sky-900">
           📄
         </div>
         <div>
           <div className="font-medium">{data.nombre}</div>
           <div className="text-xs opacity-60">{data.descripcion || '—'}</div>
           <div className="mt-2 flex gap-2">
-            <button onClick={onEditar} className="text-xs px-2 py-1 rounded border">
+            <button onClick={onEditar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
               Editar
             </button>
-            <button onClick={onPreview} className="text-xs px-2 py-1 rounded border">
+            <button onClick={onPreview} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
               Previsualizar
             </button>
-            <button onClick={onUsar} className="text-xs px-2 py-1 rounded border">
+            <button onClick={onUsar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
               Usar
             </button>
-            <button onClick={onDuplicar} className="text-xs px-2 py-1 rounded border">
+            <button onClick={onDuplicar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
               Duplicar
             </button>
             <button
               onClick={onEliminar}
-              className="text-xs px-2 py-1 rounded border text-red-600"
+              className="text-xs px-2 py-1 rounded border text-red-600 dark:border-slate-700 dark:hover:bg-slate-700"
             >
               Eliminar
             </button>
