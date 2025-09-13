@@ -19,4 +19,6 @@ urlpatterns = [
     # Apps
     path("api/users/", include("users.urls")),
     path("api/", include("templates_app.urls")),
+    path("api/", include("plantillas.urls")),
+    path("api/", include("legajos.urls")),
 ]

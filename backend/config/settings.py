@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'templates_app',
+    'plantillas',
+    'legajos',
 ]
 
 MIDDLEWARE = [
