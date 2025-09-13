@@ -8,6 +8,7 @@ import ComponentsModal from '@/components/form/builder/ComponentsModal';
 
 export default function Builder({ template }: { template?: any }) {
   const { setTemplate, dirty, sections, addSection } = useBuilderStore();
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (template) setTemplate(template);
@@ -27,8 +28,6 @@ export default function Builder({ template }: { template?: any }) {
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
 
-  const [showModal, setShowModal] = useState(false);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[20rem_1fr_auto] gap-6">
       <ComponentSidebar />
@@ -36,9 +35,9 @@ export default function Builder({ template }: { template?: any }) {
         <Canvas />
       </div>
       <div className="hidden lg:block">
-        <FloatingToolbar onPlus={() => setShowModal(true)} />
+        <FloatingToolbar onPlus={() => setOpen(true)} />
       </div>
-      <ComponentsModal open={showModal} onClose={() => setShowModal(false)} />
+      <ComponentsModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
 }
