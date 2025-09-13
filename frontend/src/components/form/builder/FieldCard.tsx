@@ -85,22 +85,27 @@ function MiniPreview({ node }: { node:any }) {
   }
 }
 
-export default function FieldCard({ node }:{node:any}) {
+export default function FieldCard({ node, dragHandle, readonly }:{ node:any; dragHandle?: {attributes:any; listeners:any}; readonly?:boolean }) {
   const { selected, setSelected, duplicateNode, removeNode } = useBuilderStore();
   const isSel = selected?.id === node.id;
 
   return (
     <div
-      className={`rounded-xl border bg-white p-3 space-y-2 cursor-pointer ${isSel ? 'ring-2 ring-sky-300' : 'hover:bg-gray-50'}`}
-      onClick={()=>setSelected({type:'field', id: node.id})}
+      className={`rounded-xl border bg-white p-3 space-y-2 ${readonly ? 'pointer-events-none' : 'cursor-pointer'} ${isSel ? 'ring-2 ring-sky-300' : 'hover:bg-gray-50'}`}
+      onClick={()=> !readonly && setSelected({type:'field', id: node.id})}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase opacity-60">{node.type}</span>
-        <div className="flex gap-2">
-          <button type="button" onClick={(e)=>{e.stopPropagation(); window.dispatchEvent(new CustomEvent('builder:open-props',{detail:{id: node.id}}));}} className="text-xs px-2 py-1 border rounded">Editar</button>
-          <button type="button" onClick={(e)=>{e.stopPropagation(); duplicateNode(node.id);}} className="text-xs px-2 py-1 border rounded">Duplicar</button>
-          <button type="button" onClick={(e)=>{e.stopPropagation(); removeNode(node.id);}} className="text-xs px-2 py-1 border rounded">Eliminar</button>
+        <div className="flex items-center gap-2">
+          {dragHandle && <button className="px-2 py-1 border rounded text-xs cursor-grab" {...dragHandle.attributes} {...dragHandle.listeners}>⠿</button>}
+          <span className="text-xs uppercase opacity-60">{node.type}</span>
         </div>
+        {!readonly && (
+          <div className="flex gap-2">
+            <button type="button" onClick={(e)=>{e.stopPropagation(); window.dispatchEvent(new CustomEvent('builder:open-props',{detail:{id: node.id}}));}} className="text-xs px-2 py-1 border rounded">Editar</button>
+            <button type="button" onClick={(e)=>{e.stopPropagation(); duplicateNode(node.id);}} className="text-xs px-2 py-1 border rounded">Duplicar</button>
+            <button type="button" onClick={(e)=>{e.stopPropagation(); removeNode(node.id);}} className="text-xs px-2 py-1 border rounded">Eliminar</button>
+          </div>
+        )}
       </div>
       <MiniPreview node={node} />
     </div>
