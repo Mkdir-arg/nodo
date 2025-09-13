@@ -35,6 +35,8 @@ interface State {
   collectKeysByType: (t: string) => string[];
   ensureUniqueKey: (base: string) => string;
   setSelected: (sel: Selected) => void;
+  findSectionIdByField: (fieldId: string) => string | null;
+  getSectionIdForInsert: () => string;
   setDirty: (d: boolean) => void;
   _locateNode: (id: string) => any;
 }
@@ -154,6 +156,25 @@ export const useBuilderStore = create<State>((set, get) => ({
   },
 
   setSelected: (sel: Selected) => set({ selected: sel }),
+
+  findSectionIdByField: (fieldId: string) => {
+    const secs = get().sections || [];
+    for (const s of secs) {
+      if ((s.children || []).some((n: any) => n.id === fieldId)) return s.id;
+    }
+    return null;
+  },
+
+  getSectionIdForInsert: () => {
+    const { selected, sections } = get();
+    if (selected?.type === 'section') return selected.id;
+    if (selected?.type === 'field') {
+      const sid = get().findSectionIdByField(selected.id);
+      if (sid) return sid;
+    }
+    if (sections?.length) return sections[sections.length - 1].id;
+    return get().addSection();
+  },
 
   updateNode: (id: string, patch: any) => set((state) => {
     const hit = (get() as any)._locateNode(id);
