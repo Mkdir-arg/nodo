@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { newField, FieldType } from "@/lib/form-builder/factory";
+import { FieldType } from "@/lib/form-builder/factory";
 import { useBuilderStore } from "@/lib/store/usePlantillaBuilderStore";
 
 const GROUPS: Record<string,[FieldType,string][]> = {
@@ -17,11 +17,7 @@ const GROUPS: Record<string,[FieldType,string][]> = {
 };
 
 export default function ComponentsModal({ open, onClose }:{open:boolean; onClose:()=>void}) {
-  const sections = useBuilderStore(s=>s.sections);
-  const selected = useBuilderStore(s=>s.selected);
-  const addField = useBuilderStore(s=>s.addField);
-  const addSection = useBuilderStore(s=>s.addSection);
-  const sectionId = selected?.type==="section" ? selected.id : sections?.[0]?.id;
+  const { addField, getSectionIdForInsert } = useBuilderStore();
 
   useEffect(()=>{
     const onEsc = (e:KeyboardEvent)=>{ if (e.key==="Escape") onClose(); };
@@ -30,6 +26,12 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
   }, [open, onClose]);
 
   if (!open) return null;
+  const insert = (type: string | any) => {
+    const sid = getSectionIdForInsert();
+    const id = addField(sid, type as any) as string;
+    onClose();
+    if (id) window.dispatchEvent(new CustomEvent('builder:open-props', { detail: { id } }));
+  };
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
@@ -42,14 +44,7 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {items.map(([type, label])=>(
                   <button key={type} type="button"
-                    onClick={()=>{
-                      const sid = sectionId || addSection();
-                      let id: string | undefined;
-                      try { id = addField(sid, type as any) as string; }
-                      catch { id = addField(sid, newField(type)) as string; }
-                      onClose();
-                      if (id) window.dispatchEvent(new CustomEvent('builder:open-props',{detail:{id}}));
-                    }}
+                    onClick={() => insert(type)}
                     className="border rounded-xl p-2 text-left hover:bg-gray-50 focus:outline-none focus:ring">
                     {label}
                   </button>
