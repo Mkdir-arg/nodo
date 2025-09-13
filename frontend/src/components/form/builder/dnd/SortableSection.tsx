@@ -34,12 +34,15 @@ export default function SortableSection({
     <section
       ref={setNodeRef}
       style={style}
-      className={`rounded-2xl border p-3 bg-white/50 dark:bg-slate-800/50 dark:border-slate-700 ${isSel ? 'ring-2 ring-sky-300' : ''}`}
+      className={`rounded-2xl border p-3 bg-white/50 dark:bg-slate-800/50 dark:border-slate-700 ${
+        isSel ? 'ring-2 ring-sky-300' : ''
+      }`}
       onClick={() => setSelected({ type: 'section', id })}
     >
       <header className="flex items-center justify-between rounded-xl px-3 py-2 mb-3 bg-slate-100 dark:bg-slate-700">
         <div className="flex items-center gap-2">
           <button
+            type="button"
             className="px-2 py-1 border rounded text-xs cursor-grab dark:border-slate-700 dark:text-slate-200"
             {...attributes}
             {...listeners}

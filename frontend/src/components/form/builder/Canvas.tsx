@@ -1,7 +1,13 @@
 'use client';
 import {
-  DndContext, DragEndEvent, DragOverlay,
-  MouseSensor, TouchSensor, useSensor, useSensors, closestCorners
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useMemo, useState } from 'react';
@@ -20,6 +26,8 @@ export default function Canvas() {
   );
 
   const [activeField, setActiveField] = useState<any>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<'section' | 'field' | null>(null);
   const sectionIds = useMemo(() => sections.map((s: any) => s.id), [sections]);
 
   const targetSectionFromOver = (over: any): string | null => {
@@ -55,13 +63,30 @@ export default function Canvas() {
     setActiveField(null);
   };
 
+  const collision = (args: any) => {
+    if (activeType === 'section') {
+      const filtered = args.droppableContainers.filter(
+        (c: any) => c.id !== activeId && c.data?.current?.type === 'section'
+      );
+      return closestCorners({ ...args, droppableContainers: filtered });
+    }
+    return closestCorners(args);
+  };
+
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragEnd={onDragEnd}
+      collisionDetection={collision}
+      onDragEnd={(e) => {
+        onDragEnd(e);
+        setActiveId(null);
+        setActiveType(null);
+      }}
       onDragStart={(e) => {
-        if (e.active.data.current?.type === 'field') {
+        setActiveId(String(e.active.id));
+        const type = e.active.data.current?.type as 'section' | 'field' | null;
+        setActiveType(type);
+        if (type === 'field') {
           setActiveField(e.active.data.current?.node);
         }
       }}

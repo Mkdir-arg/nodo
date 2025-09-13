@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
@@ -12,6 +12,7 @@ const cols = 'grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center';
 
 export default function PlantillasPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const dq = useDebouncedValue(q, 300);
@@ -20,6 +21,13 @@ export default function PlantillasPage() {
   const [toDelete, setToDelete] = useState<{ id: string; nombre: string } | null>(
     null
   );
+
+  useEffect(() => {
+    if (params.get('created') === '1') {
+      console.log('Plantilla creada con éxito');
+      history.replaceState(null, '', '/plantillas');
+    }
+  }, [params]);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['plantillas', { dq, estado, page }],
