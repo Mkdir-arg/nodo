@@ -30,7 +30,7 @@ export default function PlantillasPage() {
   }, [params]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['plantillas', { dq, estado, page }],
+    queryKey: ['plantillas', 'list', { dq, estado, page }],
     queryFn: () =>
       PlantillasService.fetchPlantillas({
         search: dq || undefined,
@@ -44,7 +44,7 @@ export default function PlantillasPage() {
   const del = useMutation({
     mutationFn: (id: string) => PlantillasService.deletePlantilla(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['plantillas'] });
+      qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
       setToDelete(null);
     },
   });
@@ -58,7 +58,7 @@ export default function PlantillasPage() {
         schema: tpl.schema,
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['plantillas'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['plantillas', 'list'] }),
   });
 
   const results = data?.results ?? [];
@@ -142,7 +142,7 @@ export default function PlantillasPage() {
                   } catch {}
                   window.open('/plantillas/previsualizacion', '_blank');
                 }}
-                onUsar={() => router.push(`/legajos/nuevo?plantillaId=${p.id}`)}
+                onUsar={() => router.push(`/legajos/nuevo?formId=${p.id}`)}
                 onDuplicar={() => duplicar.mutate(p)}
                 onEliminar={() => setToDelete({ id: p.id, nombre: p.nombre })}
               />

@@ -33,14 +33,14 @@ export default function NavSidebar() {
             {plantillas.map((p) => (
               <div key={p.id} className="flex items-center justify-between group">
                 <Link
-                  href={`/legajos?plantillaId=${p.id}`}
+                  href={`/legajos?formId=${p.id}`}
                   className={`px-2 py-1 rounded hover:bg-gray-100 text-sm ${pathname?.startsWith('/legajos') ? 'font-medium' : ''}`}
                 >
                   {p.nombre}
                 </Link>
                 <button
                   title="Crear legajo"
-                  onClick={() => router.push(`/legajos/nuevo?plantillaId=${p.id}`)}
+                  onClick={() => router.push(`/legajos/nuevo?formId=${p.id}`)}
                   className="opacity-60 group-hover:opacity-100 text-sm px-2"
                 >＋</button>
               </div>

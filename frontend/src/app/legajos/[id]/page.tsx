@@ -1,7 +1,7 @@
-import { LegajosService } from '@/lib/LegajosService';
+import { LegajosService } from '@/lib/services/legajos';
 
 export default async function LegajoDetallePage({ params }:{params:{id:string}}) {
-  const legajo: any = await LegajosService.fetchLegajo(params.id);
+  const legajo: any = await LegajosService.get(params.id);
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Legajo</h1>
