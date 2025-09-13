@@ -12,53 +12,50 @@ const qsOf = (o: Record<string, string | number | undefined>) => {
   Object.entries(o).forEach(([k, v]) => {
     if (v !== undefined && v !== null && String(v) !== '') q.set(k, String(v));
   });
-  const s = q.toString();
-  return s ? `?${s}` : '';
+  return q.toString() ? `?${q.toString()}` : '';
+};
+
+const normalizeList = (res: any) => {
+  if (Array.isArray(res)) return { count: res.length, results: res };
+  if (res?.results) return { count: res.count ?? res.results.length, results: res.results };
+  if (res?.items) return { count: res.total ?? res.items.length, results: res.items };
+  return { count: res?.count ?? 0, results: res?.results ?? [] };
 };
 
 const getWithFallback = (a: string, b: string) => http(a).catch(() => http(b));
-const postPutWithFallback = (
-  m: 'POST' | 'PUT',
-  a: string,
-  b: string,
-  payload: any,
-) =>
-  http(a, { method: m, body: JSON.stringify(payload) }).catch(() =>
-    http(b, { method: m, body: JSON.stringify(payload) }),
-  );
 
 export const PlantillasService = {
-  // LIST
-  fetchPlantillas: (p: FetchPlantillasParams = {}) => {
+  fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
     const qs = qsOf({ search: p.search, estado: p.estado, page: p.page, page_size: p.page_size });
-    return getWithFallback(`/plantillas/${qs}`, `/formularios/${qs}`);
+    const res = await getWithFallback(`/plantillas/${qs}`, `/formularios/${qs}`);
+    return normalizeList(res);
   },
 
-  // DETAIL
-  fetchPlantilla: (id: string) =>
-    getWithFallback(`/plantillas/${id}/`, `/formularios/${id}/`),
+  fetchPlantilla: (id: string) => getWithFallback(`/plantillas/${id}/`, `/formularios/${id}/`),
 
-  // EXISTS (acción de router detail=False ⇒ requiere slash)
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
     try {
-      const res = await http(`/plantillas/exists/${qs}`);
-      return !!(res as any)?.exists;
+      const r = await http(`/plantillas/exists/${qs}`);
+      return !!r?.exists;
     } catch {
-      const res = await http(`/formularios/exists/${qs}`);
-      return !!(res as any)?.exists;
+      const r = await http(`/formularios/exists/${qs}`);
+      return !!r?.exists;
     }
   },
 
-  // CREATE / UPDATE / DELETE
   savePlantilla: (payload: any) =>
-    postPutWithFallback('POST', `/plantillas/`, `/formularios/`, payload),
+    http(`/plantillas/`, { method: 'POST', body: JSON.stringify(payload) }).catch(() =>
+      http(`/formularios/`, { method: 'POST', body: JSON.stringify(payload) })
+    ),
 
   updatePlantilla: (id: string, payload: any) =>
-    postPutWithFallback('PUT', `/plantillas/${id}/`, `/formularios/${id}/`, payload),
+    http(`/plantillas/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }).catch(() =>
+      http(`/formularios/${id}/`, { method: 'PUT', body: JSON.stringify(payload) })
+    ),
 
   deletePlantilla: (id: string) =>
     http(`/plantillas/${id}/`, { method: 'DELETE' }).catch(() =>
-      http(`/formularios/${id}/`, { method: 'DELETE' }),
+      http(`/formularios/${id}/`, { method: 'DELETE' })
     ),
 };
