@@ -9,9 +9,10 @@ interface ActiveLinkProps {
   href: string;
   children: ReactNode;
   className?: string;
+  title?: string;
 }
 
-export default function ActiveLink({ href, children, className }: ActiveLinkProps) {
+export default function ActiveLink({ href, children, className, title }: ActiveLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === href;
   return (
@@ -25,6 +26,7 @@ export default function ActiveLink({ href, children, className }: ActiveLinkProp
           : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
         className
       )}
+      title={title}
     >
       {children}
     </Link>

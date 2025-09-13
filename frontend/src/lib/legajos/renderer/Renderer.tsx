@@ -28,17 +28,31 @@ function Node({ node, template, form }:{ node: LayoutNode, template: Template, f
   const values = form.getValues();
 
   if (node.type === "row") {
-    return <div className="grid grid-cols-12 gap-4">{node.children?.map((ch,i)=><Node key={i} node={ch} template={template} form={form} />)}</div>;
+    return (
+      <div className="grid grid-cols-12 gap-4">
+        {node.children?.map((ch: LayoutNode, i: number) => (
+          <Node key={i} node={ch} template={template} form={form} />
+        ))}
+      </div>
+    );
   }
   if (node.type === "col") {
     const span = node.span ?? 12;
-    return <div className={`col-span-${Math.min(Math.max(span,1),12)}`}>{node.children?.map((ch,i)=><Node key={i} node={ch} template={template} form={form} />)}</div>;
+    return (
+      <div className={`col-span-${Math.min(Math.max(span, 1), 12)}`}>
+        {node.children?.map((ch: LayoutNode, i: number) => (
+          <Node key={i} node={ch} template={template} form={form} />
+        ))}
+      </div>
+    );
   }
   if (node.type === "section") {
     return (
       <div className="border border-gray-700 rounded-xl p-4 mb-4">
         {node.label && <h3 className="text-lg text-white font-semibold mb-3">{node.label}</h3>}
-        {node.children?.map((ch,i)=><Node key={i} node={ch} template={template} form={form} />)}
+        {node.children?.map((ch: LayoutNode, i: number) => (
+          <Node key={i} node={ch} template={template} form={form} />
+        ))}
       </div>
     );
   }
