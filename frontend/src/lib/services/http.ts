@@ -16,13 +16,29 @@ function withTimeout<T>(p: Promise<T>, ms = 15000) {
 }
 
 export async function http(path: string, opts: HttpOptions = {}) {
-  const url = buildUrl(path);
+  let url = buildUrl(path);
+  if (typeof window !== 'undefined' && url.includes('://backend:')) {
+    url = url.replace('://backend:', '://localhost:');
+  }
+
+  const method = (opts.method || 'GET').toUpperCase();
+  if (method !== 'GET') {
+    const [base, qs] = url.split('?');
+    if (!base.endsWith('/')) url = `${base}/${qs ? `?${qs}` : ''}`;
+  }
+
+  const headers: Record<string, string> = { ...(opts.headers as any) };
+  if (!(opts.body instanceof FormData) && !('Content-Type' in headers)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (opts.auth !== false && typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const cfg: RequestInit = {
     ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(opts.headers || {}),
-    },
+    headers,
     credentials: 'include',
   };
 
@@ -36,7 +52,8 @@ export async function http(path: string, opts: HttpOptions = {}) {
 
     if (!res.ok) {
       if (ct.includes('text/html')) {
-        throw new Error(`Respuesta HTML ${res.status} desde ${url}. Verificá NEXT_PUBLIC_API_BASE o el rewrite.`);
+        const snippet = (text || '').slice(0, 400);
+        throw new Error(`HTTP ${res.status}. HTML: ${snippet}`);
       }
       try {
         const json = text ? JSON.parse(text) : {};
