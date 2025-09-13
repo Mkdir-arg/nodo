@@ -29,6 +29,8 @@ export default function Builder({ template }: { template?: any }) {
 
   const [open, setOpen] = useState(false);
 
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[20rem_1fr_auto] gap-6">
       <ComponentSidebar />

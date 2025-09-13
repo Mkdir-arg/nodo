@@ -6,6 +6,7 @@ describe('usePlantillaBuilderStore', () => {
     useBuilderStore.setState({ sections: [{ id: 's1', children: [{ id: '1', key: 'a' }] }], selected: null, dirty: false });
     const k = useBuilderStore.getState().ensureUniqueKey('a');
     expect(k).toBe('a_2');
+    expect(k).toBe('a_2');
   });
   it('sets dirty on addField', () => {
     useBuilderStore.setState({ sections: [{ id: 's1', children: [] }], selected: null, dirty: false });
