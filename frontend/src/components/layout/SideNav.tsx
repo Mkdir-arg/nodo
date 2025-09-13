@@ -123,12 +123,6 @@ function LegajosMenu() {
         )}
       >
         <ul className="min-h-0 overflow-hidden">
-          <li className="mt-2 mb-1">
-            <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
-              {SafeIcon(FilePlus2, { size: 16 })} <span>Ver legajos</span>
-            </Link>
-          </li>
-
           {isLoading && <li className="px-3 py-2 text-sm opacity-70">Cargando…</li>}
           {!isLoading && items.length === 0 && <li className="px-3 py-2 text-sm opacity-60">No hay plantillas</li>}
 
