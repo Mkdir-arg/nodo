@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { newField, FieldType } from '@/lib/form-builder/factory';
+import { arrayMove } from '@dnd-kit/sortable';
 
 type FieldNode = any;
 interface Section { id: string; title?: string; children: FieldNode[]; }
@@ -27,6 +28,8 @@ interface State {
   updateNode: (id: string, patch: any) => void;
   removeNode: (id: string) => void;
   duplicateNode: (id: string) => void;
+  moveSection: (activeId: string, overId: string) => void;
+  moveField: (activeId: string, overId?: string | null, toSectionId?: string) => void;
   collectKeysByType: (t: string) => string[];
   ensureUniqueKey: (base: string) => string;
   setSelected: (sel: Selected) => void;
@@ -163,6 +166,50 @@ export const useBuilderStore = create<State>((set, get) => ({
       sections[hit.si] = { ...sections[hit.si], children: list };
     }
     return { ...state, sections, selected: { type: 'field', id: node.id }, dirty: true };
+  }),
+
+  moveSection: (activeId, overId) => set((state) => {
+    const from = state.sections.findIndex((s: any) => s.id === activeId);
+    const to = state.sections.findIndex((s: any) => s.id === overId);
+    if (from < 0 || to < 0 || from === to) return state;
+    return { ...state, sections: arrayMove(state.sections, from, to), dirty: true };
+  }),
+
+  moveField: (activeId, overId, toSectionId) => set((state) => {
+    // localizar origen
+    let fromSi = -1, fromIdx = -1, node: any = null;
+    state.sections.forEach((s: any, si: number) => {
+      const idx = (s.children || []).findIndex((n: any) => n.id === activeId);
+      if (idx >= 0) { fromSi = si; fromIdx = idx; node = s.children[idx]; }
+    });
+    if (fromSi < 0 || !node) return state;
+
+    // decidir sección destino
+    let destSi = fromSi;
+    if (toSectionId) {
+      destSi = state.sections.findIndex((s: any) => s.id === toSectionId);
+      if (destSi < 0) destSi = fromSi;
+    } else if (overId) {
+      // si "over" es un campo, su sección es el destino
+      const hit = state.sections.findIndex((s: any) => (s.children || []).some((n: any) => n.id === overId));
+      if (hit >= 0) destSi = hit;
+    }
+
+    const sections = state.sections.map((s: any) => ({ ...s, children: [...(s.children || [])] }));
+
+    // quitar del origen
+    const [removed] = sections[fromSi].children.splice(fromIdx, 1);
+
+    // decidir índice destino
+    let destIndex = sections[destSi].children.length; // por defecto al final
+    if (overId) {
+      const idxOver = sections[destSi].children.findIndex((n: any) => n.id === overId);
+      if (idxOver >= 0) destIndex = idxOver; // insertar antes del "over"
+    }
+
+    sections[destSi].children.splice(destIndex, 0, removed);
+
+    return { ...state, sections, selected: { type: 'field', id: removed.id }, dirty: true };
   }),
 
   /** Keys disponibles por tipo (útil para sum.sources) */

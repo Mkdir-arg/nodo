@@ -1,33 +1,59 @@
 'use client';
+import { DndContext, DragEndEvent, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useMemo, useState } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
+import SortableSection from './dnd/SortableSection';
 import FieldCard from './FieldCard';
 
-export default function Canvas() {
-  const { sections, selected, setSelected } = useBuilderStore();
+const DROP_PREFIX = 'drop-'; // droppable vacío al final de cada sección
 
-  if (!sections?.length) {
-    return <div className="text-sm opacity-70">Arrastrá componentes o usá el menú para crear campos.</div>;
-  }
+export default function Canvas() {
+  const { sections, moveSection, moveField } = useBuilderStore();
+  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+  const [activeField, setActiveField] = useState<any>(null);
+
+  const sectionIds = useMemo(() => sections.map((s: any) => s.id), [sections]);
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over) return;
+    const activeType = active.data.current?.type as 'section' | 'field' | undefined;
+    const overId = String(over.id);
+    if (activeType === 'section') {
+      moveSection(String(active.id), overId);
+    } else if (activeType === 'field') {
+      // si over es "drop-<secId>", mover al final de esa sección
+      if (overId.startsWith(DROP_PREFIX)) {
+        const toSec = overId.replace(DROP_PREFIX, '');
+        moveField(String(active.id), null, toSec);
+      } else {
+        // mover antes del campo "over"; si es otra sección, se detecta adentro de moveField
+        moveField(String(active.id), overId);
+      }
+    }
+    setActiveField(null);
+  };
 
   return (
-    <div className="space-y-6">
-      {sections.map((sec:any) => (
-        <section key={sec.id} className="rounded-2xl border p-3 bg-white/50">
-          <header
-            className={`flex items-center justify-between rounded-xl px-3 py-2 mb-3 ${selected?.id===sec.id ? 'ring-2 ring-sky-300' : ''}`}
-            onClick={()=>setSelected({type:'section', id:sec.id})}
-          >
-            <h3 className="font-semibold">{sec.title || 'Sección'}</h3>
-            <div className="text-xs opacity-60">{(sec.children||[]).length} campos</div>
-          </header>
+    <DndContext sensors={sensors} collisionDetection={closestCorners}
+      onDragEnd={onDragEnd}
+      onDragStart={(e)=>{ if(e.active.data.current?.type==='field'){ setActiveField(e.active.data.current?.node);} }}>
+      <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+        <div className="space-y-6">
+          {sections.map((sec: any) => (
+            <SortableSection key={sec.id} id={sec.id} section={sec} dropId={`${DROP_PREFIX}${sec.id}`} />
+          ))}
+        </div>
+      </SortableContext>
 
-          <div className="space-y-2">
-            {(sec.children || []).map((node:any) => (
-              <FieldCard key={node.id} node={node} />
-            ))}
+      <DragOverlay>
+        {activeField ? (
+          <div className="min-w-[280px] rounded-xl border bg-white p-3 shadow-lg">
+            <FieldCard node={activeField} readonly />
           </div>
-        </section>
-      ))}
-    </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
