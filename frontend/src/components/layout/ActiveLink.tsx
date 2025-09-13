@@ -29,6 +29,7 @@ export default function ActiveLink({ href, children, className, title }: ActiveL
     <Link
       href={href}
       onClick={handleClick}
+      onClick={handleClick}
       aria-current={isActive ? 'page' : undefined}
       className={clsx(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',

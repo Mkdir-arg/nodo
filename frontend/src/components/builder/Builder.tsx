@@ -19,6 +19,17 @@ export default function Builder({ template }: { template?: any }) {
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
 
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirty]);
+
   return (
     <div className="flex">
       <Canvas />
