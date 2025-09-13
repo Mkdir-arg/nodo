@@ -1,151 +1,196 @@
 'use client';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 
-function Row({label, children}:{label:string; children:any}) {
-  return (
-    <label className="text-sm grid grid-cols-[8rem_1fr] items-center gap-2">
-      <span className="opacity-70">{label}</span>
-      <div>{children}</div>
-    </label>
-  );
-}
-
-interface Props { open: boolean; fieldId: string | null; onClose: () => void; }
+type Props = { open: boolean; fieldId: string | null; onClose: () => void };
 
 export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) {
   const { sections, updateNode, collectKeysByType } = useBuilderStore();
 
+  // localizar el nodo por id (incluye hijos de group)
+  const node = useMemo(() => {
+    if (!fieldId) return null;
+    for (const s of sections) {
+      const direct = (s.children || []).find((n: any) => n.id === fieldId);
+      if (direct) return direct;
+      const grp = (s.children || []).find(
+        (n: any) => n.type === 'group' && (n.children || []).some((c: any) => c.id === fieldId)
+      );
+      if (grp) return (grp.children || []).find((c: any) => c.id === fieldId);
+    }
+    return null;
+  }, [fieldId, sections]);
+
+  // borrador editable y cierre con ESC
+  const [draft, setDraft] = useState<any>(null);
+  useEffect(() => { setDraft(node ? JSON.parse(JSON.stringify(node)) : null); }, [node, open]);
   useEffect(() => {
+    if (!open) return;
     const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    if (open) document.addEventListener('keydown', onEsc);
+    document.addEventListener('keydown', onEsc);
     return () => document.removeEventListener('keydown', onEsc);
   }, [open, onClose]);
 
-  const node = useMemo(() => {
-    if (!open || !fieldId) return null;
-    for (const s of sections) {
-      const hit = (s.children || []).find((n: any) => n.id === fieldId);
-      if (hit) return hit;
-      const g = (s.children || []).find((n: any) => n.type === 'group' && (n.children || []).some((c: any) => c.id === fieldId));
-      if (g) return (g.children || []).find((c: any) => c.id === fieldId);
-    }
-    return null;
-  }, [open, fieldId, sections]);
-
-  if (!open || !node) return null;
+  if (!open || !draft) return null;
 
   const numKeys = collectKeysByType('number');
+  const Row = ({ label, children }: { label: string; children: any }) => (
+    <label className="text-sm grid grid-cols-[9rem_1fr] items-center gap-3">
+      <span className="opacity-70">{label}</span>
+      <div>{children}</div>
+    </label>
+  );
+
+  const save = () => { updateNode(draft.id, draft); onClose(); };
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="absolute left-1/2 top-20 -translate-x-1/2 w-[min(600px,92vw)] bg-white rounded-2xl shadow-xl p-4 overflow-y-auto max-h-[80vh]">
-        <div className="space-y-3">
-          <h4 className="font-semibold">Propiedades</h4>
+      <div className="absolute left-1/2 top-20 -translate-x-1/2 w-[min(820px,92vw)] bg-white rounded-2xl shadow-xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Propiedades — {String(draft.type).toUpperCase()}</h3>
+          <button className="px-3 py-1 border rounded-lg" onClick={onClose}>✕</button>
+        </div>
 
+        <div className="space-y-3 max-h-[65vh] overflow-auto pr-1">
+          {/* Comunes */}
           <Row label="Etiqueta">
-            <input className="w-full border rounded p-2" value={node.label||''}
-                   onChange={e=>updateNode(node.id, { label: e.target.value })}/>
+            <input className="w-full border rounded p-2" value={draft.label || ''}
+                   onChange={(e) => setDraft((d: any) => ({ ...d, label: e.target.value }))} />
           </Row>
           <Row label="Key">
-            <input className="w-full border rounded p-2 font-mono" value={node.key||''}
-                   onChange={e=>updateNode(node.id, { key: e.target.value })}/>
+            <input className="w-full border rounded p-2 font-mono" value={draft.key || ''}
+                   onChange={(e) => setDraft((d: any) => ({ ...d, key: e.target.value }))} />
           </Row>
           <Row label="Obligatorio">
-            <input type="checkbox" checked={!!node.required}
-                   onChange={e=>updateNode(node.id, { required: e.target.checked })}/>
+            <input type="checkbox" checked={!!draft.required}
+                   onChange={(e) => setDraft((d: any) => ({ ...d, required: e.target.checked }))} />
           </Row>
           <Row label="Subsanable">
-            <input type="checkbox" checked={!!node.esSubsanable}
-                   onChange={e=>updateNode(node.id, { esSubsanable: e.target.checked })}/>
+            <input type="checkbox" checked={!!draft.esSubsanable}
+                   onChange={(e) => setDraft((d: any) => ({ ...d, esSubsanable: e.target.checked }))} />
           </Row>
           <Row label="Editable operador">
-            <input type="checkbox" checked={!!node.esEditableOperador}
-                   onChange={e=>updateNode(node.id, { esEditableOperador: e.target.checked })}/>
+            <input type="checkbox" checked={!!draft.esEditableOperador}
+                   onChange={(e) => setDraft((d: any) => ({ ...d, esEditableOperador: e.target.checked }))} />
           </Row>
           <Row label="En grilla">
-            <input type="checkbox" checked={!!node.seMuestraEnGrilla}
-                   onChange={e=>updateNode(node.id, { seMuestraEnGrilla: e.target.checked })}/>
+            <input type="checkbox" checked={!!draft.seMuestraEnGrilla}
+                   onChange={(e) => setDraft((d: any) => ({ ...d, seMuestraEnGrilla: e.target.checked }))} />
           </Row>
 
-          {(node.type==='text'||node.type==='textarea') && (
+          {/* Específicas por tipo */}
+          {(draft.type === 'text' || draft.type === 'textarea') && (
             <>
               <Row label="Placeholder">
-                <input className="w-full border rounded p-2" value={node.placeholder||''}
-                       onChange={e=>updateNode(node.id, { placeholder: e.target.value })}/>
+                <input className="w-full border rounded p-2" value={draft.placeholder || ''}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, placeholder: e.target.value }))} />
               </Row>
               <Row label="Máx. largo">
-                <input type="number" className="w-full border rounded p-2" value={node.maxLength||''}
-                       onChange={e=>updateNode(node.id, { maxLength: Number(e.target.value)||undefined })}/>
+                <input type="number" className="w-full border rounded p-2" value={draft.maxLength ?? ''}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, maxLength: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
               <Row label="Regex">
-                <input className="w-full border rounded p-2 font-mono" value={node.pattern||''}
-                       onChange={e=>updateNode(node.id, { pattern: e.target.value })}/>
+                <input className="w-full border rounded p-2 font-mono" value={draft.pattern || ''}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, pattern: e.target.value }))} />
               </Row>
             </>
           )}
 
-          {node.type==='number' && (
+          {draft.type === 'number' && (
             <>
               <Row label="Mínimo">
-                <input type="number" className="w-full border rounded p-2" value={node.min ?? ''} onChange={e=>updateNode(node.id, { min: e.target.value===''?undefined:Number(e.target.value) })}/>
+                <input type="number" className="w-full border rounded p-2" value={draft.min ?? ''}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, min: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
               <Row label="Máximo">
-                <input type="number" className="w-full border rounded p-2" value={node.max ?? ''} onChange={e=>updateNode(node.id, { max: e.target.value===''?undefined:Number(e.target.value) })}/>
+                <input type="number" className="w-full border rounded p-2" value={draft.max ?? ''}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, max: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
               <Row label="Step">
-                <input type="number" className="w-full border rounded p-2" value={node.step ?? ''} onChange={e=>updateNode(node.id, { step: e.target.value===''?undefined:Number(e.target.value) })}/>
+                <input type="number" className="w-full border rounded p-2" value={draft.step ?? ''}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, step: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
             </>
           )}
 
-          {['select','dropdown','multiselect','select_with_filter'].includes(node.type) && (
+          {['select', 'dropdown', 'multiselect', 'select_with_filter'].includes(draft.type) && (
             <div className="space-y-2">
               <div className="text-sm font-medium">Opciones</div>
-              {(node.options||[]).map((o:any, i:number)=>(
+              {(draft.options || []).map((o: any, i: number) => (
                 <div key={i} className="flex gap-2">
                   <input className="border rounded p-2 flex-1" value={o.label}
-                         onChange={e=>{ const options=[...(node.options||[])]; options[i]={...o,label:e.target.value}; updateNode(node.id, { options }); }}/>
+                         onChange={(e) => {
+                           const options = [...(draft.options || [])];
+                           options[i] = { ...o, label: e.target.value };
+                           setDraft((d: any) => ({ ...d, options }));
+                         }} />
                   <input className="border rounded p-2 w-40 font-mono" value={o.value}
-                         onChange={e=>{ const options=[...(node.options||[])]; options[i]={...o,value:e.target.value}; updateNode(node.id, { options }); }}/>
-                  <button type="button" className="px-2 border rounded"
-                          onClick={()=>{ const options=[...(node.options||[])]; options.splice(i,1); updateNode(node.id, { options }); }}>−</button>
+                         onChange={(e) => {
+                           const options = [...(draft.options || [])];
+                           options[i] = { ...o, value: e.target.value };
+                           setDraft((d: any) => ({ ...d, options }));
+                         }} />
+                  <button className="px-2 border rounded" onClick={() => {
+                    const options = [...(draft.options || [])];
+                    options.splice(i, 1);
+                    setDraft((d: any) => ({ ...d, options }));
+                  }}>−</button>
                 </div>
               ))}
-              <button type="button" className="px-2 py-1 border rounded"
-                      onClick={()=>{ const options=[...(node.options||[]), {label:'Opción', value:`op_${(node.options?.length||0)+1}`}]; updateNode(node.id, { options }); }}>+ Agregar opción</button>
+              <button className="px-2 py-1 border rounded"
+                      onClick={() => setDraft((d: any) => ({
+                        ...d,
+                        options: [...(d.options || []), { label: 'Opción', value: `op_${(d.options?.length || 0) + 1}` }]
+                      }))}>
+                + Agregar opción
+              </button>
             </div>
           )}
 
-          {node.type==='document' && (
+          {draft.type === 'document' && (
             <>
               <Row label="Extensiones">
                 <input className="w-full border rounded p-2" placeholder=".pdf,.jpg"
-                       value={(node.accept||[]).join(',')}
-                       onChange={e=>updateNode(node.id, { accept: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) })}/>
+                       value={(draft.accept || []).join(',')}
+                       onChange={(e) => setDraft((d: any) => ({
+                         ...d,
+                         accept: e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                       }))} />
               </Row>
               <Row label="Tamaño MB">
-                <input type="number" className="w-full border rounded p-2" value={node.maxSizeMB ?? ''} onChange={e=>updateNode(node.id, { maxSizeMB: e.target.value===''?undefined:Number(e.target.value) })}/>
+                <input type="number" className="w-full border rounded p-2" value={draft.maxSizeMB ?? ''}
+                       onChange={(e) => setDraft((d: any) => ({
+                         ...d, maxSizeMB: e.target.value === '' ? undefined : Number(e.target.value)
+                       }))} />
               </Row>
             </>
           )}
 
-          {node.type==='sum' && (
+          {draft.type === 'sum' && (
             <>
               <Row label="Decimales">
-                <input type="number" className="w-full border rounded p-2" value={node.decimals ?? 0}
-                       onChange={e=>updateNode(node.id, { decimals: Number(e.target.value)||0 })}/>
+                <input type="number" className="w-full border rounded p-2" value={draft.decimals ?? 0}
+                       onChange={(e) => setDraft((d: any) => ({ ...d, decimals: Number(e.target.value) || 0 }))} />
               </Row>
               <div>
                 <div className="text-sm opacity-70 mb-1">Fuentes (solo números)</div>
                 <div className="flex flex-wrap gap-2">
-                  {numKeys.map(k=>{
-                    const active = (node.sources||[]).includes(k);
+                  {numKeys.map((k) => {
+                    const active = (draft.sources || []).includes(k);
                     return (
-                      <button key={k} type="button"
-                        className={`px-2 py-1 border rounded text-xs ${active?'bg-sky-100 border-sky-300':''}`}
-                        onClick={()=>{ const set = new Set(node.sources||[]); if (active) set.delete(k); else set.add(k); updateNode(node.id, { sources: Array.from(set) }); }}>{k}</button>
+                      <button
+                        key={k}
+                        type="button"
+                        className={`px-2 py-1 border rounded text-xs ${active ? 'bg-sky-100 border-sky-300' : ''}`}
+                        onClick={() => {
+                          const set = new Set(draft.sources || []);
+                          if (active) set.delete(k); else set.add(k);
+                          setDraft((d: any) => ({ ...d, sources: Array.from(set) }));
+                        }}
+                      >
+                        {k}
+                      </button>
                     );
                   })}
                 </div>
@@ -153,24 +198,30 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
             </>
           )}
 
-          {node.type==='date' && (
+          {draft.type === 'date' && (
             <>
               <Row label="Default relativo">
-                <input className="w-full border rounded p-2" placeholder='e.g. +0 days'
-                       onChange={e=>{/* placeholder */}}/>
+                <input
+                  className="w-full border rounded p-2"
+                  placeholder="e.g. +0 days"
+                  value={draft.defaultRelative || ''}
+                  onChange={(e) => setDraft((d: any) => ({ ...d, defaultRelative: e.target.value }))}
+                />
               </Row>
             </>
           )}
 
-          {node.type==='info' && (
+          {draft.type === 'info' && (
             <Row label="HTML">
-              <textarea className="w-full border rounded p-2" rows={3} value={node.html||''}
-                        onChange={e=>updateNode(node.id, { html: e.target.value })}/>
+              <textarea className="w-full border rounded p-2" rows={3} value={draft.html || ''}
+                        onChange={(e) => setDraft((d: any) => ({ ...d, html: e.target.value }))} />
             </Row>
           )}
         </div>
-        <div className="text-right mt-4">
-          <button onClick={onClose} className="px-3 py-2 border rounded-xl">Cerrar</button>
+
+        <div className="flex justify-end gap-2">
+          <button className="px-4 py-2 border rounded-lg" onClick={onClose}>Cancelar</button>
+          <button className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={save}>Guardar</button>
         </div>
       </div>
     </div>

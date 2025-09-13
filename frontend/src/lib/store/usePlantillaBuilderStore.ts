@@ -23,7 +23,7 @@ interface State {
   buildSchema: () => any;
 
   addSection: () => string;
-  addField: (sectionId: string, typeOrNode: FieldType | FieldNode) => void;
+  addField: (sectionId: string, typeOrNode: FieldType | FieldNode) => string | undefined;
   updateNode: (id: string, patch: any) => void;
   removeNode: (id: string) => void;
   duplicateNode: (id: string) => void;
@@ -59,19 +59,25 @@ export const useBuilderStore = create<State>((set, get) => ({
     });
     return newId;
   },
-  addField: (sectionId, typeOrNode) => set(state => {
-    const idx = state.sections.findIndex(s => s.id === sectionId);
-    if (idx < 0) return state;
+  addField: (sectionId, typeOrNode) => {
+    const sections = get().sections || [];
+    const idx = sections.findIndex((s) => s.id === sectionId);
+    if (idx < 0) return;
+
     const node = typeof typeOrNode === 'string'
       ? newField(typeOrNode as FieldType)
       : { ...typeOrNode };
-    node.id = node.id || `fld_${nanoid(6)}`;
-    node.key = state.ensureUniqueKey(node.key || node.type);
-    const sections = [...state.sections];
+    node.id = node.id ?? `fld_${crypto.randomUUID().slice(0, 6)}`;
+    node.key = get().ensureUniqueKey(node.key || node.type || 'campo');
+
     const sec = sections[idx];
-    sections[idx] = { ...sec, children: [...(sec.children || []), node] };
-    return { ...state, sections, selected: { type: 'field', id: node.id }, dirty: true };
-  }),
+    const next = [...sections];
+    next[idx] = { ...sec, children: [...(sec.children || []), node] };
+
+    set({ sections: next, selected: { type: 'field', id: node.id }, dirty: true });
+
+    return node.id;
+  },
 
   /** Busca un nodo por id y devuelve punteros: sección y posición del field */
   _locateNode(id: string) {

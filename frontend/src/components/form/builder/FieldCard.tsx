@@ -97,6 +97,7 @@ export default function FieldCard({ node }:{node:any}) {
       <div className="flex items-center justify-between">
         <span className="text-xs uppercase opacity-60">{node.type}</span>
         <div className="flex gap-2">
+          <button type="button" onClick={(e)=>{e.stopPropagation(); window.dispatchEvent(new CustomEvent('builder:open-props',{detail:{id: node.id}}));}} className="text-xs px-2 py-1 border rounded">Editar</button>
           <button type="button" onClick={(e)=>{e.stopPropagation(); duplicateNode(node.id);}} className="text-xs px-2 py-1 border rounded">Duplicar</button>
           <button type="button" onClick={(e)=>{e.stopPropagation(); removeNode(node.id);}} className="text-xs px-2 py-1 border rounded">Eliminar</button>
         </div>
