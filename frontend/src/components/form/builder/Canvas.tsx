@@ -12,7 +12,7 @@ import FieldCard from './FieldCard';
 const DROP_PREFIX = 'drop-';
 
 export default function Canvas() {
-  const { sections, moveSection, moveField } = useBuilderStore();
+  const { sections, moveSection, moveField, addSection } = useBuilderStore();
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
@@ -36,6 +36,7 @@ export default function Canvas() {
   const onDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over) { setActiveField(null); return; }
+
     const activeType = active.data.current?.type as 'section' | 'field' | undefined;
 
     if (activeType === 'section') {
@@ -65,6 +66,21 @@ export default function Canvas() {
         }
       }}
     >
+      {/* Barra para crear secciones */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => {
+            addSection();
+            // opcional: abrir modal de componentes automáticamente
+            setTimeout(() => window.dispatchEvent(new Event('builder:open-components')), 0);
+          }}
+          className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50"
+        >
+          + Agregar sección
+        </button>
+      </div>
+
       <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
         <div className="space-y-6">
           {sections.map((sec: any) => (

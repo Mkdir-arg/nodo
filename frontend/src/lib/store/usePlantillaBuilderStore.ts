@@ -1,6 +1,5 @@
 'use client';
 import { create } from 'zustand';
-import { nanoid } from 'nanoid';
 import { newField, FieldType } from '@/lib/form-builder/factory';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -24,6 +23,9 @@ interface State {
   buildSchema: () => any;
 
   addSection: () => string;
+  updateSection: (id: string, patch: Partial<any>) => void;
+  duplicateSection: (id: string) => void;
+  removeSection: (id: string) => void;
   addField: (sectionId: string, typeOrNode: FieldType | FieldNode) => string | undefined;
   updateNode: (id: string, patch: any) => void;
   removeNode: (id: string) => void;
@@ -49,21 +51,69 @@ export const useBuilderStore = create<State>((set, get) => ({
   version: 1,
   descripcion: null,
   addSection: () => {
-    let newId = '';
-    set(state => {
-      const id = `sec_${nanoid(6)}`;
-      const title = `Sección ${state.sections.length + 1}`;
-      const section = { type: 'section', id, title, collapsed: false, children: [] as any[] };
-      newId = id;
+    const n = (get().sections?.length || 0) + 1;
+    const id = `sec_${crypto.randomUUID().slice(0, 6)}`;
+    const section = { type: 'section', id, title: `Sección ${n}`, children: [] as any[] };
+    set((s) => ({
+      sections: [...(s.sections || []), section],
+      selected: { type: 'section', id },
+      dirty: true,
+    }));
+    return id;
+  },
+
+  updateSection: (id, patch) => set((state) => {
+    const sections = (state.sections || []).map((s: any) =>
+      s.id === id ? { ...s, ...patch } : s
+    );
+    return { ...state, sections, dirty: true };
+  }),
+
+  duplicateSection: (id) => set((state) => {
+    const idx = (state.sections || []).findIndex((s: any) => s.id === id);
+    if (idx < 0) return state;
+    const deep = (o: any) => JSON.parse(JSON.stringify(o));
+    const clone = deep(state.sections[idx]);
+    clone.id = `sec_${crypto.randomUUID().slice(0, 6)}`;
+    clone.title = `${clone.title || 'Sección'} (copia)`;
+    const ensure = state.ensureUniqueKey;
+    clone.children = (clone.children || []).map((n: any) => {
+      const c = deep(n);
+      c.id = `fld_${crypto.randomUUID().slice(0, 6)}`;
+      if (c.key) c.key = ensure(c.key);
+      if (c.children)
+        c.children = c.children.map((nn: any) => {
+          const cc = deep(nn);
+          cc.id = `fld_${crypto.randomUUID().slice(0, 6)}`;
+          if (cc.key) cc.key = ensure(cc.key);
+          return cc;
+        });
+      return c;
+    });
+    const sections = [...state.sections];
+    sections.splice(idx + 1, 0, clone);
+    return {
+      ...state,
+      sections,
+      selected: { type: 'section', id: clone.id },
+      dirty: true,
+    };
+  }),
+
+  removeSection: (id) => set((state) => {
+    const sections = (state.sections || []).filter((s: any) => s.id !== id);
+    if (sections.length === 0) {
+      const fallbackId = `sec_${crypto.randomUUID().slice(0, 6)}`;
+      sections.push({ type: 'section', id: fallbackId, title: 'Sección 1', children: [] });
       return {
         ...state,
-        sections: [...state.sections, section],
-        selected: { type: 'section', id },
+        sections,
+        selected: { type: 'section', id: fallbackId },
         dirty: true,
       };
-    });
-    return newId;
-  },
+    }
+    return { ...state, sections, selected: null, dirty: true };
+  }),
   addField: (sectionId, typeOrNode) => {
     const sections = get().sections || [];
     const idx = sections.findIndex((s) => s.id === sectionId);
