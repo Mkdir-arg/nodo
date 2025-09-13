@@ -44,8 +44,11 @@ class LegajoSerializer(serializers.ModelSerializer):
                     arr = attrs["data"].get(n["key"], [])
                     if isinstance(arr, list):
                         for item in arr:
+
+                            item_vals = {**values, **item}
                             for c in n.get("children", []):
-                                if self._eval_conds(values, c.get("condicionesOcultar")):
+                                if self._eval_conds(item_vals, c.get("condicionesOcultar")):
+
                                     item.pop(c["key"], None)
                 else:
                     if self._eval_conds(values, n.get("condicionesOcultar")):
