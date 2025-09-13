@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Folder, FolderOpen, FilePlus2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FolderClosed, FolderOpen, FilePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
@@ -15,16 +15,9 @@ interface SideNavProps {
   onToggleMini: () => void;
 }
 
-// Helper para evitar crashear si algún icono viniera undefined
-function SafeIcon(Comp: any, props: any) {
-  // Si Comp no es una función/componente válido, muestro fallback
-  return typeof Comp === 'function' ? <Comp {...props} /> : <span aria-hidden>■</span>;
-}
-
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
   const plantillasItem = NAV_ITEMS.find((i) => i.href === '/plantillas');
-
   return (
     <aside
       className={clsx(
@@ -43,13 +36,8 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={dashboardItem.label}
             >
-              {/* icono seguro */}
-              {SafeIcon(dashboardItem.icon, { className: 'h-5 w-5', 'aria-hidden': true })}
-              {mini ? (
-                <span className="sr-only">{dashboardItem.label}</span>
-              ) : (
-                <span>{dashboardItem.label}</span>
-              )}
+              <dashboardItem.icon className="h-5 w-5" aria-hidden />
+              {mini ? <span className="sr-only">{dashboardItem.label}</span> : <span>{dashboardItem.label}</span>}
             </ActiveLink>
           )}
 
@@ -61,12 +49,8 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={plantillasItem.label}
             >
-              {SafeIcon(plantillasItem.icon, { className: 'h-5 w-5', 'aria-hidden': true })}
-              {mini ? (
-                <span className="sr-only">{plantillasItem.label}</span>
-              ) : (
-                <span>{plantillasItem.label}</span>
-              )}
+              <plantillasItem.icon className="h-5 w-5" aria-hidden />
+              {mini ? <span className="sr-only">{plantillasItem.label}</span> : <span>{plantillasItem.label}</span>}
             </ActiveLink>
           )}
         </div>
@@ -104,12 +88,11 @@ function LegajosMenu() {
           pathname?.startsWith('/legajos') && 'bg-slate-200/60 dark:bg-slate-800/60'
         )}
       >
-        {/* Usar Folder (cerrado) y FolderOpen (abierto) en lugar de FolderClosed */}
-        {open ? <FolderOpen size={18} /> : <Folder size={18} />}
+        {open ? <FolderOpen size={18} /> : <FolderClosed size={18} />}
         <span className="flex-1 text-left">Legajos</span>
       </button>
 
-      {/* Despliegue con CSS (sin framer-motion) */}
+      {/* Animación sin framer-motion */}
       <div
         className={clsx(
           'pl-6 overflow-hidden transition-[grid-template-rows,opacity] duration-200 grid',
@@ -119,7 +102,7 @@ function LegajosMenu() {
         <ul className="min-h-0 overflow-hidden">
           <li className="mt-2 mb-1">
             <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
-              <FilePlus2 size={16} /> <span>Ver legajos</span>
+              <FilePlus size={16} /> <span>Ver legajos</span>
             </Link>
           </li>
 
