@@ -1,4 +1,4 @@
-import Builder from '@/components/builder/Builder';
+import Builder from '@/components/form/builder/Builder';
 import { PlantillasService } from '@/lib/PlantillasService';
 
 export default async function EditarPlantillaPage({ params }:{params:{id:string}}) {
