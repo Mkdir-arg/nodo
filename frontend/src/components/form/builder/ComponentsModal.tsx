@@ -35,7 +35,7 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="absolute left-1/2 top-20 -translate-x-1/2 w-[min(800px,92vw)] bg-white rounded-2xl shadow-xl p-4">
+      <div className="absolute left-1/2 top-20 -translate-x-1/2 w-[min(800px,92vw)] bg-white rounded-2xl shadow-xl p-4 dark:bg-slate-800 dark:border dark:border-slate-700">
         <h3 className="text-lg font-semibold mb-3">Componentes</h3>
         <div className="space-y-6">
           {Object.entries(GROUPS).map(([title, items])=>(
@@ -45,7 +45,7 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
                 {items.map(([type, label])=>(
                   <button key={type} type="button"
                     onClick={() => insert(type)}
-                    className="border rounded-xl p-2 text-left hover:bg-gray-50 focus:outline-none focus:ring">
+                    className="border rounded-xl p-2 text-left hover:bg-gray-50 focus:outline-none focus:ring dark:border-slate-700 dark:hover:bg-slate-700">
                     {label}
                   </button>
                 ))}
@@ -54,7 +54,7 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
           ))}
         </div>
         <div className="text-right mt-4">
-          <button onClick={onClose} className="px-3 py-2 border rounded-xl">Cerrar</button>
+          <button onClick={onClose} className="px-3 py-2 border rounded-xl dark:border-slate-700">Cerrar</button>
         </div>
       </div>
     </div>

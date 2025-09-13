@@ -46,20 +46,20 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="absolute left-1/2 top-20 -translate-x-1/2 w-[min(820px,92vw)] bg-white rounded-2xl shadow-xl p-5 space-y-4">
+      <div className="absolute left-1/2 top-20 -translate-x-1/2 w-[min(820px,92vw)] bg-white rounded-2xl shadow-xl p-5 space-y-4 dark:bg-slate-800 dark:border dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Propiedades — {String(draft.type).toUpperCase()}</h3>
-          <button className="px-3 py-1 border rounded-lg" onClick={onClose}>✕</button>
+          <button className="px-3 py-1 border rounded-lg dark:border-slate-700" onClick={onClose}>✕</button>
         </div>
 
         <div className="space-y-3 max-h-[65vh] overflow-auto pr-1">
           {/* Comunes */}
           <Row label="Etiqueta">
-            <input className="w-full border rounded p-2" value={draft.label || ''}
+            <input className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.label || ''}
                    onChange={(e) => setDraft((d: any) => ({ ...d, label: e.target.value }))} />
           </Row>
           <Row label="Key">
-            <input className="w-full border rounded p-2 font-mono" value={draft.key || ''}
+            <input className="w-full border rounded p-2 font-mono dark:bg-slate-900 dark:border-slate-700" value={draft.key || ''}
                    onChange={(e) => setDraft((d: any) => ({ ...d, key: e.target.value }))} />
           </Row>
           <Row label="Obligatorio">
@@ -83,15 +83,15 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
           {(draft.type === 'text' || draft.type === 'textarea') && (
             <>
               <Row label="Placeholder">
-                <input className="w-full border rounded p-2" value={draft.placeholder || ''}
+                <input className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.placeholder || ''}
                        onChange={(e) => setDraft((d: any) => ({ ...d, placeholder: e.target.value }))} />
               </Row>
               <Row label="Máx. largo">
-                <input type="number" className="w-full border rounded p-2" value={draft.maxLength ?? ''}
+                <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.maxLength ?? ''}
                        onChange={(e) => setDraft((d: any) => ({ ...d, maxLength: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
               <Row label="Regex">
-                <input className="w-full border rounded p-2 font-mono" value={draft.pattern || ''}
+                <input className="w-full border rounded p-2 font-mono dark:bg-slate-900 dark:border-slate-700" value={draft.pattern || ''}
                        onChange={(e) => setDraft((d: any) => ({ ...d, pattern: e.target.value }))} />
               </Row>
             </>
@@ -100,15 +100,15 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
           {draft.type === 'number' && (
             <>
               <Row label="Mínimo">
-                <input type="number" className="w-full border rounded p-2" value={draft.min ?? ''}
+                <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.min ?? ''}
                        onChange={(e) => setDraft((d: any) => ({ ...d, min: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
               <Row label="Máximo">
-                <input type="number" className="w-full border rounded p-2" value={draft.max ?? ''}
+                <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.max ?? ''}
                        onChange={(e) => setDraft((d: any) => ({ ...d, max: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
               <Row label="Step">
-                <input type="number" className="w-full border rounded p-2" value={draft.step ?? ''}
+                <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.step ?? ''}
                        onChange={(e) => setDraft((d: any) => ({ ...d, step: e.target.value === '' ? undefined : Number(e.target.value) }))} />
               </Row>
             </>
@@ -151,7 +151,7 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
           {draft.type === 'document' && (
             <>
               <Row label="Extensiones">
-                <input className="w-full border rounded p-2" placeholder=".pdf,.jpg"
+                <input className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" placeholder=".pdf,.jpg"
                        value={(draft.accept || []).join(',')}
                        onChange={(e) => setDraft((d: any) => ({
                          ...d,
@@ -159,7 +159,7 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
                        }))} />
               </Row>
               <Row label="Tamaño MB">
-                <input type="number" className="w-full border rounded p-2" value={draft.maxSizeMB ?? ''}
+                <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.maxSizeMB ?? ''}
                        onChange={(e) => setDraft((d: any) => ({
                          ...d, maxSizeMB: e.target.value === '' ? undefined : Number(e.target.value)
                        }))} />
@@ -170,7 +170,7 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
           {draft.type === 'sum' && (
             <>
               <Row label="Decimales">
-                <input type="number" className="w-full border rounded p-2" value={draft.decimals ?? 0}
+                <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={draft.decimals ?? 0}
                        onChange={(e) => setDraft((d: any) => ({ ...d, decimals: Number(e.target.value) || 0 }))} />
               </Row>
               <div>
@@ -202,7 +202,7 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
             <>
               <Row label="Default relativo">
                 <input
-                  className="w-full border rounded p-2"
+                  className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
                   placeholder="e.g. +0 days"
                   value={draft.defaultRelative || ''}
                   onChange={(e) => setDraft((d: any) => ({ ...d, defaultRelative: e.target.value }))}
@@ -213,7 +213,7 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
 
           {draft.type === 'info' && (
             <Row label="HTML">
-              <textarea className="w-full border rounded p-2" rows={3} value={draft.html || ''}
+              <textarea className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" rows={3} value={draft.html || ''}
                         onChange={(e) => setDraft((d: any) => ({ ...d, html: e.target.value }))} />
             </Row>
           )}
