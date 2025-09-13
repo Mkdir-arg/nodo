@@ -1,19 +1,19 @@
-"use client";
+'use client';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { PlantillasService } from '@/lib/PlantillasService';
 
-export default function TemplatesPage() {
-  const { data } = useQuery({ queryKey: ['templates'], queryFn: () => api.get('/templates/').then(res => res.data) });
+export default function PlantillasPage() {
+  const { data } = useQuery<any>({ queryKey: ['plantillas'], queryFn: PlantillasService.fetchPlantillas });
   return (
-    <div className="p-4">
-      <h1 className="text-xl mb-4">Plantillas</h1>
-      <Link href="/plantillas/nueva" className="text-blue-600">Nueva plantilla</Link>
+    <div>
+      <h1 className="text-2xl mb-4">Plantillas</h1>
+      <Link href="/plantillas/crear" className="border px-2 py-1">Crear</Link>
       <ul className="mt-4 space-y-2">
-        {data?.map((t: any) => (
-          <li key={t.id} className="border p-2 rounded">
-            {t.name} v{t.version}
-            <Link href={`/plantillas/${t.id}/editar`} className="ml-2 text-sm text-blue-600">Editar</Link>
+        {data?.results?.map((p:any)=>(
+          <li key={p.id} className="border p-2 flex justify-between">
+            <span>{p.nombre} v{p.version}</span>
+            <Link href={`/plantillas/editar/${p.id}`} className="text-blue-600">Editar</Link>
           </li>
         ))}
       </ul>
