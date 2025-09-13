@@ -8,7 +8,7 @@ import BuilderHeader from './BuilderHeader';
 import FieldPropertiesModal from './FieldPropertiesModal';
 
 export default function Builder({ template }: { template?: any }) {
-  const { setTemplate, dirty, sections, addSection, selected } = useBuilderStore();
+  const { setTemplate, dirty, sections, addSection } = useBuilderStore();
 
   const [openComponents, setOpenComponents] = useState(false);
   const [propsId, setPropsId] = useState<string | null>(null);
@@ -20,11 +20,6 @@ export default function Builder({ template }: { template?: any }) {
   useEffect(() => {
     if (!sections?.length) addSection();
   }, [sections?.length, addSection]);
-
-  // Abrir modal de propiedades si hay un campo seleccionado
-  useEffect(() => {
-    if (selected?.type === 'field') setPropsId(selected.id);
-  }, [selected]);
 
   // Confirmación al salir con cambios sin guardar
   useEffect(() => {
