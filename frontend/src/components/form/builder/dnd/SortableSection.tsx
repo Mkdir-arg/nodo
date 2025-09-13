@@ -31,13 +31,11 @@ export default function SortableSection({
   const fieldIds = useMemo(() => (section.children || []).map((n: any) => n.id), [section.children]);
 
   return (
-    <section
-      ref={setNodeRef}
-      style={style}
-      className={`rounded-2xl border p-3 bg-white/50 ${isSel ? 'ring-2 ring-sky-300' : ''}`}
-      onClick={() => setSelected({ type: 'section', id })}
-    >
-      <header className="flex items-center justify-between rounded-xl px-3 py-2 mb-3">
+    <section ref={setNodeRef} style={style} className="rounded-2xl border p-3 bg-white/50">
+      <header
+        className={`flex items-center justify-between rounded-xl px-3 py-2 mb-3 ${isSel ? 'ring-2 ring-sky-300' : ''}`}
+        onClick={() => setSelected({ type: 'section', id })}
+      >
         <div className="flex items-center gap-2">
           <button
             type="button"

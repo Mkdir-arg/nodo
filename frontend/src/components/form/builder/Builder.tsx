@@ -38,13 +38,9 @@ export default function Builder({ template }: { template?: any }) {
 
   // Escucha eventos para abrir propiedades explícitamente
   useEffect(() => {
-    const open = (e: CustomEvent<{ id?: string }>) => setPropsId(e.detail?.id || null);
-    // @ts-expect-error: CustomEvent typing for addEventListener
-    window.addEventListener('builder:open-props', open);
-    return () => {
-      // @ts-expect-error: CustomEvent typing for removeEventListener
-      window.removeEventListener('builder:open-props', open);
-    };
+    const open = (e: any) => setPropsId(e.detail?.id || null);
+    window.addEventListener('builder:open-props', open as any);
+    return () => window.removeEventListener('builder:open-props', open as any);
   }, []);
 
   useEffect(() => {
