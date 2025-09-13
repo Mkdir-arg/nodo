@@ -16,8 +16,6 @@ interface ActiveLinkProps {
 export default function ActiveLink({ href, children, className, title }: ActiveLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === href;
-
-  // aviso de cambios sin guardar (si lo usás en el builder)
   const dirty = useBuilderStore((s) => s.dirty);
   const setDirty = useBuilderStore((s) => s.setDirty);
 
@@ -26,9 +24,7 @@ export default function ActiveLink({ href, children, className, title }: ActiveL
       e.preventDefault();
       return;
     }
-    if (dirty) {
-      setDirty(false);
-    }
+    if (dirty) setDirty(false);
   };
 
   return (
@@ -49,3 +45,4 @@ export default function ActiveLink({ href, children, className, title }: ActiveL
     </Link>
   );
 }
+
