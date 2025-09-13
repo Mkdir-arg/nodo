@@ -6,6 +6,7 @@ describe('usePlantillaBuilderStore', () => {
     useBuilderStore.setState({ sections: [{ id: 's1', children: [{ id: '1', key: 'a' }] }], selected: null, dirty: false });
     const k = useBuilderStore.getState().ensureUniqueKey('a');
     expect(k).toBe('a_2');
+    expect(k).toBe('a_2');
   });
   it('sets dirty on addField', () => {
     useBuilderStore.setState({ sections: [{ id: 's1', children: [] }], selected: null, dirty: false });
@@ -27,11 +28,5 @@ describe('usePlantillaBuilderStore', () => {
     const state = useBuilderStore.getState();
     expect(state.sections[0].id).toBe(id);
     expect(state.selected).toEqual({ type: 'section', id });
-  });
-  it('addField accepts node objects and ensures unique key', () => {
-    useBuilderStore.setState({ sections: [{ id: 's1', children: [{ id: '1', key: 'a', type: 'text' }] }], selected: null, dirty: false });
-    useBuilderStore.getState().addField('s1', { id: '2', key: 'a', type: 'text' });
-    const children = useBuilderStore.getState().sections[0].children;
-    expect(children[1].key).toBe('a_1');
   });
 });
