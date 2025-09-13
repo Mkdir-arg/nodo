@@ -3,11 +3,13 @@ import { create } from 'zustand';
 import { newField, FieldType } from '@/lib/form-builder/factory';
 import { arrayMove } from '@dnd-kit/sortable';
 
+
 export type ValidationError = { code: string; message: string; path?: string[] };
 
 function isSelectType(t: string) {
   return ['select', 'multiselect', 'dropdown', 'select_with_filter'].includes(t);
 }
+
 
 export type FieldNode = {
   id: string;
