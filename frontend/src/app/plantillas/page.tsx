@@ -1,19 +1,10 @@
 'use client';
-<<<<<<< HEAD
-import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { PlantillasService } from '@/lib/PlantillasService';
-
-export default function PlantillasPage() {
-  const { data } = useQuery<any>({ queryKey: ['plantillas'], queryFn: PlantillasService.fetchPlantillas });
-=======
 import useSWR from 'swr';
 import Link from 'next/link';
 import { PlantillasService } from '@/lib/PlantillasService';
 
 export default function PlantillasPage() {
   const { data } = useSWR('/plantillas', PlantillasService.fetchPlantillas);
->>>>>>> main
   return (
     <div>
       <h1 className="text-2xl mb-4">Plantillas</h1>

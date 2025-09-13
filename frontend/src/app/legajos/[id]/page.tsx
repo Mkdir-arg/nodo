@@ -1,4 +1,5 @@
 import { LegajosService } from '@/lib/LegajosService';
+import { LegajosService } from '@/lib/LegajosService';
 
 export default async function LegajoDetallePage({ params }:{params:{id:string}}) {
   const legajo: any = await LegajosService.fetchLegajo(params.id);
