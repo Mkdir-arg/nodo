@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Folder, FolderOpen, FilePlus, ChevronLeft, ChevronRight } from 'lucide-react'; // 👈 Folder en vez de FolderClosed
+import { Folder, FolderOpen, FilePlus2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
@@ -15,9 +15,21 @@ interface SideNavProps {
   onToggleMini: () => void;
 }
 
+// Helper: si un icono viniera undefined, renderiza fallback y evita el crash
+function SafeIcon(Comp: any, props: any) {
+  if (typeof Comp === 'function') return <Comp {...props} />;
+  if (process.env.NODE_ENV !== 'production') {
+    // ayuda para debuggear qué ícono faltó
+    // eslint-disable-next-line no-console
+    console.warn('SafeIcon: icon component is undefined. Props:', props);
+  }
+  return <span aria-hidden>■</span>;
+}
+
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
   const plantillasItem = NAV_ITEMS.find((i) => i.href === '/plantillas');
+
   return (
     <aside
       className={clsx(
@@ -36,8 +48,12 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={dashboardItem.label}
             >
-              <dashboardItem.icon className="h-5 w-5" aria-hidden />
-              {mini ? <span className="sr-only">{dashboardItem.label}</span> : <span>{dashboardItem.label}</span>}
+              {SafeIcon(dashboardItem.icon, { className: 'h-5 w-5', 'aria-hidden': true })}
+              {mini ? (
+                <span className="sr-only">{dashboardItem.label}</span>
+              ) : (
+                <span>{dashboardItem.label}</span>
+              )}
             </ActiveLink>
           )}
 
@@ -49,8 +65,12 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={plantillasItem.label}
             >
-              <plantillasItem.icon className="h-5 w-5" aria-hidden />
-              {mini ? <span className="sr-only">{plantillasItem.label}</span> : <span>{plantillasItem.label}</span>}
+              {SafeIcon(plantillasItem.icon, { className: 'h-5 w-5', 'aria-hidden': true })}
+              {mini ? (
+                <span className="sr-only">{plantillasItem.label}</span>
+              ) : (
+                <span>{plantillasItem.label}</span>
+              )}
             </ActiveLink>
           )}
         </div>
@@ -88,11 +108,14 @@ function LegajosMenu() {
           pathname?.startsWith('/legajos') && 'bg-slate-200/60 dark:bg-slate-800/60'
         )}
       >
-        {open ? <FolderOpen size={18} /> : <Folder size={18} />}{/* 👈 Folder en lugar de FolderClosed */}
+        {/* usar SafeIcon para evitar crash si el icono no existe */}
+        {open
+          ? SafeIcon(FolderOpen, { size: 18 })
+          : SafeIcon(Folder, { size: 18 })}
         <span className="flex-1 text-left">Legajos</span>
       </button>
 
-      {/* Animación sin framer-motion */}
+      {/* Despliegue con CSS (sin framer-motion) */}
       <div
         className={clsx(
           'pl-6 overflow-hidden transition-[grid-template-rows,opacity] duration-200 grid',
@@ -102,7 +125,7 @@ function LegajosMenu() {
         <ul className="min-h-0 overflow-hidden">
           <li className="mt-2 mb-1">
             <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
-              <FilePlus size={16} /> <span>Ver legajos</span>
+              {SafeIcon(FilePlus2, { size: 16 })} <span>Ver legajos</span>
             </Link>
           </li>
 
@@ -125,3 +148,4 @@ function LegajosMenu() {
     </div>
   );
 }
+
