@@ -36,7 +36,8 @@ export async function http(path: string, opts: HttpOptions = {}) {
 
     if (!res.ok) {
       if (ct.includes('text/html')) {
-        throw new Error(`Respuesta HTML ${res.status} desde ${url}. Verificá NEXT_PUBLIC_API_BASE o el rewrite.`);
+        const snippet = (text || '').slice(0, 400);
+        throw new Error(`HTTP ${res.status}. HTML: ${snippet}`);
       }
       try {
         const json = text ? JSON.parse(text) : {};
