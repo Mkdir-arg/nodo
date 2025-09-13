@@ -19,11 +19,11 @@ export default function DeleteConfirm({
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onCancel} />
-      <div className="absolute left-1/2 top-24 -translate-x-1/2 w-[min(520px,92vw)] bg-white rounded-2xl shadow-xl p-5">
+      <div className="absolute left-1/2 top-24 -translate-x-1/2 w-[min(520px,92vw)] bg-white rounded-2xl shadow-xl p-5 dark:bg-slate-800 dark:border dark:border-slate-700">
         <h4 className="text-lg font-semibold mb-2">{title}</h4>
         <p className="text-sm opacity-80 mb-4">{message}</p>
         <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="px-4 py-2 rounded border">
+          <button onClick={onCancel} className="px-4 py-2 rounded border dark:border-slate-700">
             Cancelar
           </button>
           <button

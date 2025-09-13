@@ -1,12 +1,15 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { serializeTemplateSchema } from '@/lib/serializeTemplate';
+import { PLANTILLAS_QUERY_KEY } from '@/lib/hooks/usePlantillasMin';
 
 export default function BuilderHeader() {
   const router = useRouter();
+  const qc = useQueryClient();
   const { sections, validateAll, nombre, setNombre, resetDirty } = useBuilderStore();
   const [saving, setSaving] = useState(false);
 
@@ -27,6 +30,8 @@ export default function BuilderHeader() {
         descripcion: '',
         schema,
       });
+      await qc.invalidateQueries({ queryKey: PLANTILLAS_QUERY_KEY });
+      await qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
 
       // limpiar flags/auto-save y volver
       resetDirty();

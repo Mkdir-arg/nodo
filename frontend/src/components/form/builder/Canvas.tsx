@@ -84,10 +84,9 @@ export default function Canvas() {
           type="button"
           onClick={() => {
             addSection();
-            // opcional: abrir modal de componentes automáticamente
             setTimeout(() => window.dispatchEvent(new Event('builder:open-components')), 0);
           }}
-          className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50"
+          className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
         >
           + Agregar sección
         </button>
@@ -101,12 +100,13 @@ export default function Canvas() {
         </div>
       </SortableContext>
 
-      {activeFieldNode && (
-        <DragOverlay>
-          <FieldCard node={activeFieldNode} readonly />
-        </DragOverlay>
-      )}
+      <DragOverlay>
+        {activeFieldNode ? (
+          <div className="min-w-[280px] rounded-xl border bg-white p-3 shadow-lg dark:bg-slate-800 dark:border-slate-700">
+            <FieldCard node={activeFieldNode} readonly />
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
-

@@ -1,7 +1,7 @@
 'use client';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 
-function MiniPreview({ node }: { node:any }) {
+function MiniPreview({ node }: { node: any }) {
   const label = node.label || 'Sin título';
   switch (node.type) {
     case 'text':
@@ -9,21 +9,33 @@ function MiniPreview({ node }: { node:any }) {
       return (
         <>
           <div className="font-medium">{label}</div>
-          <input className="w-full border rounded p-2" placeholder={node.placeholder || ''} readOnly />
+          <input
+            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+            placeholder={node.placeholder || ''}
+            readOnly
+          />
         </>
       );
     case 'number':
       return (
         <>
           <div className="font-medium">{label}</div>
-          <input type="number" className="w-full border rounded p-2" readOnly />
+          <input
+            type="number"
+            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+            readOnly
+          />
         </>
       );
     case 'date':
       return (
         <>
           <div className="font-medium">{label}</div>
-          <input type="date" className="w-full border rounded p-2" readOnly />
+          <input
+            type="date"
+            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+            readOnly
+          />
         </>
       );
     case 'select':
@@ -32,9 +44,14 @@ function MiniPreview({ node }: { node:any }) {
       return (
         <>
           <div className="font-medium">{label}</div>
-          <select className="w-full border rounded p-2" readOnly>
+          <select
+            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+            disabled
+          >
             <option>{node.placeholder || 'Seleccione...'}</option>
-            {(node.options || []).map((o:any)=> <option key={o.value}>{o.label}</option>)}
+            {(node.options || []).map((o: any) => (
+              <option key={o.value}>{o.label}</option>
+            ))}
           </select>
         </>
       );
@@ -43,8 +60,13 @@ function MiniPreview({ node }: { node:any }) {
         <>
           <div className="font-medium">{label}</div>
           <div className="flex flex-wrap gap-2">
-            {(node.options||[]).slice(0,3).map((o:any)=>(
-              <span key={o.value} className="px-2 py-1 rounded border text-xs">{o.label}</span>
+            {(node.options || []).slice(0, 3).map((o: any) => (
+              <span
+                key={o.value}
+                className="px-2 py-1 rounded border text-xs dark:border-slate-700"
+              >
+                {o.label}
+              </span>
             ))}
           </div>
         </>
@@ -53,31 +75,65 @@ function MiniPreview({ node }: { node:any }) {
       return (
         <>
           <div className="font-medium">{label}</div>
-          <input type="file" className="w-full border rounded p-2" readOnly />
-          <p className="text-xs opacity-60">Ext: {(node.accept||[]).join(', ')} • Max {node.maxSizeMB||'—'}MB</p>
+          <input
+            type="file"
+            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+            disabled
+          />
+          <p className="text-xs opacity-60">
+            Ext: {(node.accept || []).join(', ')} • Max {node.maxSizeMB || '—'}MB
+          </p>
         </>
       );
     case 'sum':
-      return (<><div className="font-medium">{label}</div><input className="w-full border rounded p-2 bg-gray-50" value="(auto)" readOnly /></>);
+      return (
+        <>
+          <div className="font-medium">{label}</div>
+          <input
+            className="w-full border rounded p-2 bg-gray-50 dark:bg-slate-700 dark:border-slate-700"
+            value="(auto)"
+            readOnly
+          />
+        </>
+      );
     case 'phone':
-      return (<><div className="font-medium">{label}</div><input type="tel" className="w-full border rounded p-2" readOnly /></>);
+      return (
+        <>
+          <div className="font-medium">{label}</div>
+          <input
+            type="tel"
+            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+            readOnly
+          />
+        </>
+      );
     case 'cuit_razon_social':
       return (
         <>
           <div className="font-medium">{label}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <input placeholder="CUIT" className="border rounded p-2" readOnly />
-            <input placeholder="Razón social" className="border rounded p-2" readOnly />
+            <input
+              placeholder="CUIT"
+              className="border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+              readOnly
+            />
+            <input
+              placeholder="Razón social"
+              className="border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
+              readOnly
+            />
           </div>
         </>
       );
     case 'info':
-      return (<div className="font-medium">{node.label || 'Texto informativo'}</div>);
+      return <div className="font-medium">{node.label || 'Texto informativo'}</div>;
     case 'group':
       return (
         <>
           <div className="font-medium">{node.label || 'Grupo'}</div>
-          <div className="rounded border p-2 text-xs opacity-70">Contiene { (node.children||[]).length } subcampos</div>
+          <div className="rounded border p-2 text-xs opacity-70 dark:border-slate-700">
+            Contiene {(node.children || []).length} subcampos
+          </div>
         </>
       );
     default:
@@ -85,25 +141,37 @@ function MiniPreview({ node }: { node:any }) {
   }
 }
 
-export default function FieldCard({ node, dragHandle, readonly }:{ node:any; dragHandle?: {attributes:any; listeners:any}; readonly?:boolean }) {
+type DragHandle = { attributes: any; listeners: any };
+export default function FieldCard({
+  node,
+  dragHandle,
+  readonly,
+}: {
+  node: any;
+  dragHandle?: DragHandle;
+  readonly?: boolean;
+}) {
   const { selected, setSelected, duplicateNode, removeNode } = useBuilderStore();
-  const isSel = selected?.id === node.id;
+  const isSel = selected?.type === 'field' && selected?.id === node.id;
 
   return (
     <div
-      className={`rounded-xl border bg-white p-3 space-y-2 ${readonly ? 'pointer-events-none' : 'cursor-pointer'} ${isSel ? 'ring-2 ring-sky-300' : 'hover:bg-gray-50'}`}
-      onClick={()=> !readonly && setSelected({type:'field', id: node.id})}
+      className={`rounded-xl border bg-white p-3 space-y-2 dark:bg-slate-800 dark:border-slate-700 ${
+        readonly ? 'pointer-events-none' : 'cursor-pointer'
+      } ${isSel ? 'ring-2 ring-sky-300' : 'hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+      onClick={() => !readonly && setSelected({ type: 'field', id: node.id })}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {dragHandle && (
             <button
               type="button"
-              className="px-2 py-1 border rounded text-xs cursor-grab"
+              aria-label="Arrastrar campo"
+              className="px-2 py-1 border rounded text-xs cursor-grab dark:border-slate-700 dark:text-slate-200"
               {...dragHandle.attributes}
               {...dragHandle.listeners}
-              onMouseDownCapture={(e)=>e.stopPropagation()}
-              onPointerDownCapture={(e)=>e.stopPropagation()}
+              onMouseDownCapture={(e) => e.stopPropagation()}
+              onPointerDownCapture={(e) => e.stopPropagation()}
             >
               ⠿
             </button>
@@ -112,9 +180,38 @@ export default function FieldCard({ node, dragHandle, readonly }:{ node:any; dra
         </div>
         {!readonly && (
           <div className="flex gap-2">
-            <button type="button" onClick={(e)=>{e.stopPropagation(); window.dispatchEvent(new CustomEvent('builder:open-props',{detail:{id: node.id}}));}} className="text-xs px-2 py-1 border rounded">Editar</button>
-            <button type="button" onClick={(e)=>{e.stopPropagation(); duplicateNode(node.id);}} className="text-xs px-2 py-1 border rounded">Duplicar</button>
-            <button type="button" onClick={(e)=>{e.stopPropagation(); removeNode(node.id);}} className="text-xs px-2 py-1 border rounded">Eliminar</button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(
+                  new CustomEvent('builder:open-props', { detail: { id: node.id } }),
+                );
+              }}
+              className="text-xs px-2 py-1 border rounded dark:border-slate-700"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                duplicateNode(node.id);
+              }}
+              className="text-xs px-2 py-1 border rounded dark:border-slate-700"
+            >
+              Duplicar
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeNode(node.id);
+              }}
+              className="text-xs px-2 py-1 border rounded dark:border-slate-700 text-red-600"
+            >
+              Eliminar
+            </button>
           </div>
         )}
       </div>
