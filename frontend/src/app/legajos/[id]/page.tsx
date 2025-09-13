@@ -1,29 +1,18 @@
-"use client";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { repo } from "@/lib/legajos/repo";
-import DynamicForm from "@/lib/legajos/renderer/Renderer";
-import { useClientGuard } from "@/lib/useClientGuard";
+import { LegajosService } from '@/lib/LegajosService';
 
-export default function LegajoDetail() {
-  useClientGuard();
-  const { id } = useParams<{id:string}>();
-  const [d,setD] = useState<any>(null);
-  const [t,setT] = useState<any>(null);
-
-  useEffect(()=>{ (async()=>{
-    const dossier = await repo.getDossier(id); setD(dossier);
-    if (dossier) setT(await repo.getTemplate(dossier.templateId));
-  })(); },[id]);
-
-  if (!d || !t) return <main className="p-6 text-white">Cargando…</main>;
-
+export default async function LegajoDetallePage({ params }:{params:{id:string}}) {
+  const legajo = await LegajosService.fetchLegajo(params.id);
   return (
-    <main className="p-6 text-white">
-      <h1 className="text-xl font-semibold mb-3">Legajo · {t.name}</h1>
-      <DynamicForm template={t} defaultValues={d.data} onSubmit={async (v)=>{
-        await repo.saveDossier({ ...d, data: v }); alert("Guardado");
-      }}/>
-    </main>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">Legajo</h1>
+      <div className="space-y-1 text-sm">
+        <div><strong>Plantilla:</strong> {legajo.plantilla}</div>
+        <div><strong>Creado:</strong> {new Date(legajo.created_at).toLocaleString()}</div>
+        <div><strong>Actualizado:</strong> {new Date(legajo.updated_at).toLocaleString()}</div>
+      </div>
+      <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
+        {JSON.stringify(legajo.data, null, 2)}
+      </pre>
+    </div>
   );
 }
