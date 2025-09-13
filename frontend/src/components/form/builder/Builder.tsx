@@ -18,7 +18,11 @@ export default function Builder({ template }: { template?: any }) {
   }, [template, setTemplate]);
 
   useEffect(() => {
-    if (!sections?.length) addSection();
+    if (!sections?.length) {
+      addSection();
+      // no marcar cambios por la sección inicial
+      setTimeout(() => useBuilderStore.getState().setDirty(false), 0);
+    }
   }, [sections?.length, addSection]);
 
   // Confirmación al salir con cambios sin guardar
