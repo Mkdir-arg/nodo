@@ -17,7 +17,7 @@ interface SideNavProps {
 
 // Helper: si un icono viniera undefined, renderiza fallback y evita el crash
 function SafeIcon(Comp: any, props: any) {
-  if (typeof Comp === 'function') return <Comp {...props} />;
+  if (Comp) return <Comp {...props} />;
   if (process.env.NODE_ENV !== 'production') {
     // ayuda para debuggear qué ícono faltó
     // eslint-disable-next-line no-console
