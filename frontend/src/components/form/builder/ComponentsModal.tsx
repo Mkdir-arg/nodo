@@ -44,9 +44,11 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
                   <button key={type} type="button"
                     onClick={()=>{
                       const sid = sectionId || addSection();
-                      try { addField(sid, type as any); }
-                      catch { addField(sid, newField(type)); }
+                      let id: string | undefined;
+                      try { id = addField(sid, type as any) as string; }
+                      catch { id = addField(sid, newField(type)) as string; }
                       onClose();
+                      if (id) window.dispatchEvent(new CustomEvent('builder:open-props',{detail:{id}}));
                     }}
                     className="border rounded-xl p-2 text-left hover:bg-gray-50 focus:outline-none focus:ring">
                     {label}
