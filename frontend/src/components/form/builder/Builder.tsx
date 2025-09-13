@@ -48,6 +48,12 @@ export default function Builder({ template }: { template?: any }) {
     };
   }, []);
 
+  useEffect(() => {
+    const open = () => setOpenComponents(true);
+    window.addEventListener('builder:open-components', open);
+    return () => window.removeEventListener('builder:open-components', open);
+  }, []);
+
   return (
     <>
       <BuilderHeader />
