@@ -15,7 +15,15 @@ class LegajoSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at", "updated_at")
 
     def _flat(self, data: Dict[str, Any]):
-        return data
+        flat: Dict[str, Any] = {}
+        def visit(obj: Dict[str, Any], prefix: str = ""):
+            for k, v in obj.items():
+                key = f"{prefix}{k}" if not prefix else f"{prefix}.{k}"
+                flat[key] = v
+                if isinstance(v, dict):
+                    visit(v, key)
+        visit(data)
+        return flat
 
     def _eval_conds(self, values: Dict[str, Any], conds: List[Dict[str, Any]]):
         def ok(c):

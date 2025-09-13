@@ -7,6 +7,9 @@ export default function NumberField({ field }:{field:any}) {
       <input
         type="number"
         className="border rounded px-2 py-1"
+        step={field.step}
+        min={field.min}
+        max={field.max}
         {...register(field.key, { valueAsNumber: true })}
       />
     </div>
