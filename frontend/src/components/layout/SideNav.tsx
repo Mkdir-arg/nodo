@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { FolderClosed, FolderOpen, FilePlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Folder, FolderOpen, FilePlus, ChevronLeft, ChevronRight } from 'lucide-react'; // 👈 Folder en vez de FolderClosed
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
@@ -88,7 +88,7 @@ function LegajosMenu() {
           pathname?.startsWith('/legajos') && 'bg-slate-200/60 dark:bg-slate-800/60'
         )}
       >
-        {open ? <FolderOpen size={18} /> : <FolderClosed size={18} />}
+        {open ? <FolderOpen size={18} /> : <Folder size={18} />}{/* 👈 Folder en lugar de FolderClosed */}
         <span className="flex-1 text-left">Legajos</span>
       </button>
 
@@ -125,4 +125,3 @@ function LegajosMenu() {
     </div>
   );
 }
-

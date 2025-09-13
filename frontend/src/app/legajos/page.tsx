@@ -3,6 +3,7 @@ export default function LegajosPage() {
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Legajos</h1>
       <p>Listado de legajos</p>
+      {/* TODO: aquí va la grilla/listado real cuando lo tengas */}
     </div>
   );
 }
