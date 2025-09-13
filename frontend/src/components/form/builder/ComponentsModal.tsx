@@ -20,6 +20,7 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
   const sections = useBuilderStore(s=>s.sections);
   const selected = useBuilderStore(s=>s.selected);
   const addField = useBuilderStore(s=>s.addField);
+  const addSection = useBuilderStore(s=>s.addSection);
   const sectionId = selected?.type==="section" ? selected.id : sections?.[0]?.id;
 
   useEffect(()=>{
@@ -42,9 +43,9 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
                 {items.map(([type, label])=>(
                   <button key={type} type="button"
                     onClick={()=>{
-                      if (!sectionId) return onClose();
-                      try { addField(sectionId, type as any); }
-                      catch { addField(sectionId, newField(type)); }
+                      const sid = sectionId || addSection();
+                      try { addField(sid, type as any); }
+                      catch { addField(sid, newField(type)); }
                       onClose();
                     }}
                     className="border rounded-xl p-2 text-left hover:bg-gray-50 focus:outline-none focus:ring">

@@ -20,6 +20,7 @@ export default function ComponentSidebar() {
   const sections = useBuilderStore(s=>s.sections);
   const selected = useBuilderStore(s=>s.selected);
   const addField = useBuilderStore(s=>s.addField);
+  const addSection = useBuilderStore(s=>s.addSection);
   const [q, setQ] = useState("");
 
   const sectionId = useMemo(()=>{
@@ -28,9 +29,9 @@ export default function ComponentSidebar() {
   }, [selected, sections]);
 
   const handleAdd = (t: FieldType) => {
-    if (!sectionId) return window.dispatchEvent(new CustomEvent("toast",{detail:{type:"error",msg:"Creá una sección primero"}}));
-    try { addField(sectionId, t as any); }
-    catch { addField(sectionId, newField(t) as any); }
+    const sid = sectionId || addSection();
+    try { addField(sid, t as any); }
+    catch { addField(sid, newField(t) as any); }
   };
 
   const Block = ({title, items}:{title:string; items:[FieldType,string][]}) => (
