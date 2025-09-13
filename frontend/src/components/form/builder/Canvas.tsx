@@ -1,50 +1,78 @@
 'use client';
-import { DndContext, DragEndEvent, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
+import {
+  DndContext, DragEndEvent, DragOverlay,
+  MouseSensor, TouchSensor, useSensor, useSensors, closestCorners
+} from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useMemo, useState } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import SortableSection from './dnd/SortableSection';
 import FieldCard from './FieldCard';
 
-const DROP_PREFIX = 'drop-'; // droppable vacío al final de cada sección
+const DROP_PREFIX = 'drop-';
 
 export default function Canvas() {
   const { sections, moveSection, moveField, addSection } = useBuilderStore();
-  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
-  const [activeField, setActiveField] = useState<any>(null);
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } })
+  );
+
+  const [activeField, setActiveField] = useState<any>(null);
   const sectionIds = useMemo(() => sections.map((s: any) => s.id), [sections]);
+
+  const targetSectionFromOver = (over: any): string | null => {
+    if (!over) return null;
+    const id = String(over.id);
+    const data = over.data?.current;
+    if (data?.type === 'section') return String(over.id);
+    if (data?.type === 'field') return data.sectionId || null;
+    if (data?.type === 'section-drop') return data.sectionId || null;
+    if (id.startsWith(DROP_PREFIX)) return id.replace(DROP_PREFIX, '');
+    return null;
+  };
 
   const onDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (!over) return;
+    if (!over) { setActiveField(null); return; }
+
     const activeType = active.data.current?.type as 'section' | 'field' | undefined;
-    const overId = String(over.id);
+
     if (activeType === 'section') {
-      moveSection(String(active.id), overId);
+      const toSection = targetSectionFromOver(over);
+      if (toSection) moveSection(String(active.id), toSection);
     } else if (activeType === 'field') {
-      // si over es "drop-<secId>", mover al final de esa sección
-      if (overId.startsWith(DROP_PREFIX)) {
-        const toSec = overId.replace(DROP_PREFIX, '');
-        moveField(String(active.id), null, toSec);
+      const overData = over.data.current;
+      if (overData?.type === 'section-drop') {
+        moveField(String(active.id), null, overData.sectionId);
+      } else if (overData?.type === 'section') {
+        moveField(String(active.id), null, String(over.id)); // al final de esa sección
       } else {
-        // mover antes del campo "over"; si es otra sección, se detecta adentro de moveField
-        moveField(String(active.id), overId);
+        moveField(String(active.id), String(over.id)); // antes del campo over
       }
     }
     setActiveField(null);
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCorners}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
       onDragEnd={onDragEnd}
-      onDragStart={(e)=>{ if(e.active.data.current?.type==='field'){ setActiveField(e.active.data.current?.node);} }}>
+      onDragStart={(e) => {
+        if (e.active.data.current?.type === 'field') {
+          setActiveField(e.active.data.current?.node);
+        }
+      }}
+    >
       {/* Barra para crear secciones */}
       <div className="mb-4">
         <button
           type="button"
           onClick={() => {
             addSection();
+            // opcional: abrir modal de componentes automáticamente
             setTimeout(() => window.dispatchEvent(new Event('builder:open-components')), 0);
           }}
           className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50"
