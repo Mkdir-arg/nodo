@@ -102,4 +102,9 @@ export const PlantillasService = {
 
   updatePlantilla: (id: string, payload: any) =>
     postPutWithFallback('PUT', `/plantillas/${id}`, `/formularios/${id}`, payload),
+
+  deletePlantilla: (id: string) =>
+    apiFetch(`/plantillas/${id}`, { method: 'DELETE' }).catch(() =>
+      apiFetch(`/formularios/${id}`, { method: 'DELETE' })
+    ),
 };
