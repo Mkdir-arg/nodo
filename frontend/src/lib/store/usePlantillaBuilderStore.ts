@@ -3,6 +3,12 @@ import { create } from 'zustand';
 import { newField, FieldType } from '@/lib/form-builder/factory';
 import { arrayMove } from '@dnd-kit/sortable';
 
+export type ValidationError = { code: string; message: string; path?: string[] };
+
+function isSelectType(t: string) {
+  return ['select', 'multiselect', 'dropdown', 'select_with_filter'].includes(t);
+}
+
 type FieldNode = any;
 interface Section { id: string; title?: string; children: FieldNode[]; }
 type Selected = { type: 'section' | 'field'; id: string } | null;
@@ -34,6 +40,7 @@ interface State {
   moveField: (activeId: string, overId?: string | null, toSectionId?: string) => void;
   collectKeysByType: (t: string) => string[];
   ensureUniqueKey: (base: string) => string;
+  validateAll: () => ValidationError[];
   setSelected: (sel: Selected) => void;
   findSectionIdByField: (fieldId: string) => string | null;
   getSectionIdForInsert: () => string;
@@ -283,6 +290,68 @@ export const useBuilderStore = create<State>((set, get) => ({
     return { ...state, sections, selected: { type: 'field', id: removed.id }, dirty: true };
   }),
 
+  validateAll: () => {
+    const errs: ValidationError[] = [];
+    const { sections } = get();
+
+    if (!sections || sections.length === 0) {
+      errs.push({ code: 'NO_SECTIONS', message: 'Debe existir al menos una sección.' });
+      return errs;
+    }
+
+    // No permitir secciones vacías, y recolectar keys
+    const keySet = new Set<string>();
+    const numericKeys = new Set<string>();
+
+    sections.forEach((sec, i) => {
+      const path = [`Sección ${i + 1}`];
+      const children = sec.children || [];
+
+      if (children.length === 0) {
+        errs.push({ code: 'EMPTY_SECTION', message: 'La sección no puede estar vacía.', path });
+      }
+
+      children.forEach((n, j) => {
+        const fpath = [...path, n.label || n.key || `Campo ${j + 1}`];
+
+        // key
+        if (!n.key || !n.key.trim()) {
+          errs.push({ code: 'MISSING_KEY', message: 'Falta la key del campo.', path: fpath });
+        } else if (keySet.has(n.key)) {
+          errs.push({ code: 'DUP_KEY', message: `Key duplicada: "${n.key}"`, path: fpath });
+        } else {
+          keySet.add(n.key);
+        }
+
+        // select/multiselect/dropdown => al menos 1 opción
+        if (isSelectType(n.type)) {
+          const opts = Array.isArray(n.options) ? n.options : [];
+          if (opts.length === 0) {
+            errs.push({ code: 'EMPTY_OPTIONS', message: 'Debe definir al menos 1 opción.', path: fpath });
+          }
+        }
+
+        // number: recolectar keys numéricas
+        if (n.type === 'number' && n.key) numericKeys.add(n.key);
+
+        // sum: sources deben ser numéricas válidas
+        if (n.type === 'sum') {
+          const sources = Array.isArray(n.sources) ? n.sources : [];
+          const invalid = sources.filter((s: string) => !numericKeys.has(s));
+          if (invalid.length) {
+            errs.push({
+              code: 'SUM_SOURCES',
+              message: `Las fuentes de suma deben ser campos numéricos. Inválidas: ${invalid.join(', ')}`,
+              path: fpath,
+            });
+          }
+        }
+      });
+    });
+
+    return errs;
+  },
+
   /** Keys disponibles por tipo (útil para sum.sources) */
   collectKeysByType: (t: string) => {
     const keys: string[] = [];
@@ -296,18 +365,12 @@ export const useBuilderStore = create<State>((set, get) => ({
   },
 
   ensureUniqueKey: (base) => {
-    const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-    const tryKey = slug(base || 'campo');
-    const all = new Set<string>();
-    const walk = (nodes: any[]) => nodes.forEach(n => {
-      if (n.type === 'section') return walk(n.children || []);
-      if (n.key) all.add(n.key);
-    });
-    walk(get().sections || []);
-    if (!all.has(tryKey)) return tryKey;
-    let i = 2;
-    while (all.has(`${tryKey}_${i}`)) i++;
-    return `${tryKey}_${i}`;
+    const keys = new Set<string>();
+    (get().sections || []).forEach((s: any) => (s.children || []).forEach((n: any) => n.key && keys.add(n.key)));
+    let k = base;
+    let c = 2;
+    while (keys.has(k)) k = `${base}_${c++}`;
+    return k;
   },
 
   setDirty: (d) => set({ dirty: d }),
