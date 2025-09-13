@@ -40,6 +40,7 @@ export default function SortableSection({
       <header className="flex items-center justify-between rounded-xl px-3 py-2 mb-3">
         <div className="flex items-center gap-2">
           <button
+            type="button"
             className="px-2 py-1 border rounded text-xs cursor-grab"
             {...attributes}
             {...listeners}

@@ -98,6 +98,7 @@ export default function FieldCard({ node, dragHandle, readonly }:{ node:any; dra
         <div className="flex items-center gap-2">
           {dragHandle && (
             <button
+              type="button"
               className="px-2 py-1 border rounded text-xs cursor-grab"
               {...dragHandle.attributes}
               {...dragHandle.listeners}

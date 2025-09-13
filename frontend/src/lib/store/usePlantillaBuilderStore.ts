@@ -3,12 +3,25 @@ import { create } from 'zustand';
 import { newField, FieldType } from '@/lib/form-builder/factory';
 import { arrayMove } from '@dnd-kit/sortable';
 
-type FieldNode = any;
-interface Section { id: string; title?: string; children: FieldNode[]; }
+export type FieldNode = {
+  id: string;
+  type: string;
+  key?: string;
+  label?: string;
+  [k: string]: any;
+};
+
+export type SectionNode = {
+  id: string;
+  title?: string;
+  children: FieldNode[];
+  [k: string]: any;
+};
+
 type Selected = { type: 'section' | 'field'; id: string } | null;
 
-interface State {
-  sections: Section[];
+export interface BuilderState {
+  sections: SectionNode[];
   selected: Selected;
   dirty: boolean;
 
@@ -41,7 +54,7 @@ interface State {
   _locateNode: (id: string) => any;
 }
 
-export const useBuilderStore = create<State>((set, get) => ({
+export const useBuilderStore = create<BuilderState>((set, get) => ({
   sections: [],
   selected: null,
   dirty: false,
