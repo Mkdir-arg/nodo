@@ -1,10 +1,19 @@
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import DynamicForm from '@/components/runtime/DynamicForm';
+'use client';
+import { useSearchParams, useRouter } from 'next/navigation';
+import useSWR from 'swr';
+import { PlantillasService } from '@/lib/PlantillasService';
+import { LegajosService } from '@/lib/LegajosService';
+import DynamicForm from '@/components/form/runtime/DynamicForm';
 
-export default function NewRecordPage() {
-  const { data } = useQuery({ queryKey: ['templates'], queryFn: () => api.get('/templates/').then(res => res.data) });
-  if (!data) return <div>Sin plantillas</div>;
-  const template = data[0];
-  return <DynamicForm template={template} onSubmit={(d)=>api.post('/records/', d)} />;
+export default function NuevoLegajoPage() {
+  const params = useSearchParams();
+  const plantillaId = params.get('plantillaId');
+  const { data } = useSWR(plantillaId?`/plantillas/${plantillaId}`:null, ()=>PlantillasService.fetchPlantilla(plantillaId!));
+  const router = useRouter();
+  if(!plantillaId) return <div>Falta plantillaId</div>;
+  if(!data) return <div>Cargando...</div>;
+  return <DynamicForm schema={data.schema} onSubmit={async (values)=>{
+    const res = await LegajosService.createLegajo({plantilla: data.id, data: values});
+    router.push(`/legajos/${res.id}`);
+  }} />;
 }
