@@ -7,19 +7,14 @@ export function usePlantillasMin() {
   return useQuery({
     queryKey: PLANTILLAS_QUERY_KEY,
     queryFn: async () => {
-      try {
-        const res = await PlantillasService.fetchPlantillas({ page: 1, page_size: 100 });
-        // Mapea a lo mínimo necesario para el menú
-        return (res.results || []).map((p: any) => ({
-          id: p.id,
-          nombre: p.nombre,
-          version: p.version,
-          estado: p.estado,
-        }));
-      } catch (err) {
-        console.error(err);
-        return [];
-      }
+      const res = await PlantillasService.fetchPlantillas({ page: 1, page_size: 100 });
+      // Mapea a lo mínimo necesario para el menú
+      return (res.results || []).map((p: any) => ({
+        id: p.id,
+        nombre: p.nombre,
+        version: p.version,
+        estado: p.estado,
+      }));
     },
     staleTime: 60_000,
   });
