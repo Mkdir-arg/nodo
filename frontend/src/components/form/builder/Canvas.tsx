@@ -2,12 +2,13 @@
 import {
   DndContext,
   DragEndEvent,
-  DragOverlay,
+  DragStartEvent,
   MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
+  DragOverlay,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useMemo, useState } from 'react';
@@ -22,18 +23,17 @@ export default function Canvas() {
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } })
+    useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 6 } })
   );
 
-  const [activeField, setActiveField] = useState<any>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeType, setActiveType] = useState<'section' | 'field' | null>(null);
   const sectionIds = useMemo(() => sections.map((s: any) => s.id), [sections]);
+  const [activeFieldNode, setActiveFieldNode] = useState<any>(null);
 
-  const targetSectionFromOver = (over: any): string | null => {
+  const getTargetSectionId = (over: any): string | null => {
     if (!over) return null;
     const id = String(over.id);
     const data = over.data?.current;
+
     if (data?.type === 'section') return String(over.id);
     if (data?.type === 'field') return data.sectionId || null;
     if (data?.type === 'section-drop') return data.sectionId || null;
@@ -41,63 +41,49 @@ export default function Canvas() {
     return null;
   };
 
+  const onDragStart = (e: DragStartEvent) => {
+    const t = e.active.data.current?.type as string | undefined;
+    if (t === 'field') setActiveFieldNode(e.active.data.current?.node || null);
+  };
+
   const onDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (!over) { setActiveField(null); return; }
+    setActiveFieldNode(null);
+    if (!over) return;
 
     const activeType = active.data.current?.type as 'section' | 'field' | undefined;
 
     if (activeType === 'section') {
-      const toSection = targetSectionFromOver(over);
+      const toSection = getTargetSectionId(over);
       if (toSection) moveSection(String(active.id), toSection);
-    } else if (activeType === 'field') {
+      return;
+    }
+
+    if (activeType === 'field') {
       const overData = over.data.current;
       if (overData?.type === 'section-drop') {
         moveField(String(active.id), null, overData.sectionId);
       } else if (overData?.type === 'section') {
-        moveField(String(active.id), null, String(over.id)); // al final de esa sección
+        moveField(String(active.id), null, String(over.id));
       } else {
-        moveField(String(active.id), String(over.id)); // antes del campo over
+        // over es otro campo → insertar antes de ese campo
+        moveField(String(active.id), String(over.id));
       }
     }
-    setActiveField(null);
-  };
-
-  const collision = (args: any) => {
-    if (activeType === 'section') {
-      const filtered = args.droppableContainers.filter(
-        (c: any) => c.id !== activeId && c.data?.current?.type === 'section'
-      );
-      return closestCorners({ ...args, droppableContainers: filtered });
-    }
-    return closestCorners(args);
   };
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={collision}
-      onDragEnd={(e) => {
-        onDragEnd(e);
-        setActiveId(null);
-        setActiveType(null);
-      }}
-      onDragStart={(e) => {
-        setActiveId(String(e.active.id));
-        const type = e.active.data.current?.type as 'section' | 'field' | null;
-        setActiveType(type);
-        if (type === 'field') {
-          setActiveField(e.active.data.current?.node);
-        }
-      }}
+      collisionDetection={closestCorners}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
     >
-      {/* Barra para crear secciones */}
       <div className="mb-4">
         <button
           type="button"
           onClick={() => {
             addSection();
-            // opcional: abrir modal de componentes automáticamente
             setTimeout(() => window.dispatchEvent(new Event('builder:open-components')), 0);
           }}
           className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700"
@@ -107,7 +93,7 @@ export default function Canvas() {
       </div>
 
       <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-        <div className="space-y-6">
+        <div className="space-y-6 select-none">
           {sections.map((sec: any) => (
             <SortableSection key={sec.id} id={sec.id} section={sec} dropId={`${DROP_PREFIX}${sec.id}`} />
           ))}
@@ -115,9 +101,9 @@ export default function Canvas() {
       </SortableContext>
 
       <DragOverlay>
-        {activeField ? (
+        {activeFieldNode ? (
           <div className="min-w-[280px] rounded-xl border bg-white p-3 shadow-lg dark:bg-slate-800 dark:border-slate-700">
-            <FieldCard node={activeField} readonly />
+            <FieldCard node={activeFieldNode} readonly />
           </div>
         ) : null}
       </DragOverlay>

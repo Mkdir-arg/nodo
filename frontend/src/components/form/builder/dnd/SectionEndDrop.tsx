@@ -10,7 +10,6 @@ export default function SectionEndDrop({ id, sectionId }: { id: string; sectionI
   return (
     <div
       ref={setNodeRef}
-      id={id}
       className={`h-3 rounded ${isOver ? 'bg-sky-200/60' : ''}`}
       aria-hidden
     />
