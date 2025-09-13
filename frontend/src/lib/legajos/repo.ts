@@ -48,7 +48,7 @@ export class LocalRepo implements ITemplatesRepo {
     return this.upsertTemplate(copy);
   }
   async listDossiers() { return get<Dossier[]>(kD, []); }
-  async createDossier(d) {
+  async createDossier(d: Omit<Dossier, "id">) {
     const parsed = dossierSchema.parse({ id: nanoid(), ...d });
     const list = await this.listDossiers(); list.push(parsed); set(kD, list); return parsed;
   }

@@ -39,7 +39,7 @@ export const fieldDefSchema = z.object({
 });
 export type FieldDef = z.infer<typeof fieldDefSchema>;
 
-export const layoutNodeSchema = z.lazy(() => z.object({
+export const layoutNodeSchema: z.ZodType<any> = z.lazy(() => z.object({
   type: z.enum(["row","col","section","tabs","tab","repeater","field"]),
   label: z.string().optional(),
   span: z.number().min(1).max(12).optional(),      // para col
