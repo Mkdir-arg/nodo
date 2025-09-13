@@ -96,7 +96,17 @@ export default function FieldCard({ node, dragHandle, readonly }:{ node:any; dra
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {dragHandle && <button className="px-2 py-1 border rounded text-xs cursor-grab" {...dragHandle.attributes} {...dragHandle.listeners}>⠿</button>}
+          {dragHandle && (
+            <button
+              className="px-2 py-1 border rounded text-xs cursor-grab"
+              {...dragHandle.attributes}
+              {...dragHandle.listeners}
+              onMouseDownCapture={(e)=>e.stopPropagation()}
+              onPointerDownCapture={(e)=>e.stopPropagation()}
+            >
+              ⠿
+            </button>
+          )}
           <span className="text-xs uppercase opacity-60">{node.type}</span>
         </div>
         {!readonly && (

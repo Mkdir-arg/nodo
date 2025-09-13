@@ -3,15 +3,17 @@ import { useMemo } from 'react';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import SortableField from './SortableField';
+import SectionEndDrop from './SectionEndDrop';
 
-export default function SortableSection({ id, section, dropId }:{ id:string; section:any; dropId:string }) {
+export default function SortableSection({ id, section, dropId }:{
+  id:string; section:any; dropId:string;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
     data: { type: 'section' },
   });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 };
-
-  const fieldIds = useMemo(()=> (section.children || []).map((n:any)=>n.id), [section.children]);
+  const fieldIds = useMemo(() => (section.children || []).map((n:any) => n.id), [section.children]);
 
   return (
     <section ref={setNodeRef} style={style} className="rounded-2xl border p-3 bg-white/50">
@@ -25,8 +27,8 @@ export default function SortableSection({ id, section, dropId }:{ id:string; sec
           {(section.children || []).map((node:any) => (
             <SortableField key={node.id} node={node} sectionId={id} />
           ))}
-          {/* zona de drop al final (para secciones vacías o soltar al final) */}
-          <div id={dropId} data-section-drop className="h-3" />
+          {/* droppable al final */}
+          <SectionEndDrop id={dropId} sectionId={id} />
         </div>
       </SortableContext>
     </section>
