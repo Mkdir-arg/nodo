@@ -37,7 +37,6 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               className={clsx(mini && 'justify-center')}
               title={dashboardItem.label}
             >
-              {/* El icono viene desde NAV_ITEMS y funciona; lo dejamos igual */}
               <dashboardItem.icon className="h-5 w-5" aria-hidden />
               {mini ? (
                 <span className="sr-only">{dashboardItem.label}</span>
@@ -98,12 +97,10 @@ function LegajosMenu() {
           pathname?.startsWith('/legajos') && 'bg-slate-200/60 dark:bg-slate-800/60'
         )}
       >
-        {/* Ícono de carpeta correcto, sin fallback */}
         {open ? <Icons.FolderOpen size={18} /> : <Icons.Folder size={18} />}
         <span className="flex-1 text-left">Legajos</span>
       </button>
 
-      {/* Despliegue con CSS */}
       <div
         className={clsx(
           'pl-6 overflow-hidden transition-[grid-template-rows,opacity] duration-200 grid',
