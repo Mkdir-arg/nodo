@@ -1,4 +1,4 @@
-// frontend/src/lib/api.ts
+// frontend/src/lib/api/index.ts
 import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
