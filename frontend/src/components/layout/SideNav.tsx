@@ -1,22 +1,13 @@
 'use client';
 
 import clsx from 'clsx';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-
-import { useState, useEffect, type SVGProps } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-
-  FilePlus,
-  Folder,
-  FolderOpen,
-} from 'lucide-react';
+import { useMemo } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
+import LegajosMenu from './LegajosMenu';
 
 interface SideNavProps {
   open: boolean;
@@ -34,6 +25,22 @@ function Safe({ Comp, className, size, 'aria-hidden': ariaHidden }: { Comp: any;
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
   const plantillasItem = NAV_ITEMS.find((i) => i.href === '/plantillas');
+  const { data } = usePlantillasMin();
+
+  const legajoItems = useMemo(() => {
+    const base = [{
+      id: 'ver',
+      label: 'Ver legajos',
+      href: '/legajos',
+      icon: 'FilePlus' as const,
+    }];
+    const plantillas = (data ?? []).map((p: any) => ({
+      id: String(p.id),
+      label: p.nombre,
+      href: `/legajos/nuevo?formId=${p.id}`,
+    }));
+    return [...base, ...plantillas];
+  }, [data]);
 
   return (
     <aside
@@ -59,7 +66,7 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
             </ActiveLink>
           )}
 
-          <LegajosMenu />
+          <LegajosMenu items={legajoItems} />
 
           {plantillasItem && (
             <ActiveLink
@@ -91,127 +98,3 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   );
 }
 
-// ===== Fallbacks seguros para íconos de carpeta =====
-
-interface IconProps extends SVGProps<SVGSVGElement> {
-  size?: number | string;
-}
-
-function InlineFolder({ size = 24, ...props }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    >
-
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-
-    </svg>
-  );
-}
-
-function InlineFolderOpen({ size = 24, ...props }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      {...props}
-    >
-
-      <path d="m6 2 2 2h8a2 2 0 0 1 2 2v2" />
-      <path d="m3 7 5 5h13" />
-      <path d="m3 7 3-3h7l5 5v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-
-    </svg>
-  );
-}
-
-
-const FolderClosedIcon = (props: IconProps) =>
-  (typeof Folder === 'function' ? <Folder {...props} /> : <InlineFolder {...props} />);
-const FolderOpenIcon = (props: IconProps) =>
-  (typeof FolderOpen === 'function' ? <FolderOpen {...props} /> : <InlineFolderOpen {...props} />);
-
-
-function LegajosMenu() {
-  const pathname = usePathname();
-  const { data, isLoading } = usePlantillasMin();
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (pathname?.startsWith('/legajos')) setOpen(true);
-  }, [pathname]);
-
-  const items = data || [];
-
-  return (
-    <div className="mt-2">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className={clsx(
-          'w-full flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-200/60 dark:hover:bg-slate-800/60',
-          pathname?.startsWith('/legajos') && 'bg-slate-200/60 dark:bg-slate-800/60'
-        )}
-      >
-
-        {open ? (
-          <FolderOpenIcon className="h-5 w-5" />
-        ) : (
-          <FolderClosedIcon className="h-5 w-5" />
-        )}
-
-        <span className="flex-1 text-left">Legajos</span>
-      </button>
-
-      <div
-        className={clsx(
-          'pl-6 overflow-hidden transition-[grid-template-rows,opacity] duration-200 grid',
-          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-        )}
-      >
-        <ul className="min-h-0 overflow-hidden">
-          <li className="mt-2 mb-1">
-            <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
-
-              <FilePlus size={16} /> <span>Ver legajos</span>
-
-            </Link>
-          </li>
-
-          {isLoading && <li className="px-3 py-2 text-sm opacity-70">Cargando…</li>}
-          {!isLoading && items.length === 0 && <li className="px-3 py-2 text-sm opacity-60">No hay plantillas</li>}
-
-          {!isLoading &&
-            items.map((p: any) => (
-              <li key={p.id}>
-                <Link
-                  href={`/legajos/nuevo?formId=${p.id}`}
-                  className="block px-3 py-2 rounded hover:bg-slate-200/50"
-                >
-                  {p.nombre}
-                </Link>
-              </li>
-            ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
