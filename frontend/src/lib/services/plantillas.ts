@@ -54,6 +54,9 @@ export const PlantillasService = {
       http(`/formularios/${id}/`, { method: 'PUT', body: JSON.stringify(payload) })
     ),
 
+  updateVisualConfig: (id: string, cfg: any) =>
+    http(`/plantillas/${id}/visual-config/`, { method: 'PATCH', body: JSON.stringify(cfg) }),
+
   deletePlantilla: (id: string) =>
     http(`/plantillas/${id}/`, { method: 'DELETE' }).catch(() =>
       http(`/formularios/${id}/`, { method: 'DELETE' })

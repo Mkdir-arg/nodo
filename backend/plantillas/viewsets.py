@@ -2,7 +2,7 @@ from rest_framework import viewsets, decorators, response, status, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Plantilla
-from .serializers import PlantillaSerializer
+from .serializers import PlantillaSerializer, PlantillaVisualConfigSerializer
 
 
 class PlantillaViewSet(viewsets.ModelViewSet):
@@ -27,3 +27,12 @@ class PlantillaViewSet(viewsets.ModelViewSet):
         if exclude:
             qs = qs.exclude(pk=exclude)
         return response.Response({"exists": qs.exists()})
+
+    @decorators.action(detail=True, methods=["patch"], url_path="visual-config")
+    def visual_config(self, request, pk=None):
+        plantilla = self.get_object()
+        serializer = PlantillaVisualConfigSerializer(data={"visual_config": request.data or {}})
+        serializer.is_valid(raise_exception=True)
+        plantilla.visual_config = serializer.validated_data["visual_config"]
+        plantilla.save(update_fields=["visual_config"])
+        return response.Response(serializer.validated_data["visual_config"])
