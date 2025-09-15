@@ -1,14 +1,16 @@
+"use client";
+
+import { useDraggable } from "@dnd-kit/core";
+import clsx from "clsx";
+
 import builderConfig from "../builder.config";
 import FieldDraggable from "./FieldDraggable";
+import type { CanvasPaletteItem } from "./CanvasGrid";
 
 interface PaletteCategory {
   id: string;
   label: string;
-  items: Array<{
-    key: string;
-    label: string;
-    description?: string;
-  }>;
+  items: Array<CanvasPaletteItem>;
 }
 
 function buildCategories(): PaletteCategory[] {
@@ -23,7 +25,8 @@ function buildCategories(): PaletteCategory[] {
           key: componentKey,
           label: definition.label,
           description: definition.description,
-        };
+          colSpan: 4,
+        } satisfies CanvasPaletteItem;
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
@@ -39,6 +42,27 @@ function buildCategories(): PaletteCategory[] {
   return categories;
 }
 
+function PaletteItem({ component }: { component: CanvasPaletteItem }) {
+  const { attributes, listeners, setActivatorNodeRef, setNodeRef, isDragging } =
+    useDraggable({
+      id: `palette-${component.key}`,
+      data: { type: "palette", component },
+    });
+
+  return (
+    <FieldDraggable
+      ref={setNodeRef}
+      label={component.label}
+      description={component.description}
+      variant="palette"
+      dragAttributes={attributes}
+      dragListeners={listeners}
+      setActivatorNodeRef={setActivatorNodeRef}
+      className={clsx(isDragging ? "opacity-60" : undefined)}
+    />
+  );
+}
+
 export default function Palette() {
   const categories = buildCategories();
   const isEmpty = categories.length === 0;
@@ -46,7 +70,9 @@ export default function Palette() {
   return (
     <aside className="flex h-full min-h-0 flex-col gap-4 overflow-hidden rounded-xl border border-slate-200 bg-white/70 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
       <div>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Componentes disponibles</h2>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          Componentes disponibles
+        </h2>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Arrastrá un componente al lienzo para comenzar a construir la plantilla.
         </p>
@@ -67,11 +93,7 @@ export default function Palette() {
               </header>
               <div className="space-y-2">
                 {category.items.map((component) => (
-                  <FieldDraggable
-                    key={component.key}
-                    label={component.label}
-                    description={component.description}
-                  />
+                  <PaletteItem key={component.key} component={component} />
                 ))}
               </div>
             </section>
