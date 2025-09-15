@@ -1,6 +1,6 @@
 "use client";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/lib/api";
 
 type Tokens = { access: string; refresh: string };
 
@@ -26,61 +26,92 @@ export function clearTokens() {
 async function refreshAccessToken(): Promise<string | null> {
   const tokens = getTokens();
   if (!tokens) return null;
-  const res = await fetch(`${API}/api/token/refresh/`, {
+
+  const res = await fetch(buildApiUrl("/api/token/refresh/", "POST"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh: tokens.refresh }),
+    credentials: "include",
   });
+
   if (!res.ok) return null;
+
   const data = await res.json();
   const access = data.access as string;
   setTokens({ access, refresh: tokens.refresh });
   return access;
 }
 
-export async function authFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
-  let access = getTokens()?.access;
-  const headers = new Headers(init.headers);
-  if (access) headers.set("Authorization", `Bearer ${access}`);
-  headers.set("Content-Type", headers.get("Content-Type") || "application/json");
+export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET"))
+    .toUpperCase();
+  let target: RequestInfo | URL = input;
 
-  let res = await fetch(input, { ...init, headers });
+  if (typeof input === "string") {
+    target = buildApiUrl(input, method);
+  } else if (input instanceof URL) {
+    target = buildApiUrl(input.toString(), method);
+  } else if (typeof Request !== "undefined" && input instanceof Request) {
+    target = new Request(buildApiUrl(input.url, method), input);
+  }
+
+  let access = getTokens()?.access;
+  const headers = new Headers(init.headers ?? {});
+
+  if (access && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${access}`);
+  }
+
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const requestInit: RequestInit = {
+    ...init,
+    method,
+    headers,
+    credentials: init.credentials ?? "include",
+  };
+
+  let res = await fetch(target, requestInit);
   if (res.status !== 401) return res;
 
-  // reintento con refresh
   const newAccess = await refreshAccessToken();
   if (!newAccess) return res;
+
   headers.set("Authorization", `Bearer ${newAccess}`);
-  res = await fetch(input, { ...init, headers });
+  res = await fetch(target, requestInit);
   return res;
 }
 
 export async function login(identifier: string, password: string, remember = true) {
-  const body = { identifier, password, username: identifier }; // backend aceptará email/username
-  const res = await fetch(`${API}/api/token/`, {
+  const body = { identifier, password, username: identifier };
+  const res = await fetch(buildApiUrl("/api/token/", "POST"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    credentials: "include",
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || "Credenciales inválidas");
   }
+
   const data = (await res.json()) as Tokens;
   setTokens(data);
+
   if (!remember) {
-    // opción simple: limpiar refresh al cerrar tab
     window.addEventListener("beforeunload", () => clearTokens());
   }
 }
 
 export async function me() {
-  const res = await authFetch(`${API}/api/auth/me/`, { method: "GET" });
+  const res = await authFetch("/api/auth/me/", { method: "GET" });
   if (!res.ok) throw new Error("No autenticado");
   return res.json();
 }
 
 export function logout() {
   clearTokens();
-  // Opcional: invalidate react-query aquí si lo usás
 }
