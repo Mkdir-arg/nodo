@@ -1,4 +1,4 @@
-from rest_framework import viewsets, decorators, response, status, filters
+from rest_framework import viewsets, decorators, response, status, filters, exceptions
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Plantilla
@@ -44,6 +44,13 @@ class PlantillaViewSet(viewsets.ModelViewSet):
     @decorators.action(detail=True, methods=["get", "put"], url_path="layout")
     def layout(self, request, pk=None):
         plantilla = self.get_object()
+        required_perm = (
+            "plantillas.view_plantilla"
+            if request.method == "GET"
+            else "plantillas.change_plantilla"
+        )
+        if not request.user.has_perm(required_perm):
+            raise exceptions.PermissionDenied()
         if request.method == "GET":
             serializer = PlantillaLayoutSerializer(plantilla)
             return response.Response(serializer.data)
