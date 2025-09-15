@@ -1,15 +1,25 @@
-// frontend/src/services/auth.ts
 "use client";
 
 import { apiUrl } from "./api";
 
 export interface TokenPair { access: string; refresh: string }
 
-function base(): string { return apiUrl(""); } // para log de verificación
+function base(): string { return apiUrl(""); }
+
+function ensurePublic(url: string, suffix: string) {
+  // Si en navegador y quedó apuntando a backend, rehace con la base pública
+  if (typeof window !== "undefined" && /\/\/backend(:\d+)?\//.test(url)) {
+    const pub = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/").replace(/\/+$/, "") + "/";
+    return pub + suffix.replace(/^\/+/, "");
+  }
+  return url;
+}
 
 export async function login(username: string, password: string): Promise<TokenPair> {
-  const url = apiUrl("token/"); // http://<base>/api/token/
+  const raw = apiUrl("token/");
+  const url = ensurePublic(raw, "token/");
   console.log("[auth] BASE =", base(), "LOGIN URL =", url);
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,7 +34,8 @@ export async function login(username: string, password: string): Promise<TokenPa
 }
 
 export async function refreshToken(refresh: string): Promise<{ access: string }> {
-  const url = apiUrl("token/refresh/");
+  const raw = apiUrl("token/refresh/");
+  const url = ensurePublic(raw, "token/refresh/");
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -39,7 +50,8 @@ export async function refreshToken(refresh: string): Promise<{ access: string }>
 }
 
 export async function me(access: string) {
-  const url = apiUrl("auth/me/");
+  const raw = apiUrl("auth/me/");
+  const url = ensurePublic(raw, "auth/me/");
   const res = await fetch(url, { headers: { Authorization: `Bearer ${access}` } });
   if (!res.ok) throw new Error(`Me failed: HTTP ${res.status}`);
   return res.json();
