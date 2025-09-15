@@ -9,7 +9,7 @@ type MenuItem = {
   id: string;
   label: string;
   href: string;
-  icon?: keyof typeof Icons;
+  icon?: keyof typeof Icons; // p.ej. "Folder", "FileText", "Users"
 };
 
 type Props = {
@@ -18,16 +18,12 @@ type Props = {
 };
 
 function getIcon(name?: keyof typeof Icons) {
-  const Ico = (name ? Icons[name] : undefined) as any;
-  // Fallback si el ícono no existe o quedó undefined
+  const Ico = name ? (Icons as any)[name] : undefined;
   return typeof Ico === "function" ? Ico : Icons.Folder;
 }
 
 export default function LegajosMenu({ items, title = "Legajos" }: Props) {
-  const safeItems = useMemo(
-    () => (Array.isArray(items) ? items : []),
-    [items]
-  );
+  const safeItems = useMemo(() => (Array.isArray(items) ? items : []), [items]);
 
   return (
     <nav className="space-y-3">
@@ -57,4 +53,3 @@ export default function LegajosMenu({ items, title = "Legajos" }: Props) {
     </nav>
   );
 }
-
