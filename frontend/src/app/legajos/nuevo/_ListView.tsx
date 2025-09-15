@@ -2,7 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+
 import { getJSON } from "@/lib/api";
+
 
 type ListResponse = {
   results: Array<Record<string, any>>;
@@ -20,8 +22,10 @@ async function fetchLegajos({
   page?: number;
   search?: string;
 }) {
+
   if (typeof window === "undefined") {
     throw new Error("fetchLegajos solo está disponible en el cliente");
+
   }
 
   const url = new URL(`/api/legajos`, window.location.origin);

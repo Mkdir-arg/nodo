@@ -1,3 +1,4 @@
+
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
@@ -97,6 +98,7 @@ export async function api(path: string, init: RequestInit = {}) {
 
 export async function getJSON<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await api(path, init);
+
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }

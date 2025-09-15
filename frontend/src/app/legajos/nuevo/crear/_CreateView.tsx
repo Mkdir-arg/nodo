@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import DynamicForm from "@/components/form/runtime/DynamicForm";
+
 import { getJSON, postJSON } from "@/lib/api";
 
 async function fetchPlantilla(id: string) {
@@ -11,6 +12,7 @@ async function fetchPlantilla(id: string) {
 
 async function createLegajo(payload: { plantilla_id: string; data: any }) {
   return postJSON(`/api/legajos`, payload);
+
 }
 
 export default function CreateView({ formId }: { formId: string }) {

@@ -1,9 +1,11 @@
+
 import { buildApiUrl } from "@/lib/api";
 
 export type HttpOptions = RequestInit & { timeoutMs?: number; auth?: boolean };
 
 export function buildUrl(path: string, method = "GET") {
   return buildApiUrl(path, method);
+
 }
 
 function withTimeout<T>(p: Promise<T>, ms = 15000) {
@@ -23,10 +25,12 @@ function withTimeout<T>(p: Promise<T>, ms = 15000) {
 }
 
 export async function http(path: string, opts: HttpOptions = {}) {
+
   const method = (opts.method || "GET").toUpperCase();
   let url = buildUrl(path, method);
   if (typeof window !== "undefined" && typeof url === "string" && url.includes("://backend:")) {
     url = url.replace("://backend:", "://localhost:");
+
   }
 
   const headers: Record<string, string> = { ...(opts.headers as any) };
@@ -46,7 +50,9 @@ export async function http(path: string, opts: HttpOptions = {}) {
   };
 
   try {
+
     console.info("[http]", method, url);
+
     const res = await withTimeout(fetch(url, cfg), opts.timeoutMs || 15000);
 
     const ct = res.headers.get("content-type") || "";

@@ -1,11 +1,18 @@
 "use client";
 
+
 import { buildApiUrl } from "@/lib/api";
+
 
 type Tokens = { access: string; refresh: string };
 
 const LS_ACCESS = "access_token";
 const LS_REFRESH = "refresh_token";
+
+function resolvePath(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  return path.startsWith("/") ? path : `/${path}`;
+}
 
 export function getTokens(): Tokens | null {
   const access = typeof window !== "undefined" ? localStorage.getItem(LS_ACCESS) : null;
@@ -28,6 +35,7 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!tokens) return null;
 
   const res = await fetch(buildApiUrl("/api/token/refresh/", "POST"), {
+
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh: tokens.refresh }),
@@ -43,6 +51,7 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+
   const method = (init.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET"))
     .toUpperCase();
   let target: RequestInfo | URL = input;
@@ -62,13 +71,16 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
     headers.set("Authorization", `Bearer ${access}`);
   }
 
+
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
   const requestInit: RequestInit = {
     ...init,
+
     method,
+
     headers,
     credentials: init.credentials ?? "include",
   };
@@ -86,7 +98,9 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
 
 export async function login(identifier: string, password: string, remember = true) {
   const body = { identifier, password, username: identifier };
+
   const res = await fetch(buildApiUrl("/api/token/", "POST"), {
+
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
