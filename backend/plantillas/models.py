@@ -14,6 +14,8 @@ class Plantilla(models.Model):
     descripcion = models.TextField(null=True, blank=True)
     schema = models.JSONField()
     visual_config = models.JSONField(default=dict, blank=True)
+    layout_json = models.JSONField(default=dict, blank=True)
+    layout_version = models.PositiveIntegerField(default=1)
     version = models.PositiveIntegerField(default=1)
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
     created_at = models.DateTimeField(auto_now_add=True)
