@@ -11,9 +11,10 @@ export default function FieldPropertiesModal({ open, fieldId, onClose }: Props) 
   const node = useMemo(() => {
     if (!fieldId) return null;
     for (const s of sections) {
-      const direct = (s.children || []).find((n: any) => n.id === fieldId);
+      const list = s.nodes || s.children || [];
+      const direct = list.find((n: any) => n.id === fieldId);
       if (direct) return direct;
-      const grp = (s.children || []).find(
+      const grp = list.find(
         (n: any) => n.type === 'group' && (n.children || []).some((c: any) => c.id === fieldId)
       );
       if (grp) return (grp.children || []).find((c: any) => c.id === fieldId);
