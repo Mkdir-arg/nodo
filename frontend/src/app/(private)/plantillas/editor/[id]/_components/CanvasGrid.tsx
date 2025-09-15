@@ -29,7 +29,15 @@ import {
 } from "react";
 
 import FieldDraggable from "./FieldDraggable";
-import type { FormLayout } from "@/lib/forms/types";
+import type {
+  ColumnSpan,
+  FormLayout,
+  GridPlacement,
+  LayoutColumnNode,
+  LayoutFieldNode,
+  LayoutRowNode,
+  LayoutSectionNode,
+} from "@/lib/forms/types";
 
 const GRID_COLUMNS = 12;
 const GRID_GAP = 16;
@@ -90,6 +98,523 @@ const OPTION_COMPONENT_KEYS = new Set([
   "select_with_filter",
   "radio",
 ]);
+
+type PersistedField = Record<string, unknown> & {
+  id?: string;
+  key?: string;
+  name?: string;
+  type?: string;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  required?: boolean;
+  options?: Array<Record<string, unknown>>;
+  min?: number;
+  max?: number;
+  step?: number;
+  minDate?: string;
+  maxDate?: string;
+  accept?: string[] | string;
+  maxSizeMB?: number;
+  layout?: GridPlacement;
+  componentKey?: string;
+};
+
+type PersistedFieldNode = LayoutFieldNode & {
+  field?: PersistedField;
+  componentKey?: string;
+  name?: string;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  required?: boolean;
+  options?: Array<Record<string, unknown>>;
+  min?: number;
+  max?: number;
+  step?: number;
+  minDate?: string;
+  maxDate?: string;
+  accept?: string[] | string;
+  maxSizeMB?: number;
+};
+
+type PersistedColumnNode = LayoutColumnNode & { start?: number };
+type PersistedRowNode = LayoutRowNode & { rowIndex?: number };
+
+const COMPONENT_TYPE_MAP: Record<string, string> = {
+  text: "text",
+  number: "number",
+  select: "select",
+  date: "date",
+  checkbox: "checkbox",
+  file: "document",
+};
+
+const FIELD_COMPONENT_MAP: Record<string, string> = {
+  text: "text",
+  textarea: "text",
+  number: "number",
+  select: "select",
+  dropdown: "select",
+  multiselect: "select",
+  select_with_filter: "select",
+  date: "date",
+  document: "file",
+  checkbox: "checkbox",
+};
+
+function mapComponentKeyToFieldType(key: string): string {
+  return COMPONENT_TYPE_MAP[key] ?? key;
+}
+
+function mapFieldTypeToComponentKey(type?: string): string {
+  if (!type) return "text";
+  const normalized = type.toLowerCase();
+  return FIELD_COMPONENT_MAP[normalized] ?? normalized;
+}
+
+function ensureArray<T>(value: T | T[] | undefined | null): T[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function coerceNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+}
+
+function coerceBoolean(value: unknown): boolean | undefined {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    if (value === "true") return true;
+    if (value === "false") return false;
+  }
+  return undefined;
+}
+
+function coerceString(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  return undefined;
+}
+
+function normalizeOptions(
+  value: unknown,
+): CanvasNode["options"] | undefined {
+  const array = ensureArray(value as Array<Record<string, unknown>>);
+  if (array.length === 0) return undefined;
+  const result = array
+    .map((option) => {
+      if (typeof option === "string") {
+        return { label: option, value: option };
+      }
+      if (!option || typeof option !== "object") return null;
+      const record = option as Record<string, unknown>;
+      const rawValue =
+        record.value ?? record.id ?? record.key ?? record.name ?? "";
+      const valueString =
+        typeof rawValue === "number" || typeof rawValue === "boolean"
+          ? String(rawValue)
+          : typeof rawValue === "string"
+          ? rawValue
+          : "";
+      const rawLabel = record.label ?? record.name ?? valueString;
+      const labelString =
+        typeof rawLabel === "string" ? rawLabel : valueString;
+      return { label: labelString, value: valueString };
+    })
+    .filter(
+      (option): option is { label: string; value: string } => Boolean(option),
+    );
+  return result.length > 0 ? result : undefined;
+}
+
+function normalizeAccept(value: unknown): string[] | undefined {
+  if (!value) return undefined;
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => (typeof item === "string" ? item : String(item ?? "")))
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    return items.length > 0 ? items : undefined;
+  }
+  if (typeof value === "string") {
+    const items = value
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    return items.length > 0 ? items : undefined;
+  }
+  return undefined;
+}
+
+function mapCanvasNodeToField(
+  node: CanvasNode,
+  position: { row: number; col: number; colSpan: number },
+): Record<string, unknown> {
+  const colSpan = normalizeColSpan(position.colSpan);
+  const col = clampColumn(position.col, colSpan);
+  const row = Math.max(0, Math.round(position.row));
+  const fieldType = mapComponentKeyToFieldType(node.componentKey);
+  const base: Record<string, unknown> = {
+    id: node.id,
+    key: node.name || node.id,
+    name: node.name || node.id,
+    type: fieldType,
+    label: node.label,
+    description: node.description ?? "",
+    placeholder: node.placeholder ?? "",
+    required: Boolean(node.required),
+    kind: "field",
+    componentKey: node.componentKey,
+    layout: {
+      i: node.id,
+      x: col,
+      y: row,
+      w: colSpan,
+      h: 1,
+    } satisfies GridPlacement,
+  };
+
+  if (node.options && node.options.length > 0) {
+    base.options = node.options.map((option) => ({
+      label: option.label ?? "",
+      value: option.value ?? "",
+    }));
+  }
+
+  if (node.min != null) base.min = node.min;
+  if (node.max != null) base.max = node.max;
+  if (node.step != null) base.step = node.step;
+  if (node.minDate) base.minDate = node.minDate;
+  if (node.maxDate) base.maxDate = node.maxDate;
+  if (node.accept && node.accept.length > 0) base.accept = node.accept;
+  if (node.maxSizeMB != null) base.maxSizeMB = node.maxSizeMB;
+
+  return base;
+}
+
+function resolveFieldNode(
+  node: PersistedFieldNode,
+  context: { rowIndex: number; columnStart: number; columnSpan: number },
+): CanvasNode {
+  const fallbackRow = Math.max(0, Math.round(context.rowIndex));
+  const fallbackSpan = normalizeColSpan(context.columnSpan);
+  const fallbackCol = clampColumn(context.columnStart, fallbackSpan);
+
+  const rawField: PersistedField = (node.field as PersistedField) ?? {};
+  const layout =
+    (node.layout as GridPlacement | undefined) ??
+    (rawField.layout as GridPlacement | undefined);
+
+  const row =
+    coerceNumber(layout?.y) != null
+      ? Math.max(0, Math.round(coerceNumber(layout?.y)!))
+      : fallbackRow;
+  const colSpan = normalizeColSpan(
+    coerceNumber(layout?.w) ?? coerceNumber(node.colSpan) ?? fallbackSpan,
+  );
+  const col =
+    coerceNumber(layout?.x) != null
+      ? clampColumn(coerceNumber(layout?.x)!, colSpan)
+      : fallbackCol;
+
+  const componentKey =
+    typeof rawField.componentKey === "string" && rawField.componentKey
+      ? rawField.componentKey
+      : typeof node.componentKey === "string" && node.componentKey
+      ? node.componentKey
+      : mapFieldTypeToComponentKey(
+          typeof rawField.type === "string" ? rawField.type : undefined,
+        );
+
+  const label =
+    coerceString(rawField.label) ??
+    coerceString((node as Record<string, unknown>).label) ??
+    "Campo sin título";
+
+  const name =
+    coerceString(node.fieldKey) ??
+    coerceString(rawField.key) ??
+    coerceString(rawField.name) ??
+    coerceString((node as Record<string, unknown>).name) ??
+    (typeof node.id === "string" ? node.id : "");
+
+  const description =
+    coerceString(rawField.description) ??
+    coerceString((node as Record<string, unknown>).description);
+
+  const placeholder =
+    coerceString(rawField.placeholder) ??
+    coerceString((node as Record<string, unknown>).placeholder);
+
+  const required =
+    coerceBoolean(rawField.required) ??
+    coerceBoolean((node as Record<string, unknown>).required) ??
+    false;
+
+  const options = normalizeOptions(
+    rawField.options ?? (node as Record<string, unknown>).options,
+  );
+
+  const min = coerceNumber(rawField.min ?? (node as Record<string, unknown>).min);
+  const max = coerceNumber(rawField.max ?? (node as Record<string, unknown>).max);
+  const step = coerceNumber(
+    rawField.step ?? (node as Record<string, unknown>).step,
+  );
+  const minDate =
+    coerceString(rawField.minDate ?? (node as Record<string, unknown>).minDate);
+  const maxDate =
+    coerceString(rawField.maxDate ?? (node as Record<string, unknown>).maxDate);
+  const accept = normalizeAccept(
+    rawField.accept ?? (node as Record<string, unknown>).accept,
+  );
+  const maxSizeMB = coerceNumber(
+    rawField.maxSizeMB ?? (node as Record<string, unknown>).maxSizeMB,
+  );
+
+  const id =
+    coerceString(node.id) ??
+    coerceString(rawField.id) ??
+    `node-${nanoid()}`;
+
+  return {
+    id,
+    componentKey,
+    label,
+    name: name || id,
+    description: description ?? undefined,
+    placeholder: placeholder ?? undefined,
+    required,
+    row,
+    col,
+    colSpan,
+    options,
+    min: min ?? undefined,
+    max: max ?? undefined,
+    step: step ?? undefined,
+    minDate: minDate ?? undefined,
+    maxDate: maxDate ?? undefined,
+    accept,
+    maxSizeMB: maxSizeMB ?? undefined,
+  } satisfies CanvasNode;
+}
+
+export function canvasNodesToLayout(
+  nodes: CanvasNode[],
+  version = 1,
+): FormLayout {
+  const grouped = new Map<number, CanvasNode[]>();
+
+  nodes.forEach((node) => {
+    const span = normalizeColSpan(node.colSpan);
+    const row = Math.max(0, Math.round(node.row));
+    const col = clampColumn(Math.round(node.col), span);
+    const normalized: CanvasNode = {
+      ...node,
+      row,
+      col,
+      colSpan: span,
+    };
+    if (!grouped.has(row)) {
+      grouped.set(row, [normalized]);
+    } else {
+      grouped.get(row)!.push(normalized);
+    }
+  });
+
+  const sortedRows = Array.from(grouped.entries()).sort((a, b) => a[0] - b[0]);
+
+  const layoutRows: LayoutRowNode[] = sortedRows.map(
+    ([rowIndex, rowNodes], rowOrder) => {
+      const sortedNodes = [...rowNodes].sort((a, b) => a.col - b.col);
+      const columns: LayoutColumnNode[] = sortedNodes.map(
+        (node, columnIndex) => {
+          const span = normalizeColSpan(node.colSpan);
+          const col = clampColumn(node.col, span);
+          const field = mapCanvasNodeToField(node, {
+            row: rowIndex,
+            col,
+            colSpan: span,
+          });
+          const fieldNode: PersistedFieldNode = {
+            id: node.id,
+            type: "field",
+            fieldId: node.id,
+            fieldKey: node.name,
+            colSpan: span as ColumnSpan,
+            componentKey: node.componentKey,
+            name: node.name,
+            layout: {
+              i: node.id,
+              x: col,
+              y: rowIndex,
+              w: span,
+              h: 1,
+            },
+            field,
+          };
+          const columnNode: PersistedColumnNode = {
+            id: `row-${rowOrder}-col-${columnIndex}`,
+            type: "column",
+            span: span as ColumnSpan,
+            start: col,
+            children: [fieldNode],
+          };
+          return columnNode;
+        },
+      );
+
+      const rowNode: PersistedRowNode = {
+        id: `row-${rowOrder}`,
+        type: "row",
+        rowIndex,
+        columns,
+      };
+
+      return rowNode;
+    },
+  );
+
+  return {
+    version,
+    nodes: layoutRows,
+  } satisfies FormLayout;
+}
+
+function columnStart(column: PersistedColumnNode): number | undefined {
+  if (typeof column.start === "number") return column.start;
+  if (
+    column.layout &&
+    typeof (column.layout as GridPlacement)?.x === "number"
+  ) {
+    return (column.layout as GridPlacement).x;
+  }
+  const firstField = ensureArray(column.children).find(
+    (child) => (child as LayoutFieldNode).type === "field",
+  ) as PersistedFieldNode | undefined;
+  if (firstField) {
+    const layout =
+      (firstField.layout as GridPlacement | undefined) ??
+      ((firstField.field as PersistedField)?.layout as GridPlacement | undefined);
+    if (layout && typeof layout.x === "number") return layout.x;
+  }
+  return undefined;
+}
+
+function inferRowIndex(row: PersistedRowNode): number | undefined {
+  if (typeof row.rowIndex === "number") return row.rowIndex;
+  for (const column of ensureArray(row.columns)) {
+    const firstField = ensureArray(column.children).find(
+      (child) => (child as LayoutFieldNode).type === "field",
+    ) as PersistedFieldNode | undefined;
+    if (!firstField) continue;
+    const layout =
+      (firstField.layout as GridPlacement | undefined) ??
+      ((firstField.field as PersistedField)?.layout as GridPlacement | undefined);
+    if (layout && typeof layout.y === "number") {
+      return Math.max(0, Math.round(layout.y));
+    }
+  }
+  return undefined;
+}
+
+export function layoutToCanvasNodes(layout?: FormLayout | null): CanvasNode[] {
+  if (!layout || !Array.isArray(layout.nodes)) return [];
+
+  const result: CanvasNode[] = [];
+
+  const visitNode = (
+    node:
+      | LayoutSectionNode
+      | LayoutRowNode
+      | LayoutColumnNode
+      | LayoutFieldNode,
+    context: { rowIndex: number; columnStart: number; columnSpan: number },
+  ) => {
+    if (!node) return;
+
+    if ((node as LayoutSectionNode).type === "section") {
+      ensureArray((node as LayoutSectionNode).children).forEach((child) =>
+        visitNode(child, context),
+      );
+      return;
+    }
+
+    if ((node as LayoutRowNode).type === "row") {
+      const rowNode = node as PersistedRowNode;
+      const rowIndex = inferRowIndex(rowNode) ?? context.rowIndex;
+      const columns = ensureArray(rowNode.columns);
+      const sortedColumns = [...columns].sort((a, b) => {
+        const startA = columnStart(a as PersistedColumnNode) ?? 0;
+        const startB = columnStart(b as PersistedColumnNode) ?? 0;
+        if (startA === startB) return 0;
+        return startA - startB;
+      });
+      let fallbackStart = 0;
+      sortedColumns.forEach((column) => {
+        const span = normalizeColSpan(
+          coerceNumber((column as LayoutColumnNode).span) ?? context.columnSpan,
+        );
+        const start =
+          columnStart(column as PersistedColumnNode) ?? fallbackStart;
+        visitNode(column, {
+          rowIndex,
+          columnStart: start,
+          columnSpan: span,
+        });
+        fallbackStart = start + span;
+      });
+      return;
+    }
+
+    if ((node as LayoutColumnNode).type === "column") {
+      const columnNode = node as PersistedColumnNode;
+      const span = normalizeColSpan(
+        coerceNumber(columnNode.span) ?? context.columnSpan,
+      );
+      const start = columnStart(columnNode) ?? context.columnStart;
+      ensureArray(columnNode.children).forEach((child) =>
+        visitNode(child, {
+          rowIndex: context.rowIndex,
+          columnStart: start,
+          columnSpan: span,
+        }),
+      );
+      return;
+    }
+
+    if ((node as LayoutFieldNode).type === "field") {
+      const canvasNode = resolveFieldNode(node as PersistedFieldNode, context);
+      result.push(canvasNode);
+    }
+  };
+
+  ensureArray(layout.nodes).forEach((node) =>
+    visitNode(node, { rowIndex: 0, columnStart: 0, columnSpan: DEFAULT_COL_SPAN }),
+  );
+
+  return result.sort((a, b) =>
+    a.row === b.row ? a.col - b.col : a.row - b.row,
+  );
+}
+
+export function canvasNodesToPreviewSchema(nodes: CanvasNode[]) {
+  const sorted = [...nodes].sort((a, b) =>
+    a.row === b.row ? a.col - b.col : a.row - b.row,
+  );
+  const fields = sorted.map((node) =>
+    mapCanvasNodeToField(node, {
+      row: Math.max(0, Math.round(node.row)),
+      col: clampColumn(Math.round(node.col), normalizeColSpan(node.colSpan)),
+      colSpan: normalizeColSpan(node.colSpan),
+    }),
+  );
+  return { nodes: fields };
+}
 
 function slugifyName(value: string): string {
   return value
@@ -167,10 +692,7 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
-  const initialNodes = useMemo<CanvasNode[]>(() => {
-    if (!layout) return [];
-    return [];
-  }, [layout]);
+  const initialNodes = useMemo<CanvasNode[]>(() => layoutToCanvasNodes(layout), [layout]);
 
   const [nodes, setNodes] = useState<CanvasNode[]>(initialNodes);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
