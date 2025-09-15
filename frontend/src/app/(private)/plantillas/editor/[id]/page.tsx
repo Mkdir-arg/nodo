@@ -1,21 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { getPlantillaLayoutQueryOptions } from "@/lib/api/plantillas";
-import type { FormLayout, LayoutRowNode, LayoutSectionNode } from "@/lib/forms/types";
 
 import Palette from "./_components/Palette";
-import CanvasGrid from "./_components/CanvasGrid";
+import CanvasGrid, { CanvasGridProvider } from "./_components/CanvasGrid";
 import PropertiesPanel from "./_components/PropertiesPanel";
 import Toolbar from "./_components/Toolbar";
-
-function getPrimarySection(layout: FormLayout | undefined): LayoutSectionNode | LayoutRowNode | null {
-  if (!layout || !Array.isArray(layout.nodes)) return null;
-  return layout.nodes.length > 0 ? layout.nodes[0] : null;
-}
 
 export default function PlantillaEditorPage() {
   const params = useParams();
@@ -30,11 +23,6 @@ export default function PlantillaEditorPage() {
   const layout = layoutQuery.data?.layout;
   const layoutVersion = layoutQuery.data?.layoutVersion ?? 1;
   const updatedAt = layoutQuery.data?.updatedAt ?? "";
-
-  const isEmptyLayout = useMemo(() => {
-    if (!layout || !Array.isArray(layout.nodes)) return true;
-    return layout.nodes.length === 0;
-  }, [layout]);
 
   if (!plantillaId) {
     return (
@@ -64,11 +52,13 @@ export default function PlantillaEditorPage() {
     <div className="flex flex-1 flex-col gap-4">
       <Toolbar plantillaId={plantillaId} layoutVersion={layoutVersion} updatedAt={updatedAt} />
 
-      <div className="grid min-h-[28rem] flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)_minmax(15rem,20rem)]">
-        <Palette />
-        <CanvasGrid layout={layoutQuery.data.layout} isEmpty={isEmptyLayout} primarySection={getPrimarySection(layoutQuery.data.layout)} />
-        <PropertiesPanel />
-      </div>
+      <CanvasGridProvider layout={layout} key={`${plantillaId}-${layoutVersion}`}>
+        <div className="grid min-h-[28rem] flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)_minmax(15rem,20rem)]">
+          <Palette />
+          <CanvasGrid />
+          <PropertiesPanel />
+        </div>
+      </CanvasGridProvider>
     </div>
   );
 }
