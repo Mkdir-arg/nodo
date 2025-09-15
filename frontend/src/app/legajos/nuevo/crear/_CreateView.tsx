@@ -3,14 +3,42 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import DynamicForm from "@/components/form/runtime/DynamicForm";
-import { getJSON, postJSON } from "@/lib/api";
+
+import { getApiBaseUrl } from "@/lib/env";
 
 async function fetchPlantilla(id: string) {
-  return getJSON(`/api/plantillas/${id}`);
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("No se pudo resolver la URL de la API");
+  }
+  const res = await fetch(new URL(`/api/plantillas/${id}`, base).toString(), {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error("No se pudo cargar la plantilla");
+  }
+  return res.json();
 }
 
 async function createLegajo(payload: { plantilla_id: string; data: any }) {
-  return postJSON(`/api/legajos`, payload);
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("No se pudo resolver la URL de la API");
+  }
+  const res = await fetch(new URL(`/api/legajos`, base).toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "No se pudo crear el legajo");
+  }
+  return res.json();
+
 }
 
 export default function CreateView({ formId }: { formId: string }) {

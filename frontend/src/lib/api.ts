@@ -1,64 +1,19 @@
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
 
-const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
+import { getApiBaseUrl } from "@/lib/env";
 
-const isServer = typeof window === "undefined";
-
-export function resolveApiUrl(path: string): string {
-  if (ABSOLUTE_URL_REGEX.test(path)) {
-    return path;
+export async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("No se configuró la URL de la API");
   }
+  const res = await fetch(`${base}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
 
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-
-  if (typeof window === "undefined") {
-    const base = (process.env.API_URL_INTERNAL || "http://backend:8000").replace(/\/$/, "");
-    return `${base}${normalized}`;
-  }
-
-  return normalized;
-}
-
-function withAuth(init: RequestInit = {}): RequestInit {
-  const headers = new Headers(init.headers ?? {});
-
-  if (!isServer) {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-    if (token && !headers.has("Authorization")) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-  }
-
-  const requestInit: RequestInit = {
-    ...init,
-    headers,
-  };
-
-  if (!requestInit.credentials) {
-    requestInit.credentials = "include";
-  }
-
-  return requestInit;
-}
-
-export async function api(path: string, init?: RequestInit) {
-  const response = await fetch(resolveApiUrl(path), withAuth(init));
-
-  if (response.status === 401) {
-    if (!isServer) {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      window.location.href = "/login";
-    }
-    throw new Error("Unauthorized");
-  }
-
-  return response;
-}
-
-export async function getJSON<T = unknown>(path: string, init?: RequestInit): Promise<T> {
-  const res = await api(path, init);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }

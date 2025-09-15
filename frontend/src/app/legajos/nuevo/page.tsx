@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { getJSON } from "@/lib/api";
+
+import { getApiBaseUrl } from "@/lib/env";
 import ListView from "./_ListView";
 
 async function fetchPlantilla(formId: string) {
+  const base = getApiBaseUrl();
+  if (!base) return null;
+
   try {
     return await getJSON(`/api/plantillas/${formId}`, { cache: "no-store" });
   } catch (error) {

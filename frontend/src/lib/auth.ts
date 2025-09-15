@@ -1,5 +1,11 @@
 "use client";
 
+
+import { getApiBaseUrl } from "@/lib/env";
+
+const API = getApiBaseUrl() || "http://localhost:8000";
+
+
 type Tokens = { access: string; refresh: string };
 
 const LS_ACCESS = "access_token";
