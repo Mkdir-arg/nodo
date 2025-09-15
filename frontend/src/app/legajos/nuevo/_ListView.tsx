@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
-import { getApiBaseUrl } from "@/lib/env";
+import { getJSON } from "@/lib/api";
 
 
 type ListResponse = {
@@ -23,9 +23,8 @@ async function fetchLegajos({
   search?: string;
 }) {
 
-  const base = getApiBaseUrl();
-  if (!base) {
-    throw new Error("No se configuró la URL de la API");
+  if (typeof window === "undefined") {
+    throw new Error("fetchLegajos solo está disponible en el cliente");
 
   }
 

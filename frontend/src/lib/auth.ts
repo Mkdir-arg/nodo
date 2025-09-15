@@ -1,9 +1,7 @@
 "use client";
 
 
-import { getApiBaseUrl } from "@/lib/env";
-
-const API = getApiBaseUrl() || "http://localhost:8000";
+import { buildApiUrl } from "@/lib/api";
 
 
 type Tokens = { access: string; refresh: string };
@@ -36,7 +34,8 @@ async function refreshAccessToken(): Promise<string | null> {
   const tokens = getTokens();
   if (!tokens) return null;
 
-  const res = await fetch(resolvePath("/api/token/refresh/"), {
+  const res = await fetch(buildApiUrl("/api/token/refresh/", "POST"), {
+
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh: tokens.refresh }),
@@ -52,12 +51,18 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
-  const target =
-    typeof input === "string"
-      ? resolvePath(input)
-      : input instanceof URL
-        ? resolvePath(input.toString())
-        : input;
+
+  const method = (init.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET"))
+    .toUpperCase();
+  let target: RequestInfo | URL = input;
+
+  if (typeof input === "string") {
+    target = buildApiUrl(input, method);
+  } else if (input instanceof URL) {
+    target = buildApiUrl(input.toString(), method);
+  } else if (typeof Request !== "undefined" && input instanceof Request) {
+    target = new Request(buildApiUrl(input.url, method), input);
+  }
 
   let access = getTokens()?.access;
   const headers = new Headers(init.headers ?? {});
@@ -66,12 +71,16 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
     headers.set("Authorization", `Bearer ${access}`);
   }
 
+
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
   const requestInit: RequestInit = {
     ...init,
+
+    method,
+
     headers,
     credentials: init.credentials ?? "include",
   };
@@ -89,7 +98,9 @@ export async function authFetch(input: RequestInfo | URL, init: RequestInit = {}
 
 export async function login(identifier: string, password: string, remember = true) {
   const body = { identifier, password, username: identifier };
-  const res = await fetch(resolvePath("/api/token/"), {
+
+  const res = await fetch(buildApiUrl("/api/token/", "POST"), {
+
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

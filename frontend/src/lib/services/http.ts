@@ -1,15 +1,11 @@
-import { resolveApiUrl } from "@/lib/api";
+
+import { buildApiUrl } from "@/lib/api";
 
 export type HttpOptions = RequestInit & { timeoutMs?: number; auth?: boolean };
 
-const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
+export function buildUrl(path: string, method = "GET") {
+  return buildApiUrl(path, method);
 
-export function buildUrl(path: string) {
-  if (ABSOLUTE_URL_REGEX.test(path)) {
-    return path;
-  }
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return resolveApiUrl(normalized);
 }
 
 function withTimeout<T>(p: Promise<T>, ms = 15000) {
@@ -29,15 +25,12 @@ function withTimeout<T>(p: Promise<T>, ms = 15000) {
 }
 
 export async function http(path: string, opts: HttpOptions = {}) {
-  let url = buildUrl(path);
-  if (typeof window !== "undefined" && typeof url === "string" && url.includes("://backend:")) {
-    url = url.replace("://backend:", "://localhost:");
-  }
 
   const method = (opts.method || "GET").toUpperCase();
-  if (method !== "GET" && typeof url === "string") {
-    const [base, qs] = url.split("?");
-    if (!base.endsWith("/")) url = `${base}/${qs ? `?${qs}` : ""}`;
+  let url = buildUrl(path, method);
+  if (typeof window !== "undefined" && typeof url === "string" && url.includes("://backend:")) {
+    url = url.replace("://backend:", "://localhost:");
+
   }
 
   const headers: Record<string, string> = { ...(opts.headers as any) };
@@ -51,12 +44,15 @@ export async function http(path: string, opts: HttpOptions = {}) {
 
   const cfg: RequestInit = {
     ...opts,
+    method,
     headers,
     credentials: opts.credentials ?? "include",
   };
 
   try {
-    console.info("[http]", opts.method || "GET", url);
+
+    console.info("[http]", method, url);
+
     const res = await withTimeout(fetch(url, cfg), opts.timeoutMs || 15000);
 
     const ct = res.headers.get("content-type") || "";
