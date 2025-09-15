@@ -75,7 +75,7 @@ export default function ListView({ formId }: { formId: string }) {
   const { data, error, isLoading, isFetching } = useQuery({
     queryKey: ["legajos", formId, page, search],
     queryFn: () => fetchLegajos({ formId, page, search }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   const rows = useMemo(() => data?.results ?? [], [data?.results]);

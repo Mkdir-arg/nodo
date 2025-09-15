@@ -63,10 +63,15 @@ export default function PlantillaRenderPage() {
     enabled: Boolean(plantillaId),
   });
 
-  const schemaFields = useMemo(
-    () => extractSchemaFields(plantillaQuery.data?.schema),
-    [plantillaQuery.data?.schema]
-  );
+  type PlantillaDetail = {
+    schema?: unknown;
+    nombre?: string;
+  };
+
+  const plantillaData = plantillaQuery.data as PlantillaDetail | undefined;
+  const schemaSource = plantillaData?.schema;
+
+  const schemaFields = useMemo(() => extractSchemaFields(schemaSource), [schemaSource]);
 
   if (!plantillaId) {
     return (
@@ -101,7 +106,7 @@ export default function PlantillaRenderPage() {
   }
 
   const layout = layoutQuery.data.layout;
-  const nombre = plantillaQuery.data?.nombre ?? "Formulario";
+  const nombre = plantillaData?.nombre ?? "Formulario";
 
   return (
     <div className="space-y-6">

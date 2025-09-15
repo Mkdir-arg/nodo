@@ -38,7 +38,7 @@ export default function PlantillasPage() {
         page,
         page_size: 10,
       }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   const del = useMutation({

@@ -35,12 +35,13 @@ export const PlantillasService = {
 
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
+    type ExistsResponse = { exists?: boolean };
     try {
-      const r = await getJSON(`/plantillas/exists/${qs}`);
-      return !!r?.exists;
+      const r = await getJSON<ExistsResponse>(`/plantillas/exists/${qs}`);
+      return Boolean(r?.exists);
     } catch {
-      const r = await getJSON(`/formularios/exists/${qs}`);
-      return !!r?.exists;
+      const r = await getJSON<ExistsResponse>(`/formularios/exists/${qs}`);
+      return Boolean(r?.exists);
     }
   },
 

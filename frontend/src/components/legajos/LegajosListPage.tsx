@@ -100,7 +100,7 @@ export default function LegajosListPage() {
         results: rawResults.map(normalizeRow),
       } satisfies LegajosListResponse;
     },
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   const { data: plantillas = [] } = useQuery<PlantillaOption[]>({
