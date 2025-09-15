@@ -27,32 +27,32 @@ const getWithFallback = (a: string, b: string) => getJSON(a).catch(() => getJSON
 export const PlantillasService = {
   fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
     const qs = qsOf({ search: p.search, estado: p.estado, page: p.page, page_size: p.page_size });
-    const res = await getWithFallback(`/plantillas/${qs}`, `/formularios/${qs}`);
+    const res = await getWithFallback(`/api/plantillas/${qs}`, `/api/formularios/${qs}`);
     return normalizeList(res);
   },
 
-  fetchPlantilla: (id: string) => getWithFallback(`/plantillas/${id}/`, `/formularios/${id}/`),
+  fetchPlantilla: (id: string) => getWithFallback(`/api/plantillas/${id}/`, `/api/formularios/${id}/`),
 
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
     try {
-      const r = await getJSON(`/plantillas/exists/${qs}`);
+      const r = await getJSON(`/api/plantillas/exists/${qs}`);
       return !!r?.exists;
     } catch {
-      const r = await getJSON(`/formularios/exists/${qs}`);
+      const r = await getJSON(`/api/formularios/exists/${qs}`);
       return !!r?.exists;
     }
   },
 
   savePlantilla: (payload: any) =>
-    postJSON(`/plantillas/`, payload).catch(() => postJSON(`/formularios/`, payload)),
+    postJSON(`/api/plantillas/`, payload).catch(() => postJSON(`/api/formularios/`, payload)),
 
   updatePlantilla: (id: string, payload: any) =>
-    putJSON(`/plantillas/${id}/`, payload).catch(() => putJSON(`/formularios/${id}/`, payload)),
+    putJSON(`/api/plantillas/${id}/`, payload).catch(() => putJSON(`/api/formularios/${id}/`, payload)),
 
   updateVisualConfig: (id: string, cfg: any) =>
-    patchJSON(`/plantillas/${id}/visual-config/`, cfg),
+    patchJSON(`/api/plantillas/${id}/visual-config/`, cfg),
 
   deletePlantilla: (id: string) =>
-    deleteJSON(`/plantillas/${id}/`).catch(() => deleteJSON(`/formularios/${id}/`)),
+    deleteJSON(`/api/plantillas/${id}/`).catch(() => deleteJSON(`/api/formularios/${id}/`)),
 };

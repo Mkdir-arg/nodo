@@ -1,16 +1,21 @@
 /** @type {import('next').NextConfig} */
-const API_INTERNAL = process.env.API_URL_INTERNAL || "http://backend:8000";
-
 const nextConfig = {
   reactStrictMode: true,
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${API_INTERNAL.replace(/\/$/, "")}/api/:path*`,
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig;
+
+// Opcional: rewrites para usar /backend si el front corre en Docker
+// module.exports = {
+//   ...nextConfig,
+//   async rewrites() {
+//     const base = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/+$/, "");
+//     if (!base) return [];
+//     return [
+//       {
+//         source: "/backend/:path*",
+//         destination: `${base}/:path*`,
+//       },
+//     ];
+//   },
+// };

@@ -9,6 +9,8 @@ import DynamicFormRenderer from "@/lib/forms/runtime/DynamicFormRenderer";
 import type { CollectOptions } from "@/lib/forms/zodSchemaFromLayout";
 import { PlantillasService } from "@/lib/services/plantillas";
 
+type PlantillaDetail = { schema?: unknown; nombre?: string };
+
 const EMPTY_FIELDS: NonNullable<CollectOptions["fields"]> = [];
 
 function extractSchemaFields(schema: unknown): NonNullable<CollectOptions["fields"]> {
@@ -63,9 +65,16 @@ export default function PlantillaRenderPage() {
     enabled: Boolean(plantillaId),
   });
 
+  const plantillaSchema = (
+    plantillaQuery.data as PlantillaDetail | undefined
+  )?.schema;
+  const plantillaNombre = (
+    plantillaQuery.data as PlantillaDetail | undefined
+  )?.nombre;
+
   const schemaFields = useMemo(
-    () => extractSchemaFields(plantillaQuery.data?.schema),
-    [plantillaQuery.data?.schema]
+    () => extractSchemaFields(plantillaSchema),
+    [plantillaSchema]
   );
 
   if (!plantillaId) {
@@ -101,7 +110,7 @@ export default function PlantillaRenderPage() {
   }
 
   const layout = layoutQuery.data.layout;
-  const nombre = plantillaQuery.data?.nombre ?? "Formulario";
+  const nombre = plantillaNombre ?? "Formulario";
 
   return (
     <div className="space-y-6">
