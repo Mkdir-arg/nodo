@@ -11,7 +11,7 @@ def test_hidden_field_removed(db):
             ]}
         ]}
     )
-    serializer = LegajoSerializer(data={"plantilla": str(plantilla.id), "data": {"a": "1", "b": "2"}})
+    serializer = LegajoSerializer(data={"plantilla_id": str(plantilla.id), "data": {"a": "1", "b": "2"}})
     assert serializer.is_valid(), serializer.errors
     legajo = serializer.save()
     assert "b" not in legajo.data

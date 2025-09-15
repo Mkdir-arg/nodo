@@ -1,18 +1,88 @@
 from rest_framework import serializers
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .models import Legajo
 from plantillas.models import Plantilla
 from plantillas.validators import run_schema_validations
 
 
 class LegajoSerializer(serializers.ModelSerializer):
-    plantilla = serializers.PrimaryKeyRelatedField(queryset=Plantilla.objects.all())
+    plantilla_id = serializers.PrimaryKeyRelatedField(
+        source="plantilla", queryset=Plantilla.objects.all()
+    )
     data = serializers.JSONField()
+    display = serializers.SerializerMethodField()
+    estado = serializers.SerializerMethodField()
 
     class Meta:
         model = Legajo
-        fields = ("id", "plantilla", "data", "created_at", "updated_at")
-        read_only_fields = ("created_at", "updated_at")
+        fields = (
+            "id",
+            "plantilla_id",
+            "display",
+            "estado",
+            "data",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("display", "estado", "created_at", "updated_at")
+
+    def get_display(self, obj: Legajo) -> Optional[str]:
+        data = obj.data or {}
+        grid_values = obj.grid_values or {}
+        if isinstance(grid_values, dict):
+            display = grid_values.get("display") or grid_values.get("nombre")
+            if display:
+                return display
+        if isinstance(data, dict):
+            display = data.get("display")
+            if display:
+                return display
+
+            def pick_name(container: Dict[str, Any]) -> Optional[str]:
+                apellido = (
+                    container.get("apellido")
+                    or container.get("last_name")
+                    or container.get("apellidos")
+                )
+                nombre = (
+                    container.get("nombre")
+                    or container.get("first_name")
+                    or container.get("nombres")
+                )
+                if apellido and nombre:
+                    return f"{apellido}, {nombre}"
+                if nombre:
+                    return str(nombre)
+                if apellido:
+                    return str(apellido)
+                return None
+
+            for key in ("ciudadano", "persona", "titular"):
+                container = data.get(key)
+                if isinstance(container, dict):
+                    guess = pick_name(container)
+                    if guess:
+                        return guess
+
+            guess = pick_name(data)
+            if guess:
+                return guess
+
+        return str(obj.id)
+
+    def get_estado(self, obj: Legajo) -> Optional[str]:
+        candidates = []
+        if isinstance(obj.grid_values, dict):
+            candidates.append(obj.grid_values)
+        if isinstance(obj.data, dict):
+            candidates.append(obj.data)
+
+        for source in candidates:
+            for key in ("estado", "status", "estado_legajo", "estadoLegajo"):
+                value = source.get(key)
+                if value not in (None, ""):
+                    return value
+        return "ACTIVO"
 
     def _flat(self, data: Dict[str, Any]):
         return data
