@@ -1,3 +1,18 @@
+"use client";
+
+import { useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { Button } from "@/components/ui/button";
+import { plantillasKeys, saveLayout } from "@/lib/api/plantillas";
+import type { FormLayout } from "@/lib/forms/types";
+import {
+  canvasNodesToLayout,
+  canvasNodesToPreviewSchema,
+  useCanvasGridContext,
+} from "./CanvasGrid";
+import { useToast } from "@/components/ui/toast-provider";
+
 function formatUpdatedAt(value: string) {
   if (!value) return "Sin fecha";
   const date = new Date(value);
@@ -13,10 +28,50 @@ function formatUpdatedAt(value: string) {
 interface ToolbarProps {
   plantillaId: string;
   layoutVersion: number;
+  layoutDefinitionVersion: number;
   updatedAt: string;
 }
 
-export default function Toolbar({ plantillaId, layoutVersion, updatedAt }: ToolbarProps) {
+export default function Toolbar({
+  plantillaId,
+  layoutVersion,
+  layoutDefinitionVersion,
+  updatedAt,
+}: ToolbarProps) {
+  const { nodes } = useCanvasGridContext();
+  const queryClient = useQueryClient();
+  const { success: showSuccessToast, error: showErrorToast } = useToast();
+
+  const saveMutation = useMutation({
+    mutationFn: (layout: FormLayout) => saveLayout(plantillaId, layout),
+    onSuccess: (data) => {
+      queryClient.setQueryData(plantillasKeys.layout(plantillaId), data);
+      showSuccessToast("Cambios guardados correctamente.");
+    },
+    onError: () => {
+      showErrorToast("No se pudieron guardar los cambios.");
+    },
+  });
+
+  const handleSave = useCallback(() => {
+    const layout = canvasNodesToLayout(nodes, layoutDefinitionVersion);
+    saveMutation.mutate(layout);
+  }, [layoutDefinitionVersion, nodes, saveMutation]);
+
+  const handlePreview = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const schema = canvasNodesToPreviewSchema(nodes);
+    try {
+      window.localStorage.setItem(
+        "nodo.plantilla.preview",
+        JSON.stringify(schema),
+      );
+      window.open("/plantillas/previsualizacion", "_blank", "noopener,noreferrer");
+    } catch (error) {
+      showErrorToast("No fue posible abrir la vista previa.");
+    }
+  }, [nodes, showErrorToast]);
+
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
       <div className="space-y-1">
@@ -33,14 +88,26 @@ export default function Toolbar({ plantillaId, layoutVersion, updatedAt }: Toolb
         <div>
           Última actualización: <span className="font-medium text-slate-700 dark:text-slate-200">{formatUpdatedAt(updatedAt)}</span>
         </div>
-        <button
-          type="button"
-          disabled
-          className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-slate-300 bg-slate-100/60 px-3 py-1 text-xs font-medium text-slate-500 transition dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-400"
-          title="La opción de guardar estará disponible próximamente"
-        >
-          Guardar cambios
-        </button>
+        <div className="flex items-center gap-2 text-sm">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handlePreview}
+            className="text-xs"
+          >
+            Vista previa
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={saveMutation.isPending}
+            className="text-xs"
+          >
+            {saveMutation.isPending ? "Guardando…" : "Guardar cambios"}
+          </Button>
+        </div>
       </div>
     </header>
   );
