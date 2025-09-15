@@ -2,7 +2,7 @@ import { getJSON, postJSON } from '@/lib/api';
 
 export const LegajosService = {
   create: (payload: { plantilla_id: string; data: any }) =>
-    postJSON(`/legajos/`, payload),
+    postJSON(`/api/legajos/`, payload),
   list: (
     params: { formId?: string; page?: number; page_size?: number; search?: string } = {}
   ) => {
@@ -12,7 +12,7 @@ export const LegajosService = {
     if (params.page_size) q.set('page_size', String(params.page_size));
     if (params.search) q.set('search', params.search);
     const qs = q.toString();
-    return getJSON(`/legajos/${qs ? `?${qs}` : ''}`);
+    return getJSON(`/api/legajos/${qs ? `?${qs}` : ''}`);
   },
-  get: (id: string) => getJSON(`/legajos/${id}/`),
+  get: (id: string) => getJSON(`/api/legajos/${id}/`),
 };

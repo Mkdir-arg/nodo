@@ -1,6 +1,6 @@
 "use client";
 
-import { login as requestLogin, me as requestMe, refreshToken } from "@/lib/services/auth";
+import { login as requestLogin, me as requestMe, refreshToken } from "@/services/auth";
 import { Tokens, clearStoredTokens, getStoredTokens, storeTokens } from "@/lib/tokens";
 
 export function getTokens(): Tokens | null {
