@@ -1,10 +1,8 @@
 import { nanoid } from "nanoid";
 
-export type FieldType =
-  | "text"|"textarea"|"number"
-  | "select"|"dropdown"|"multiselect"|"select_with_filter"
-  | "date"|"document"|"sum"|"phone"|"cuit_razon_social"
-  | "info"|"group";
+import type { FieldType } from "@/lib/forms/types";
+
+export type { FieldType } from "@/lib/forms/types";
 
 const LAYOUT_DEFAULTS: Record<string, { w: number; h: number }> = {
   "ui:header": { w: 12, h: 5 },
