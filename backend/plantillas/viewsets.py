@@ -2,7 +2,11 @@ from rest_framework import viewsets, decorators, response, status, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Plantilla
-from .serializers import PlantillaSerializer, PlantillaVisualConfigSerializer
+from .serializers import (
+    PlantillaLayoutSerializer,
+    PlantillaSerializer,
+    PlantillaVisualConfigSerializer,
+)
 
 
 class PlantillaViewSet(viewsets.ModelViewSet):
@@ -36,3 +40,15 @@ class PlantillaViewSet(viewsets.ModelViewSet):
         plantilla.visual_config = serializer.validated_data["visual_config"]
         plantilla.save(update_fields=["visual_config"])
         return response.Response(serializer.validated_data["visual_config"])
+
+    @decorators.action(detail=True, methods=["get", "put"], url_path="layout")
+    def layout(self, request, pk=None):
+        plantilla = self.get_object()
+        if request.method == "GET":
+            serializer = PlantillaLayoutSerializer(plantilla)
+            return response.Response(serializer.data)
+
+        serializer = PlantillaLayoutSerializer(instance=plantilla, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(serializer.data)
