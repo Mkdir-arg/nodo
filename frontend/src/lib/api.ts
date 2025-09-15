@@ -1,3 +1,4 @@
+
 import { getApiBaseUrl } from "@/lib/env";
 
 export async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
@@ -12,14 +13,29 @@ export async function fetcher<T>(url: string, options: RequestInit = {}): Promis
       ...options.headers,
     },
   });
+
   if (!res.ok) {
-    throw new Error('API error');
+    throw new Error(`HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
 
-export const api = {
-  get: (url: string) => fetcher(url),
-  post: (url: string, data: any) => fetcher(url, { method: 'POST', body: JSON.stringify(data) }),
-  put: (url: string, data: any) => fetcher(url, { method: 'PUT', body: JSON.stringify(data) }),
-};
+export async function postJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers ?? {});
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const res = await api(path, {
+    ...init,
+    method: init?.method ?? "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  return res.json() as Promise<T>;
+}

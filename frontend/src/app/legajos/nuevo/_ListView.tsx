@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getApiBaseUrl } from "@/lib/env";
 
+
 type ListResponse = {
   results: Array<Record<string, any>>;
   next: string | null;
@@ -21,21 +22,21 @@ async function fetchLegajos({
   page?: number;
   search?: string;
 }) {
+
   const base = getApiBaseUrl();
   if (!base) {
     throw new Error("No se configuró la URL de la API");
+
   }
-  const url = new URL(`/api/legajos`, base);
+
+  const url = new URL(`/api/legajos`, window.location.origin);
   url.searchParams.set("plantilla_id", formId);
   url.searchParams.set("page", String(page));
   if (search) {
     url.searchParams.set("search", search);
   }
-  const res = await fetch(url.toString(), { credentials: "include" });
-  if (!res.ok) {
-    throw new Error("No se pudo cargar la lista de legajos");
-  }
-  return (await res.json()) as ListResponse;
+
+  return getJSON<ListResponse>(`${url.pathname}${url.search}`);
 }
 
 function fmtDate(value?: string) {

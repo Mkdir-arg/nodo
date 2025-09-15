@@ -1,3 +1,4 @@
+
 import SectionRenderer from '@/components/legajo/SectionRenderer';
 import { getApiBaseUrl } from '@/lib/env';
 
@@ -10,6 +11,7 @@ export default async function LegajoDetallePage({ params }: { params: { id: stri
     cache: 'no-store',
   });
   const { data, schema, meta } = await res.json();
+
   const sections = schema?.nodes || schema?.sections || [];
 
   return (
