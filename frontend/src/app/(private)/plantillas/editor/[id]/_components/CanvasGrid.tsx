@@ -25,6 +25,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent,
   type ReactNode,
 } from "react";
 
@@ -667,6 +668,8 @@ interface CanvasGridContextValue {
   selectNode: (id: string | null) => void;
   removeNode: (id: string) => void;
   updateNode: (id: string, patch: Partial<CanvasNode>) => void;
+  addNodeFromPalette: (component: CanvasPaletteItem) => void;
+  moveNodeBy: (id: string, deltaRow: number, deltaCol: number) => void;
   setGridElement: (element: HTMLDivElement | null) => void;
 }
 
@@ -757,6 +760,70 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
     },
     [],
   );
+
+  const addNodeFromPalette = useCallback(
+    (component: CanvasPaletteItem) => {
+      let createdId: string | null = null;
+      setNodes((prev) => {
+        const colSpan = normalizeColSpan(component.colSpan);
+        const resolved = resolvePosition({ row: 0, col: 0 }, colSpan, prev);
+        const id = nanoid();
+        const name = generateUniqueName(component.label, prev);
+        const newNode: CanvasNode = {
+          id,
+          componentKey: component.key,
+          label: component.label,
+          name,
+          description: component.description ?? "",
+          placeholder: "",
+          required: false,
+          row: resolved.row,
+          col: resolved.col,
+          colSpan,
+          options: buildDefaultOptions(component.key),
+          min: undefined,
+          max: undefined,
+          step: undefined,
+          minDate: undefined,
+          maxDate: undefined,
+          accept: component.key === "file" ? [] : undefined,
+          maxSizeMB: undefined,
+        };
+        createdId = id;
+        return [...prev, newNode];
+      });
+      if (createdId) {
+        setSelectedNodeId(createdId);
+      }
+    },
+    [setSelectedNodeId],
+  );
+
+  const moveNodeBy = useCallback((id: string, deltaRow: number, deltaCol: number) => {
+    if (!deltaRow && !deltaCol) return;
+    setNodes((prev) => {
+      const index = prev.findIndex((node) => node.id === id);
+      if (index < 0) return prev;
+
+      const current = prev[index];
+      const desired = {
+        row: Math.max(0, current.row + deltaRow),
+        col: clampColumn(current.col + deltaCol, current.colSpan),
+      };
+      const resolved = resolvePosition(desired, current.colSpan, prev, id);
+      if (resolved.row === current.row && resolved.col === current.col) {
+        return prev;
+      }
+
+      const nextNodes = [...prev];
+      nextNodes[index] = {
+        ...current,
+        row: resolved.row,
+        col: resolved.col,
+      };
+      return nextNodes;
+    });
+  }, []);
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -928,6 +995,8 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
       selectNode,
       removeNode,
       updateNode,
+      addNodeFromPalette,
+      moveNodeBy,
       setGridElement,
     }),
     [
@@ -938,6 +1007,8 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
       selectNode,
       removeNode,
       updateNode,
+      addNodeFromPalette,
+      moveNodeBy,
       setGridElement,
     ],
   );
@@ -1072,7 +1143,8 @@ interface CanvasNodeItemProps {
 }
 
 function CanvasNodeItem({ node, isSelected }: CanvasNodeItemProps) {
-  const { selectNode, removeNode, activeNodeId } = useCanvasGridContext();
+  const { selectNode, removeNode, updateNode, moveNodeBy, activeNodeId } =
+    useCanvasGridContext();
   const {
     attributes,
     listeners,
@@ -1092,6 +1164,67 @@ function CanvasNodeItem({ node, isSelected }: CanvasNodeItemProps) {
     zIndex: isDragging || activeNodeId === node.id ? 40 : undefined,
   };
 
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.defaultPrevented) return;
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        removeNode(node.id);
+        return;
+      }
+
+      if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+        event.preventDefault();
+        selectNode(node.id);
+        return;
+      }
+
+      if (event.shiftKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        event.preventDefault();
+        const delta = event.key === "ArrowLeft" ? -1 : 1;
+        const nextSpan = Math.min(
+          GRID_COLUMNS,
+          Math.max(1, node.colSpan + delta),
+        );
+        if (nextSpan !== node.colSpan) {
+          updateNode(node.id, { colSpan: nextSpan });
+        }
+        return;
+      }
+
+      switch (event.key) {
+        case "ArrowLeft":
+          event.preventDefault();
+          moveNodeBy(node.id, 0, -1);
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          moveNodeBy(node.id, 0, 1);
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          moveNodeBy(node.id, -1, 0);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          moveNodeBy(node.id, 1, 0);
+          break;
+        case "Home":
+          event.preventDefault();
+          moveNodeBy(node.id, 0, -GRID_COLUMNS);
+          break;
+        case "End":
+          event.preventDefault();
+          moveNodeBy(node.id, 0, GRID_COLUMNS);
+          break;
+        default:
+          break;
+      }
+    },
+    [moveNodeBy, node.colSpan, node.id, removeNode, selectNode, updateNode],
+  );
+
   return (
     <div ref={setNodeRef} style={style} className="relative h-full">
       <FieldDraggable
@@ -1103,7 +1236,10 @@ function CanvasNodeItem({ node, isSelected }: CanvasNodeItemProps) {
         setActivatorNodeRef={setActivatorNodeRef}
         onDelete={() => removeNode(node.id)}
         onSelect={() => selectNode(node.id)}
+        onFocus={() => selectNode(node.id)}
+        onKeyDown={handleKeyDown}
         isSelected={isSelected}
+        aria-grabbed={isDragging}
         className={clsx("h-full", isDragging ? "opacity-0" : "opacity-100")}
       />
     </div>
@@ -1182,12 +1318,19 @@ export default function CanvasGrid() {
             {cells}
             {previewNode ? (
               <div
-                className="pointer-events-none z-20 rounded-lg border-2 border-indigo-400/80 bg-indigo-400/10"
+                aria-hidden="true"
+                className="pointer-events-none z-20 flex flex-col gap-1 rounded-lg border-2 border-indigo-400/80 bg-indigo-400/10 p-2 text-xs font-medium text-indigo-700 dark:text-indigo-200"
                 style={{
                   gridColumn: `${previewNode.col + 1} / span ${previewNode.colSpan}`,
                   gridRow: `${previewNode.row + 1}`,
                 }}
-              />
+              >
+                <span className="truncate">{previewNode.label}</span>
+                <span className="inline-flex items-center gap-1 self-start rounded-full bg-indigo-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:bg-indigo-400/20 dark:text-indigo-100">
+                  {previewNode.colSpan} columna
+                  {previewNode.colSpan === 1 ? "" : "s"}
+                </span>
+              </div>
             ) : null}
             {sortedNodes.map((node) => (
               <CanvasNodeItem
