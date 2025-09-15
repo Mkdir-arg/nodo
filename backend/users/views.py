@@ -7,18 +7,28 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import CustomTokenObtainPairSerializer, UserSerializer
+from .serializers import EmailOrUsernameTokenObtainPairSerializer, UserSerializer
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+    serializer_class = EmailOrUsernameTokenObtainPairSerializer
 
 
 class AuthMeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        user = request.user
+        return Response(
+            {
+                "id": user.id,
+                "username": getattr(user, user.USERNAME_FIELD, user.username),
+                "email": getattr(user, "email", ""),
+                "is_active": user.is_active,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
+            }
+        )
 
 
 class UserListAPIView(ListAPIView):

@@ -1,4 +1,4 @@
-import { http } from './http';
+import { deleteJSON, getJSON, patchJSON, postJSON, putJSON } from '@/lib/api';
 
 export type FetchPlantillasParams = {
   search?: string;
@@ -22,7 +22,7 @@ const normalizeList = (res: any) => {
   return { count: res?.count ?? 0, results: res?.results ?? [] };
 };
 
-const getWithFallback = (a: string, b: string) => http(a).catch(() => http(b));
+const getWithFallback = (a: string, b: string) => getJSON(a).catch(() => getJSON(b));
 
 export const PlantillasService = {
   fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
@@ -36,29 +36,23 @@ export const PlantillasService = {
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
     try {
-      const r = await http(`/plantillas/exists/${qs}`);
+      const r = await getJSON(`/plantillas/exists/${qs}`);
       return !!r?.exists;
     } catch {
-      const r = await http(`/formularios/exists/${qs}`);
+      const r = await getJSON(`/formularios/exists/${qs}`);
       return !!r?.exists;
     }
   },
 
   savePlantilla: (payload: any) =>
-    http(`/plantillas/`, { method: 'POST', body: JSON.stringify(payload) }).catch(() =>
-      http(`/formularios/`, { method: 'POST', body: JSON.stringify(payload) })
-    ),
+    postJSON(`/plantillas/`, payload).catch(() => postJSON(`/formularios/`, payload)),
 
   updatePlantilla: (id: string, payload: any) =>
-    http(`/plantillas/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }).catch(() =>
-      http(`/formularios/${id}/`, { method: 'PUT', body: JSON.stringify(payload) })
-    ),
+    putJSON(`/plantillas/${id}/`, payload).catch(() => putJSON(`/formularios/${id}/`, payload)),
 
   updateVisualConfig: (id: string, cfg: any) =>
-    http(`/plantillas/${id}/visual-config/`, { method: 'PATCH', body: JSON.stringify(cfg) }),
+    patchJSON(`/plantillas/${id}/visual-config/`, cfg),
 
   deletePlantilla: (id: string) =>
-    http(`/plantillas/${id}/`, { method: 'DELETE' }).catch(() =>
-      http(`/formularios/${id}/`, { method: 'DELETE' })
-    ),
+    deleteJSON(`/plantillas/${id}/`).catch(() => deleteJSON(`/formularios/${id}/`)),
 };
