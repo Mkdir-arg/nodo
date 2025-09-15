@@ -1,3 +1,7 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+
 function formatUpdatedAt(value: string) {
   if (!value) return "Sin fecha";
   const date = new Date(value);
@@ -14,9 +18,17 @@ interface ToolbarProps {
   plantillaId: string;
   layoutVersion: number;
   updatedAt: string;
+  isPreviewOpen: boolean;
+  onTogglePreview: () => void;
 }
 
-export default function Toolbar({ plantillaId, layoutVersion, updatedAt }: ToolbarProps) {
+export default function Toolbar({
+  plantillaId,
+  layoutVersion,
+  updatedAt,
+  isPreviewOpen,
+  onTogglePreview,
+}: ToolbarProps) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300">
       <div className="space-y-1">
@@ -29,18 +41,29 @@ export default function Toolbar({ plantillaId, layoutVersion, updatedAt }: Toolb
         </p>
       </div>
 
-      <div className="flex flex-col items-end gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <div className="flex flex-col items-end gap-3 text-xs text-slate-500 dark:text-slate-400">
         <div>
           Última actualización: <span className="font-medium text-slate-700 dark:text-slate-200">{formatUpdatedAt(updatedAt)}</span>
         </div>
-        <button
-          type="button"
-          disabled
-          className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-slate-300 bg-slate-100/60 px-3 py-1 text-xs font-medium text-slate-500 transition dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-400"
-          title="La opción de guardar estará disponible próximamente"
-        >
-          Guardar cambios
-        </button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant={isPreviewOpen ? "secondary" : "default"}
+            onClick={onTogglePreview}
+            aria-pressed={isPreviewOpen}
+            className="h-8 px-3 text-xs font-semibold"
+          >
+            {isPreviewOpen ? "Cerrar vista previa" : "Ver vista previa"}
+          </Button>
+          <button
+            type="button"
+            disabled
+            className="inline-flex cursor-not-allowed items-center justify-center rounded-lg border border-slate-300 bg-slate-100/60 px-3 py-1 text-xs font-medium text-slate-500 transition dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-400"
+            title="La opción de guardar estará disponible próximamente"
+          >
+            Guardar cambios
+          </button>
+        </div>
       </div>
     </header>
   );
