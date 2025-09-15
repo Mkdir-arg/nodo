@@ -1,8 +1,4 @@
 {
-  "/legajos/page": "app/legajos/page.js",
-  "/plantillas/page": "app/plantillas/page.js",
-  "/legajos/nuevo/page": "app/legajos/nuevo/page.js",
-  "/plantillas/crear/page": "app/plantillas/crear/page.js",
-  "/plantillas/editar/[id]/page": "app/plantillas/editar/[id]/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/page": "app/page.js",
+  "/login/page": "app/login/page.js"
 }
