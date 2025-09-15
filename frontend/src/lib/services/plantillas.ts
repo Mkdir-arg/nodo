@@ -1,4 +1,4 @@
-import { http } from './http';
+import { deleteJSON, getJSON, patchJSON, postJSON, putJSON } from '@/lib/api';
 
 export type FetchPlantillasParams = {
   search?: string;
@@ -22,40 +22,45 @@ const normalizeList = (res: any) => {
   return { count: res?.count ?? 0, results: res?.results ?? [] };
 };
 
-const getWithFallback = (a: string, b: string) => http(a).catch(() => http(b));
+const getWithFallback = <T = any>(a: string, b: string) =>
+  getJSON<T>(a).catch(() => getJSON<T>(b));
 
 export const PlantillasService = {
   fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
-    const qs = qsOf({ search: p.search, estado: p.estado, page: p.page, page_size: p.page_size });
-    const res = await getWithFallback(`/plantillas/${qs}`, `/formularios/${qs}`);
+    const qs = qsOf({
+      search: p.search,
+      estado: p.estado,
+      page: p.page,
+      page_size: p.page_size,
+    });
+    const res = await getWithFallback(`/api/plantillas/${qs}`, `/api/formularios/${qs}`);
     return normalizeList(res);
   },
 
-  fetchPlantilla: (id: string) => getWithFallback(`/plantillas/${id}/`, `/formularios/${id}/`),
+  fetchPlantilla: (id: string) =>
+    getWithFallback(`/api/plantillas/${id}/`, `/api/formularios/${id}/`),
 
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
+    type ExistsResponse = { exists?: boolean };
     try {
-      const r = await http(`/plantillas/exists/${qs}`);
-      return !!r?.exists;
+      const r = await getJSON<ExistsResponse>(`/api/plantillas/exists/${qs}`);
+      return Boolean(r?.exists);
     } catch {
-      const r = await http(`/formularios/exists/${qs}`);
-      return !!r?.exists;
+      const r = await getJSON<ExistsResponse>(`/api/formularios/exists/${qs}`);
+      return Boolean(r?.exists);
     }
   },
 
   savePlantilla: (payload: any) =>
-    http(`/plantillas/`, { method: 'POST', body: JSON.stringify(payload) }).catch(() =>
-      http(`/formularios/`, { method: 'POST', body: JSON.stringify(payload) })
-    ),
+    postJSON(`/api/plantillas/`, payload).catch(() => postJSON(`/api/formularios/`, payload)),
 
   updatePlantilla: (id: string, payload: any) =>
-    http(`/plantillas/${id}/`, { method: 'PUT', body: JSON.stringify(payload) }).catch(() =>
-      http(`/formularios/${id}/`, { method: 'PUT', body: JSON.stringify(payload) })
-    ),
+    putJSON(`/api/plantillas/${id}/`, payload).catch(() => putJSON(`/api/formularios/${id}/`, payload)),
+
+  updateVisualConfig: (id: string, cfg: any) =>
+    patchJSON(`/api/plantillas/${id}/visual-config/`, cfg),
 
   deletePlantilla: (id: string) =>
-    http(`/plantillas/${id}/`, { method: 'DELETE' }).catch(() =>
-      http(`/formularios/${id}/`, { method: 'DELETE' })
-    ),
+    deleteJSON(`/api/plantillas/${id}/`).catch(() => deleteJSON(`/api/formularios/${id}/`)),
 };

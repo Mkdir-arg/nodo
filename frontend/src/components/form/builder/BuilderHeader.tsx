@@ -6,6 +6,7 @@ import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { serializeTemplateSchema } from '@/lib/serializeTemplate';
 import { PLANTILLAS_QUERY_KEY } from '@/lib/hooks/usePlantillasMin';
+import { useTemplateStore } from '@/stores/templateStore';
 
 export default function BuilderHeader() {
   const router = useRouter();
@@ -25,11 +26,25 @@ export default function BuilderHeader() {
     setSaving(true);
     try {
       const schema = serializeTemplateSchema(nombre.trim(), sections || []);
-      await PlantillasService.savePlantilla({
+      const { visualConfig } = useTemplateStore.getState();
+      type SavePlantillaResult = {
+        id?: string | number;
+      };
+
+      const saved = (await PlantillasService.savePlantilla({
         nombre: nombre.trim(),
         descripcion: '',
         schema,
-      });
+        visual_config: visualConfig,
+      })) as SavePlantillaResult;
+      const schemaId =
+        schema && typeof schema === 'object' ? (schema as { id?: string | number }).id : undefined;
+      const id = saved?.id ?? schemaId;
+      if (id) {
+        try {
+          await PlantillasService.updateVisualConfig(String(id), visualConfig);
+        } catch {}
+      }
       await qc.invalidateQueries({ queryKey: PLANTILLAS_QUERY_KEY });
       await qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
 

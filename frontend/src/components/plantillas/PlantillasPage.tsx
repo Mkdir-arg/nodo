@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import DeleteConfirm from './DeleteConfirm';
@@ -18,9 +18,7 @@ export default function PlantillasPage() {
   const dq = useDebouncedValue(q, 300);
   const [estado, setEstado] = useState<Estado>('TODAS');
   const [page, setPage] = useState(1);
-  const [toDelete, setToDelete] = useState<{ id: string; nombre: string } | null>(
-    null
-  );
+  const [toDelete, setToDelete] = useState<{ id: string; nombre: string } | null>(null);
 
   useEffect(() => {
     if (params.get('created') === '1') {
@@ -38,7 +36,7 @@ export default function PlantillasPage() {
         page,
         page_size: 10,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const del = useMutation({
@@ -61,8 +59,8 @@ export default function PlantillasPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['plantillas', 'list'] }),
   });
 
-  const results = data?.results ?? [];
-  const total = data?.count ?? results.length;
+  const results = (data as any)?.results ?? [];
+  const total = (data as any)?.count ?? results.length;
   const totalPages = Math.max(1, Math.ceil(total / 10));
 
   return (
@@ -94,9 +92,7 @@ export default function PlantillasPage() {
             placeholder="Buscar por nombre…"
             className="w-full border rounded-xl pl-9 pr-3 py-2 dark:bg-slate-900 dark:border-slate-700"
           />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">
-            🔎
-          </span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">🔎</span>
         </div>
         <select
           value={estado}
@@ -135,10 +131,7 @@ export default function PlantillasPage() {
                 onEditar={() => router.push(`/plantillas/editar/${p.id}`)}
                 onPreview={() => {
                   try {
-                    localStorage.setItem(
-                      'nodo.plantilla.preview',
-                      JSON.stringify(p.schema)
-                    );
+                    localStorage.setItem('nodo.plantilla.preview', JSON.stringify(p.schema));
                   } catch {}
                   window.open('/plantillas/previsualizacion', '_blank');
                 }}
@@ -153,9 +146,7 @@ export default function PlantillasPage() {
 
       {/* Footer paginación */}
       <div className="flex items-center justify-between text-sm">
-        <div className="opacity-70">
-          {isFetching ? 'Actualizando…' : `${total} resultados`}
-        </div>
+        <div className="opacity-70">{isFetching ? 'Actualizando…' : `${total} resultados`}</div>
         <div className="flex gap-2">
           <button
             disabled={page <= 1}
@@ -205,16 +196,12 @@ function Row({
   onDuplicar: () => void;
   onEliminar: () => void;
 }) {
-  const fecha = formatDate(
-    data.updated_at || data.updatedAt || data.updated || data.created_at
-  );
+  const fecha = formatDate(data.updated_at || data.updatedAt || data.updated || data.created_at);
   const estado = String(data.estado || 'ACTIVO').toUpperCase();
   return (
     <div className={`px-4 py-3 ${cols}`}>
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 grid place-items-center rounded-lg bg-sky-100 dark:bg-sky-900">
-          📄
-        </div>
+        <div className="w-8 h-8 grid place-items-center rounded-lg bg-sky-100 dark:bg-sky-900">📄</div>
         <div>
           <div className="font-medium">{data.nombre}</div>
           <div className="text-xs opacity-60">{data.descripcion || '—'}</div>
@@ -243,13 +230,7 @@ function Row({
       <div className="text-sm tabular-nums">v{data.version ?? 1}</div>
       <div className="text-sm">{fecha}</div>
       <div>
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            estado === 'ACTIVO'
-              ? 'bg-emerald-100 text-emerald-800'
-              : 'bg-gray-200 text-gray-700'
-          }`}
-        >
+        <span className={`px-2 py-1 rounded-full text-xs ${estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
           {estado}
         </span>
       </div>
@@ -286,17 +267,10 @@ function SkeletonRows() {
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="px-6 py-12 text-center">
-      <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-sky-100">
-        ✨
-      </div>
+      <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-sky-100">✨</div>
       <h3 className="text-lg font-semibold mb-1">No hay plantillas</h3>
-      <p className="text-sm opacity-70 mb-4">
-        Crea tu primera plantilla para empezar a cargar legajos.
-      </p>
-      <button
-        onClick={onCreate}
-        className="px-4 py-2 rounded-xl bg-sky-600 text-white"
-      >
+      <p className="text-sm opacity-70 mb-4">Crea tu primera plantilla para empezar a cargar legajos.</p>
+      <button onClick={onCreate} className="px-4 py-2 rounded-xl bg-sky-600 text-white">
         + Crear plantilla
       </button>
     </div>
@@ -308,8 +282,5 @@ function formatDate(iso?: string) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
   const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-

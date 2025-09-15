@@ -1,18 +1,30 @@
-import { LegajosService } from '@/lib/services/legajos';
 
-export default async function LegajoDetallePage({ params }:{params:{id:string}}) {
-  const legajo: any = await LegajosService.get(params.id);
+import SectionRenderer from "@/components/legajo/SectionRenderer";
+import { getJSON } from "@/lib/api";
+
+type LegajoResponse = {
+  data?: Record<string, unknown>;
+  schema?: {
+    nodes?: unknown[];
+    sections?: unknown[];
+  };
+  meta?: Record<string, unknown>;
+};
+
+export default async function LegajoDetallePage({ params }: { params: { id: string } }) {
+  const response = await getJSON<LegajoResponse>(`/api/legajos/${params.id}`, { cache: "no-store" });
+
+  const data = response.data ?? {};
+  const schema = response.schema ?? {};
+  const meta = response.meta ?? {};
+
+  const sections = schema?.nodes || schema?.sections || [];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Legajo</h1>
-      <div className="space-y-1 text-sm">
-        <div><strong>Plantilla:</strong> {legajo.plantilla}</div>
-        <div><strong>Creado:</strong> {new Date(legajo.created_at).toLocaleString()}</div>
-        <div><strong>Actualizado:</strong> {new Date(legajo.updated_at).toLocaleString()}</div>
-      </div>
-      <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto">
-        {JSON.stringify(legajo.data, null, 2)}
-      </pre>
+    <div className="space-y-8">
+      {sections.map((s: any) => (
+        <SectionRenderer key={s.id} section={s} ctx={{ data, meta }} />
+      ))}
     </div>
   );
 }

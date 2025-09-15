@@ -1,4 +1,7 @@
 import { nanoid } from 'nanoid';
+import { defLayout } from '@/lib/form-builder/factory';
+
+const isUiNode = (node: any) => node?.kind === 'ui' || String(node?.type || '').startsWith('ui:');
 
 function clean<T extends Record<string, any>>(obj: T): T {
   const out: any = Array.isArray(obj) ? [] : {};
@@ -11,59 +14,40 @@ function clean<T extends Record<string, any>>(obj: T): T {
   return out as T;
 }
 
+function ensureNode(node: any) {
+  const copy = JSON.parse(JSON.stringify(node ?? {}));
+  const id = copy.id ?? `fld_${nanoid(6)}`;
+  copy.id = id;
+  const layoutDefaults = defLayout(copy.type ?? '');
+  const layout = copy.layout ?? {};
+  copy.layout = {
+    i: layout.i ?? id,
+    x: typeof layout.x === 'number' ? layout.x : 0,
+    y: typeof layout.y === 'number' ? layout.y : 0,
+    w: layout.w ?? layoutDefaults.w,
+    h: layout.h ?? layoutDefaults.h,
+  };
+  copy.kind = isUiNode(copy) ? 'ui' : 'field';
+  if (Array.isArray(copy.children)) {
+    copy.children = copy.children.map((child: any) => ensureNode(child));
+  }
+  return clean(copy);
+}
+
 export function serializeTemplateSchema(nombre: string, sections: any[]) {
   const nodes: any[] = [];
 
-  sections.forEach((sec: any) => {
-    const sectionNode = {
+  (sections || []).forEach((sec: any) => {
+    const normalizedNodes = (sec?.nodes || sec?.children || []).map((n: any) => ensureNode(n));
+    const sectionNode = clean({
       type: 'section' as const,
-      id: sec.id,
-      title: sec.title || 'Sección',
+      id: sec?.id,
+      title: sec?.title || 'Sección',
       collapsed: false,
-      children: [] as any[],
-    };
-
-    (sec.children || []).forEach((f: any) => {
-      const base: any = {
-        type: f.type,
-        id: f.id,
-        key: f.key,
-        label: f.label || 'Sin título',
-        required: !!f.required,
-        helpText: f.helpText,
-        seMuestraEnGrilla: !!f.seMuestraEnGrilla,
-        esSubsanable: !!f.esSubsanable,
-        esEditableOperador: !!f.esEditableOperador,
-      };
-
-      if (f.type === 'text' || f.type === 'textarea') {
-        base.maxLength = f.maxLength;
-        base.pattern = f.pattern;
-        base.placeholder = f.placeholder;
-      }
-      if (f.type === 'number') {
-        base.min = f.min;
-        base.max = f.max;
-        base.step = f.step;
-      }
-      if (['select', 'multiselect', 'dropdown', 'select_with_filter'].includes(f.type)) {
-        base.options = (f.options || []).map((o: any) => ({ value: o.value, label: o.label }));
-        base.presentation = f.presentation;
-      }
-      if (f.type === 'document') {
-        base.accept = f.accept;
-        base.maxSizeMB = f.maxSizeMB;
-      }
-      if (f.type === 'sum') {
-        base.sources = f.sources || [];
-        base.decimals = f.decimals ?? 0;
-      }
-      if (f.type === 'info') {
-        base.html = f.html || '';
-      }
-      sectionNode.children.push(clean(base));
+      layout_mode: sec?.layout_mode === 'grid' ? 'grid' : 'flow',
+      nodes: normalizedNodes,
+      children: normalizedNodes,
     });
-
     nodes.push(sectionNode);
   });
 

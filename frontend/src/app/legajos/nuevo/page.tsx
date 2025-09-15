@@ -1,68 +1,56 @@
-'use client';
+import Link from "next/link";
+import { Suspense } from "react";
+import { Button } from "@/components/ui/button";
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlantillasService } from '@/lib/services/plantillas';
-import { LegajosService } from '@/lib/services/legajos';
-import DynamicForm from '@/components/form/runtime/DynamicForm';
+import { getJSON } from "@/lib/api";
+import ListView from "./_ListView";
 
-export default function NuevoLegajoPage() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const q = useQueryClient();
+type PlantillaSummary = {
+  nombre?: string;
+};
 
-  const formId = params.get('formId') || '';
+async function fetchPlantilla(formId: string): Promise<PlantillaSummary | null> {
+  try {
+    return await getJSON<PlantillaSummary>(`/api/plantillas/${formId}`, { cache: "no-store" });
+  } catch (error) {
+    console.error("fetchPlantilla", error);
+    return null;
+  }
+}
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['plantilla', formId],
-    enabled: !!formId,
-    queryFn: () => PlantillasService.fetchPlantilla(formId),
-  });
-
-  const mut = useMutation({
-    mutationFn: (payload: any) => LegajosService.create(payload),
-    onSuccess: () => {
-      alert('Legajo creado');
-      q.invalidateQueries({ queryKey: ['legajos', 'list'] });
-      router.push('/legajos'); // TODO: Navegar al detalle o listado real
-    },
-    onError: (e: any) => alert(e?.message || 'Error al crear el legajo'),
-  });
-
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: { formId?: string };
+}) {
+  const formId = searchParams?.formId;
   if (!formId) {
     return (
       <div className="p-6">
-        Falta <code>formId</code> en la URL.
+        Falta <code>formId</code>.
       </div>
     );
   }
 
-  if (isLoading) return <div className="p-6">Cargando…</div>;
-  if (error || !data) return <div className="p-6">Error cargando la plantilla.</div>;
-
-  // Normalizar schema (acepta .schema.nodes o .nodes)
-  const template =
-    data?.schema?.id
-      ? data.schema
-      : {
-          id: data?.id,
-          name: data?.nombre,
-          nodes: data?.schema?.nodes ?? data?.nodes ?? [],
-        };
+  const plantilla = await fetchPlantilla(formId);
+  const nombre = plantilla?.nombre ?? formId;
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Nuevo legajo — {data?.nombre ?? 'Plantilla'}</h1>
-
-      <DynamicForm
-        template={template}
-        onSubmit={(values) =>
-          mut.mutate({
-            formulario: data.id, // adapta a tu backend si el campo se llama distinto
-            data: values,
-          })
-        }
-      />
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Legajos — {nombre}</h1>
+        <Button asChild>
+          <Link href={`/legajos/nuevo/crear?formId=${formId}`}>Crear</Link>
+        </Button>
+      </div>
+      {!plantilla && (
+        <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+          No se pudo cargar la plantilla. Verificá que exista y que tengas permisos.
+        </div>
+      )}
+      <Suspense fallback={<div className="rounded-md border p-4">Cargando…</div>}>
+        <ListView formId={formId} />
+      </Suspense>
     </div>
   );
 }

@@ -16,9 +16,10 @@ export default function PropertiesPanel() {
   const node = useMemo(()=>{
     if (!selected || selected.type!=='field') return null;
     for (const s of sections) {
-      const hit = (s.children||[]).find((n:any)=>n.id===selected.id);
+      const list = s.nodes || s.children || [];
+      const hit = list.find((n:any)=>n.id===selected.id);
       if (hit) return hit;
-      const g = (s.children||[]).find((n:any)=>n.type==='group' && (n.children||[]).some((c:any)=>c.id===selected.id));
+      const g = list.find((n:any)=>n.type==='group' && (n.children||[]).some((c:any)=>c.id===selected.id));
       if (g) return (g.children||[]).find((c:any)=>c.id===selected.id);
     }
     return null;
