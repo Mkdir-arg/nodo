@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { useVisualConfigStore } from '@/lib/store/usePlantillaVisualStore';
 import { enableVisualLegajo } from '@/lib/config';
+import VisualTab from '@/components/plantillas/VisualTab';
+import { useTemplateStore } from '@/stores/templateStore';
 import Canvas from './Canvas';
 import FloatingToolbar from './FloatingToolbar';
 import ComponentsModal from './ComponentsModal';
@@ -13,6 +15,7 @@ import VisualEditor from '../visual/VisualEditor';
 export default function Builder({ template }: { template?: any }) {
   const { setTemplate, dirty, sections, addSection } = useBuilderStore();
   const { setVisualConfig } = useVisualConfigStore();
+  const { setVisual, setSchema } = useTemplateStore();
 
   const [openComponents, setOpenComponents] = useState(false);
   const [propsId, setPropsId] = useState<string | null>(null);
@@ -22,8 +25,10 @@ export default function Builder({ template }: { template?: any }) {
     if (template) {
       setTemplate(template);
       setVisualConfig(template.visual_config || {});
+      setVisual(template.visual_config || {});
+      setSchema(template.schema || { sections: [] });
     }
-  }, [template, setTemplate, setVisualConfig]);
+  }, [template, setTemplate, setVisualConfig, setVisual, setSchema]);
 
   useEffect(() => {
     if (!sections?.length) {
@@ -60,7 +65,7 @@ export default function Builder({ template }: { template?: any }) {
   return (
     <>
       <BuilderHeader />
-      {enableVisualLegajo && (
+      {(enableVisualLegajo || true) && (
         <div className="mb-4 flex gap-2">
           <button
             className={`px-3 py-1 rounded ${tab === 'campos' ? 'bg-sky-600 text-white' : 'bg-gray-100'}`}
@@ -76,8 +81,11 @@ export default function Builder({ template }: { template?: any }) {
           </button>
         </div>
       )}
-      {tab === 'visual' && enableVisualLegajo ? (
-        <VisualEditor />
+      {tab === 'visual' ? (
+        <>
+          <VisualTab />
+          {false && <VisualEditor />}
+        </>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-6">
           {/* CANVAS grande */}
