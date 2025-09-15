@@ -3,8 +3,14 @@
 import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import * as Icons from 'lucide-react';
+import { useState, useEffect, type SVGProps } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Folder,
+  FolderOpen,
+} from 'lucide-react';
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
@@ -69,12 +75,55 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
           className="mt-2 flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           aria-label="Compactar menú"
         >
-          {mini ? <Icons.ChevronRight className="h-5 w-5" /> : <Icons.ChevronLeft className="h-5 w-5" />}
+          {mini ? (
+            <ChevronRight className="h-5 w-5" />
+          ) : (
+            <ChevronLeft className="h-5 w-5" />
+          )}
         </button>
       </nav>
     </aside>
   );
 }
+
+// ===== Fallbacks seguros para íconos de carpeta =====
+function InlineFolder(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...props}
+    >
+      <path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </svg>
+  );
+}
+
+function InlineFolderOpen(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...props}
+    >
+      <path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2" />
+      <path d="M3 12h18l-2 6H5z" />
+    </svg>
+  );
+}
+
+const FolderClosedIcon = (Folder as any) ?? ((p: any) => <InlineFolder {...p} />);
+const FolderOpenIcon = (FolderOpen as any) ?? ((p: any) => <InlineFolderOpen {...p} />);
 
 function LegajosMenu() {
   const pathname = usePathname();
@@ -97,7 +146,7 @@ function LegajosMenu() {
           pathname?.startsWith('/legajos') && 'bg-slate-200/60 dark:bg-slate-800/60'
         )}
       >
-        {open ? <Icons.FolderOpen size={18} /> : <Icons.Folder size={18} />}
+        {open ? <FolderOpenIcon size={18} /> : <FolderClosedIcon size={18} />}
         <span className="flex-1 text-left">Legajos</span>
       </button>
 
@@ -110,7 +159,7 @@ function LegajosMenu() {
         <ul className="min-h-0 overflow-hidden">
           <li className="mt-2 mb-1">
             <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
-              <Icons.FileText size={16} /> <span>Ver legajos</span>
+              <FileText size={16} /> <span>Ver legajos</span>
             </Link>
           </li>
 
