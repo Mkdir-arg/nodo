@@ -8,7 +8,8 @@ import { useState, useEffect, type SVGProps } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
-  FileText,
+
+  FilePlus,
   Folder,
   FolderOpen,
 } from 'lucide-react';
@@ -118,7 +119,6 @@ function InlineFolder({ size = 24, ...props }: IconProps) {
   );
 }
 
-
 function InlineFolderOpen({ size = 24, ...props }: IconProps) {
   return (
     <svg
@@ -135,9 +135,9 @@ function InlineFolderOpen({ size = 24, ...props }: IconProps) {
       {...props}
     >
 
-      <path d="M3 3h6l2 3h10a2 2 0 0 1 2 2v4" />
-      <path d="M3 7v10a2 2 0 0 0 2 2h14" />
-      <path d="M3 7h18l-2 8H5l-2-8Z" />
+      <path d="m6 2 2 2h8a2 2 0 0 1 2 2v2" />
+      <path d="m3 7 5 5h13" />
+      <path d="m3 7 3-3h7l5 5v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
 
     </svg>
   );
@@ -187,7 +187,7 @@ function LegajosMenu() {
           <li className="mt-2 mb-1">
             <Link href="/legajos" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-200/50">
 
-              <FileText size={16} /> <span>Ver legajos</span>
+              <FilePlus size={16} /> <span>Ver legajos</span>
 
             </Link>
           </li>
