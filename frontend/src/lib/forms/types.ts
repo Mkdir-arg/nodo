@@ -187,13 +187,47 @@ export interface LayoutSectionNode {
   children: LayoutRowNode[];
 }
 
-export type LayoutChildNode = LayoutRowNode | LayoutFieldNode | LayoutSectionNode;
+export interface LayoutTabNode {
+  id: string;
+  type: "tab";
+  title?: string;
+  children?: LayoutRowNode[];
+}
+
+export interface LayoutTabsNode {
+  id: string;
+  type: "tabs";
+  title?: string;
+  description?: string;
+  tabs: Array<{ id: string; title?: string }>;
+  tabsChildren?: Record<string, LayoutChildNode[]>;
+}
+
+export interface LayoutRepeaterNode {
+  id: string;
+  type: "repeater";
+  title?: string;
+  description?: string;
+  fieldKey?: string;
+  minItems?: number;
+  maxItems?: number;
+  children?: LayoutRowNode[];
+}
+
+export type LayoutChildNode =
+  | LayoutRowNode
+  | LayoutFieldNode
+  | LayoutSectionNode
+  | LayoutTabsNode
+  | LayoutRepeaterNode;
 
 export type LayoutNode =
   | LayoutSectionNode
   | LayoutRowNode
   | LayoutColumnNode
-  | LayoutFieldNode;
+  | LayoutFieldNode
+  | LayoutTabsNode
+  | LayoutRepeaterNode;
 
 export interface FormLayout {
   version: number;

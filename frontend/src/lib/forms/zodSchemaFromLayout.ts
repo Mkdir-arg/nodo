@@ -7,8 +7,10 @@ import type {
   LayoutColumnNode,
   LayoutFieldNode,
   LayoutNode,
+  LayoutRepeaterNode,
   LayoutRowNode,
   LayoutSectionNode,
+  LayoutTabsNode,
   SelectOption,
 } from "@/lib/forms/types";
 
@@ -52,6 +54,7 @@ export interface ResolvedLayoutField {
   field: FieldLike;
   node: LayoutFieldNode;
   name: string;
+  path: string[];
 }
 
 const EMPTY_LAYOUT: FormLayout = { version: 1, nodes: [] };
@@ -80,6 +83,16 @@ function scanForFields(value: unknown, lookup: Lookup) {
   if (Array.isArray((node as any).children)) (node as any).children.forEach((child: unknown) => scanForFields(child, lookup));
   if (Array.isArray((node as any).columns)) (node as any).columns.forEach((child: unknown) => scanForFields(child, lookup));
   if (Array.isArray((node as any).nodes)) (node as any).nodes.forEach((child: unknown) => scanForFields(child, lookup));
+  const tabsChildren = (node as any).tabsChildren;
+  if (tabsChildren && typeof tabsChildren === "object") {
+    Object.values(tabsChildren).forEach((children: unknown) => {
+      if (Array.isArray(children)) {
+        children.forEach((child) => scanForFields(child, lookup));
+      } else if (children) {
+        scanForFields(children, lookup);
+      }
+    });
+  }
 }
 
 function buildLookup(layout: FormLayout, extra?: FieldCollection): Lookup {
@@ -152,77 +165,207 @@ function ensureArray<T>(value: T | T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
+function resolveFieldInfo(
+  fieldNode: LayoutFieldNode,
+  lookup: Lookup,
+  usedNames: Set<string>,
+  fallbackIndex: { current: number },
+  prefix: string[],
+): { field: FieldLike; name: string; path: string[] } | null {
+  const field = resolveFieldFromLookup(fieldNode, lookup);
+  if (!field || typeof field.type !== "string") {
+    fallbackIndex.current += 1;
+    return null;
+  }
+
+  const baseName =
+    (typeof field.key === "string" && field.key) ||
+    (typeof fieldNode.fieldKey === "string" && fieldNode.fieldKey) ||
+    (typeof (field as any).name === "string" && (field as any).name) ||
+    (typeof fieldNode.fieldId === "string" && fieldNode.fieldId) ||
+    fieldNode.id ||
+    `field_${fallbackIndex.current + 1}`;
+
+  fallbackIndex.current += 1;
+
+  const safeBase = String(baseName).trim() || `field_${fallbackIndex.current}`;
+  let candidate = safeBase;
+  let suffix = 1;
+  let path = [...prefix, candidate];
+  let joined = path.join(".");
+
+  while (usedNames.has(joined)) {
+    candidate = `${safeBase}_${suffix++}`;
+    path = [...prefix, candidate];
+    joined = path.join(".");
+  }
+
+  usedNames.add(joined);
+
+  return { field, name: joined, path };
+}
+
+function resolveRepeaterName(
+  repeater: LayoutRepeaterNode,
+  usedNames: Set<string>,
+  fallbackIndex: { current: number },
+  prefix: string[],
+): { name: string; path: string[] } {
+  const baseName =
+    (typeof repeater.fieldKey === "string" && repeater.fieldKey) ||
+    (typeof (repeater as any).key === "string" && (repeater as any).key) ||
+    (typeof (repeater as any).name === "string" && (repeater as any).name) ||
+    repeater.id ||
+    `repeater_${fallbackIndex.current + 1}`;
+
+  fallbackIndex.current += 1;
+
+  const safeBase = String(baseName).trim() || `repeater_${fallbackIndex.current}`;
+  let candidate = safeBase;
+  let suffix = 1;
+  let path = [...prefix, candidate];
+  let joined = path.join(".");
+
+  while (usedNames.has(joined)) {
+    candidate = `${safeBase}_${suffix++}`;
+    path = [...prefix, candidate];
+    joined = path.join(".");
+  }
+
+  usedNames.add(joined);
+
+  return { name: candidate, path };
+}
+
 function traverseChildren(
   node: LayoutNode | LayoutChildNode,
   lookup: Lookup,
   acc: ResolvedLayoutField[],
   usedNames: Set<string>,
-  fallbackIndex: { current: number }
+  fallbackIndex: { current: number },
+  prefix: string[] = [],
+  repeaters?: Map<string, { node: LayoutRepeaterNode; path: string[] }>,
 ) {
   if (!node || typeof node !== "object") return;
 
   if ((node as LayoutSectionNode).type === "section") {
     const section = node as LayoutSectionNode;
-    ensureArray(section.children).forEach((child) => traverseChildren(child, lookup, acc, usedNames, fallbackIndex));
+    ensureArray(section.children).forEach((child) =>
+      traverseChildren(child, lookup, acc, usedNames, fallbackIndex, prefix),
+    );
     return;
   }
 
   if ((node as LayoutRowNode).type === "row") {
     const row = node as LayoutRowNode;
-    ensureArray(row.columns).forEach((column) => traverseChildren(column, lookup, acc, usedNames, fallbackIndex));
+    ensureArray(row.columns).forEach((column) =>
+      traverseChildren(column, lookup, acc, usedNames, fallbackIndex, prefix),
+    );
     return;
   }
 
   if ((node as LayoutColumnNode).type === "column") {
     const column = node as LayoutColumnNode;
-    ensureArray(column.children).forEach((child) => traverseChildren(child, lookup, acc, usedNames, fallbackIndex));
+    ensureArray(column.children).forEach((child) =>
+      traverseChildren(child, lookup, acc, usedNames, fallbackIndex, prefix),
+    );
+    return;
+  }
+
+  if ((node as LayoutTabsNode).type === "tabs") {
+    const tabsNode = node as LayoutTabsNode;
+    const map = (tabsNode.tabsChildren ?? {}) as Record<string, LayoutChildNode[] | LayoutChildNode | undefined>;
+    const visited = new Set<string>();
+    ensureArray(tabsNode.tabs).forEach((tab) => {
+      const tabId = typeof tab?.id === "string" ? tab.id : "";
+      if (!tabId) return;
+      visited.add(tabId);
+      ensureArray(map[tabId] as any).forEach((child: LayoutChildNode) =>
+        traverseChildren(child, lookup, acc, usedNames, fallbackIndex, prefix),
+      );
+    });
+    Object.entries(map).forEach(([tabId, children]) => {
+      if (visited.has(tabId)) return;
+      ensureArray(children as any).forEach((child: LayoutChildNode) =>
+        traverseChildren(child, lookup, acc, usedNames, fallbackIndex, prefix),
+      );
+    });
+    return;
+  }
+
+  if ((node as LayoutRepeaterNode).type === "repeater") {
+    const repeaterNode = node as LayoutRepeaterNode;
+    const repeaterInfo = resolveRepeaterName(repeaterNode, usedNames, fallbackIndex, prefix);
+    if (repeaters) {
+      repeaters.set(repeaterInfo.path.join("."), { node: repeaterNode, path: repeaterInfo.path });
+    }
+    const childPrefix = [...repeaterInfo.path, "*"];
+    ensureArray(repeaterNode.children).forEach((child) =>
+      traverseChildren(child, lookup, acc, usedNames, fallbackIndex, childPrefix, repeaters),
+    );
     return;
   }
 
   if (isLayoutFieldNode(node)) {
     const fieldNode = node as LayoutFieldNode;
-    const field = resolveFieldFromLookup(fieldNode, lookup);
-    if (!field || typeof field.type !== "string") {
-      fallbackIndex.current += 1;
-      return;
-    }
-    const baseName =
-      (typeof field.key === "string" && field.key) ||
-      (typeof fieldNode.fieldKey === "string" && fieldNode.fieldKey) ||
-      (typeof (field as any).name === "string" && (field as any).name) ||
-      (typeof fieldNode.fieldId === "string" && fieldNode.fieldId) ||
-      fieldNode.id ||
-      `field_${fallbackIndex.current + 1}`;
-    fallbackIndex.current += 1;
-
-    const safeBase = String(baseName).trim() || `field_${fallbackIndex.current}`;
-    let candidate = safeBase;
-    let suffix = 1;
-    while (usedNames.has(candidate)) {
-      candidate = `${safeBase}_${suffix++}`;
-    }
-    usedNames.add(candidate);
-
-    acc.push({ field, node: fieldNode, name: candidate });
+    const info = resolveFieldInfo(fieldNode, lookup, usedNames, fallbackIndex, prefix);
+    if (!info) return;
+    acc.push({ field: info.field, node: fieldNode, name: info.name, path: info.path });
     return;
   }
 
   const anyNode = node as unknown as Record<string, unknown>;
-  if (Array.isArray(anyNode.children)) anyNode.children.forEach((child) => traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex));
-  if (Array.isArray(anyNode.columns)) anyNode.columns.forEach((child) => traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex));
-  if (Array.isArray(anyNode.nodes)) anyNode.nodes.forEach((child) => traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex));
+  if (Array.isArray(anyNode.children))
+    anyNode.children.forEach((child) =>
+      traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex, prefix, repeaters),
+    );
+  if (Array.isArray(anyNode.columns))
+    anyNode.columns.forEach((child) =>
+      traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex, prefix, repeaters),
+    );
+  if (Array.isArray(anyNode.nodes))
+    anyNode.nodes.forEach((child) =>
+      traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex, prefix, repeaters),
+    );
+  const extraTabs = (anyNode as any).tabsChildren;
+  if (extraTabs && typeof extraTabs === "object") {
+    Object.values(extraTabs as Record<string, unknown>).forEach((children) => {
+      if (Array.isArray(children)) {
+        children.forEach((child) =>
+          traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex, prefix, repeaters),
+        );
+      } else if (children) {
+        traverseChildren(children as any, lookup, acc, usedNames, fallbackIndex, prefix, repeaters);
+      }
+    });
+  }
 }
 
-export function collectLayoutFields(layout?: FormLayout | null, options?: CollectOptions): ResolvedLayoutField[] {
+function collectFieldsAndRepeaters(
+  layout?: FormLayout | null,
+  options?: CollectOptions,
+): {
+  fields: ResolvedLayoutField[];
+  repeaters: Map<string, { node: LayoutRepeaterNode; path: string[] }>;
+  lookup: Lookup;
+} {
   const normalized = layout ?? EMPTY_LAYOUT;
   const lookup = buildLookup(normalized, options?.fields);
-  const resolved: ResolvedLayoutField[] = [];
+  const fields: ResolvedLayoutField[] = [];
+  const repeaters = new Map<string, { node: LayoutRepeaterNode; path: string[] }>();
   const usedNames = new Set<string>();
   const fallbackIndex = { current: 0 };
 
-  ensureArray(normalized.nodes).forEach((node) => traverseChildren(node as LayoutNode, lookup, resolved, usedNames, fallbackIndex));
+  ensureArray(normalized.nodes).forEach((node) =>
+    traverseChildren(node as LayoutNode, lookup, fields, usedNames, fallbackIndex, [], repeaters),
+  );
 
-  return resolved;
+  return { fields, repeaters, lookup };
+}
+
+export function collectLayoutFields(layout?: FormLayout | null, options?: CollectOptions): ResolvedLayoutField[] {
+  const { fields } = collectFieldsAndRepeaters(layout, options);
+  return fields;
 }
 
 function preprocessNumber(value: unknown) {
@@ -384,16 +527,127 @@ function schemaForField(field: FieldLike): z.ZodTypeAny | null {
   return required ? fallback : fallback.optional();
 }
 
-export function zodSchemaFromLayout(layout?: FormLayout | null, options?: CollectOptions) {
-  const fields = collectLayoutFields(layout ?? EMPTY_LAYOUT, options);
-  const shape: Record<string, z.ZodTypeAny> = {};
+type DraftNode = DraftObject | DraftArray | DraftField;
 
-  fields.forEach(({ field, name }) => {
-    const schema = schemaForField(field);
-    if (schema) {
-      shape[name] = schema;
+interface DraftObject {
+  kind: "object";
+  entries: Record<string, DraftNode>;
+}
+
+interface DraftArray {
+  kind: "array";
+  element: DraftObject;
+  min?: number;
+  max?: number;
+}
+
+interface DraftField {
+  kind: "field";
+  schema: z.ZodTypeAny;
+}
+
+function createDraftObject(): DraftObject {
+  return { kind: "object", entries: {} };
+}
+
+function ensureArrayNode(
+  parent: DraftObject,
+  key: string,
+  meta: { node: LayoutRepeaterNode; path: string[] } | undefined,
+): DraftArray {
+  const existing = parent.entries[key];
+  if (existing && existing.kind === "array") {
+    if (meta?.node) {
+      if (typeof meta.node.minItems === "number") existing.min = meta.node.minItems;
+      if (typeof meta.node.maxItems === "number") existing.max = meta.node.maxItems;
+    }
+    return existing;
+  }
+  const arrayNode: DraftArray = {
+    kind: "array",
+    element: createDraftObject(),
+    min: typeof meta?.node?.minItems === "number" ? meta.node.minItems : undefined,
+    max: typeof meta?.node?.maxItems === "number" ? meta.node.maxItems : undefined,
+  };
+  parent.entries[key] = arrayNode;
+  return arrayNode;
+}
+
+function insertFieldDraft(
+  root: DraftObject,
+  path: string[],
+  schema: z.ZodTypeAny,
+  repeaters: Map<string, { node: LayoutRepeaterNode; path: string[] }>,
+) {
+  let current: DraftObject = root;
+  let index = 0;
+  while (index < path.length) {
+    const segment = path[index];
+    if (segment === "*") {
+      index += 1;
+      continue;
+    }
+    const next = path[index + 1];
+    const isArray = next === "*";
+    if (isArray) {
+      const repeaterKey = path.slice(0, index + 1).join(".");
+      const meta = repeaters.get(repeaterKey);
+      const arrayNode = ensureArrayNode(current, segment, meta);
+      current = arrayNode.element;
+      index += 2;
+      continue;
+    }
+    if (index === path.length - 1) {
+      const fieldDraft: DraftField = { kind: "field", schema };
+      current.entries[segment] = fieldDraft;
+      return;
+    }
+    const existing = current.entries[segment];
+    if (!existing || existing.kind !== "object") {
+      current.entries[segment] = createDraftObject();
+    }
+    current = current.entries[segment] as DraftObject;
+    index += 1;
+  }
+}
+
+function draftToSchema(node: DraftObject): z.ZodTypeAny {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  Object.entries(node.entries).forEach(([key, entry]) => {
+    if (!entry) return;
+    if (entry.kind === "field") {
+      shape[key] = entry.schema;
+    } else if (entry.kind === "object") {
+      const objectSchema = draftToSchema(entry);
+      shape[key] = objectSchema;
+    } else if (entry.kind === "array") {
+      const elementSchema = draftToSchema(entry.element);
+      let arraySchema: z.ZodTypeAny = z.array(elementSchema);
+      if (typeof entry.min === "number") {
+        arraySchema = arraySchema.min(entry.min, {
+          message: `Debe tener al menos ${entry.min} elemento${entry.min === 1 ? "" : "s"}`,
+        });
+      }
+      if (typeof entry.max === "number") {
+        arraySchema = arraySchema.max(entry.max, {
+          message: `Debe tener como máximo ${entry.max} elemento${entry.max === 1 ? "" : "s"}`,
+        });
+      }
+      shape[key] = arraySchema;
     }
   });
-
   return z.object(shape);
+}
+
+export function zodSchemaFromLayout(layout?: FormLayout | null, options?: CollectOptions) {
+  const { fields, repeaters } = collectFieldsAndRepeaters(layout, options);
+  const root = createDraftObject();
+
+  fields.forEach(({ field, path }) => {
+    const schema = schemaForField(field);
+    if (!schema) return;
+    insertFieldDraft(root, path, schema, repeaters);
+  });
+
+  return draftToSchema(root);
 }
