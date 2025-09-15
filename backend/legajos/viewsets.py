@@ -1,4 +1,3 @@
-import json
 from rest_framework import viewsets, response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
@@ -32,25 +31,8 @@ class LegajoViewSet(viewsets.ModelViewSet):
 
         search = (request.query_params.get("search") or "").strip()
         if search:
-            serializer = self.get_serializer()
-            term = search.lower()
-
-            def matches(obj: Legajo) -> bool:
-                parts = []
-                try:
-                    display = serializer.get_display(obj) or ""
-                except Exception:
-                    display = ""
-                parts.append(display)
-                for source in (obj.grid_values, obj.data):
-                    if isinstance(source, dict):
-                        parts.append(json.dumps(source, ensure_ascii=False))
-                    elif isinstance(source, list):
-                        parts.append(json.dumps(source, ensure_ascii=False))
-                haystack = " ".join(parts).lower()
-                return term in haystack
-
-            queryset = [obj for obj in queryset if matches(obj)]
+            for term in filter(None, search.split()):
+                queryset = queryset.filter(search_document__icontains=term)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
