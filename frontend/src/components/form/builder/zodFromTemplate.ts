@@ -35,6 +35,8 @@ function flatten(raw: any): Node[] {
   return [];
 }
 
+function isUiNode(n:any){ return n?.kind === "ui" || String(n?.type||"").startsWith("ui:"); }
+
 function safeName(n: Node, idx: number, used: Set<string>) {
   let base =
     n.key ||
@@ -114,14 +116,15 @@ function schemaForNode(n: Node): z.ZodTypeAny {
 }
 
 export function zodFromTemplate(rawNodes: any): z.ZodObject<any> {
-  const nodes = flatten(rawNodes);
+  const nodes = flatten(rawNodes).filter((n:any)=> !isUiNode(n));
   const used = new Set<string>();
   const shape: Record<string, z.ZodTypeAny> = {};
 
   nodes.forEach((n: Node, idx: number) => {
     // Soporte de grupos: si trae children/nodes/fields, flatearlos como hermanos
-    const children = flatten(n) // si n es sección con nodes/fields
-      .concat(n.children || []);
+    const children = flatten(n)
+      .concat(n.children || [])
+      .filter((c:any)=> !isUiNode(c));
     if (children.length) {
       children.forEach((c, i) => {
         const name = safeName(c, i, used);

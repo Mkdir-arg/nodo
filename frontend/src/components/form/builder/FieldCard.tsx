@@ -2,6 +2,9 @@
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 
 function MiniPreview({ node }: { node: any }) {
+  if (node.kind === 'ui' || String(node.type || '').startsWith('ui:')) {
+    return <div className="font-medium text-slate-500">{node.type}</div>;
+  }
   const label = node.label || 'Sin título';
   switch (node.type) {
     case 'text':

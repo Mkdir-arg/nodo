@@ -1,6 +1,6 @@
 'use client';
 import { create } from 'zustand';
-import { newField, FieldType } from '@/lib/form-builder/factory';
+import { FieldType, createNode } from '@/lib/form-builder/factory';
 import { arrayMove } from '@dnd-kit/sortable';
 
 
@@ -14,6 +14,7 @@ function isSelectType(t: string) {
 export type FieldNode = {
   id: string;
   type: string;
+  kind?: string;
   key?: string;
   label?: string;
   [k: string]: any;
@@ -48,7 +49,7 @@ export interface BuilderState {
   duplicateSection: (id: string) => void;
   removeSection: (id: string) => void;
 
-  addField: (sectionId: string, typeOrNode: FieldType | FieldNode) => string | undefined;
+  addField: (sectionId: string, typeOrNode: string | FieldNode) => string | undefined;
   updateNode: (id: string, patch: any) => void;
   removeNode: (id: string) => void;
   duplicateNode: (id: string) => void;
@@ -143,10 +144,12 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     if (idx < 0) return;
 
     const node: FieldNode =
-      typeof typeOrNode === 'string' ? (newField(typeOrNode as FieldType) as any) : { ...(typeOrNode as any) };
+      typeof typeOrNode === 'string' ? (createNode(typeOrNode) as any) : { ...(typeOrNode as any) };
 
     node.id = node.id ?? `fld_${crypto.randomUUID().slice(0, 6)}`;
-    node.key = get().ensureUniqueKey(node.key || node.type || 'campo');
+    if (node.kind !== 'ui') {
+      node.key = get().ensureUniqueKey(node.key || node.type || 'campo');
+    }
 
     const sec = sections[idx];
     const next = [...sections];
@@ -250,7 +253,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const clone = (obj: any) => JSON.parse(JSON.stringify(obj));
       const node = clone(hit.node);
       node.id = `fld_${crypto.randomUUID().slice(0, 6)}`;
-      node.key = state.ensureUniqueKey(node.key || node.type);
+      if (node.kind !== 'ui') {
+        node.key = state.ensureUniqueKey(node.key || node.type);
+      }
 
       if (hit.groupIndex != null) {
         const grp = { ...sections[hit.si].children[hit.groupIndex] } as any;
@@ -334,12 +339,13 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     sections.forEach((sec, i) => {
       const path = [`Sección ${i + 1}`];
       const children = sec.children || [];
+      const dataChildren = children.filter((n: any) => n.kind !== 'ui');
 
-      if (children.length === 0) {
+      if (dataChildren.length === 0) {
         errs.push({ code: 'EMPTY_SECTION', message: 'La sección no puede estar vacía.', path });
       }
 
-      children.forEach((n, j) => {
+      dataChildren.forEach((n, j) => {
         const fpath = [...path, n.label || n.key || `Campo ${j + 1}`];
 
         if (!n.key || !n.key.trim()) {

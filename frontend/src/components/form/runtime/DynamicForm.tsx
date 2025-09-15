@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { zodFromTemplate } from "../builder/zodFromTemplate";
+import DynamicNode from "./DynamicNode";
 import { Button } from "@/components/ui/button";
 
 // Normaliza distintos formatos y hace fallback seguro
@@ -19,6 +20,8 @@ function normalizeSchema(raw: any): { nodes: any[] } {
   return { nodes: [] };
 }
 
+function isUiNode(n:any){ return n?.kind === "ui" || String(n?.type||"").startsWith("ui:"); }
+
 export default function DynamicForm({
   schema,
   onSubmit,
@@ -27,9 +30,10 @@ export default function DynamicForm({
   onSubmit: (data: any) => void;
 }) {
   const normalized = useMemo(() => normalizeSchema(schema), [schema]);
+  const nodes = useMemo(()=> (normalized.nodes || []).filter((n:any)=> !isUiNode(n)), [normalized.nodes]);
   const zodSchema = useMemo(
-    () => zodFromTemplate(normalized.nodes || []),
-    [normalized.nodes]
+    () => zodFromTemplate(nodes),
+    [nodes]
   );
 
   const methods = useForm({
@@ -61,8 +65,7 @@ export default function DynamicForm({
         className="space-y-4"
         noValidate
       >
-        {/* acá renderizás tus inputs a partir de normalized.nodes */}
-        {/* <DynamicFields nodes={normalized.nodes} /> */}
+        {nodes.map((n:any)=> <DynamicNode key={n.id} node={n} />)}
 
         <div className="pt-2">
           <Button type="submit">Guardar</Button>
