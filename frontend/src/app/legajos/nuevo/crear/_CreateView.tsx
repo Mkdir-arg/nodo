@@ -3,13 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import DynamicForm from "@/components/form/runtime/DynamicForm";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+import { getApiBaseUrl } from "@/lib/env";
 
 async function fetchPlantilla(id: string) {
-  const base =
-    API_BASE ||
-    (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
+  const base = getApiBaseUrl();
   if (!base) {
     throw new Error("No se pudo resolver la URL de la API");
   }
@@ -23,9 +20,7 @@ async function fetchPlantilla(id: string) {
 }
 
 async function createLegajo(payload: { plantilla_id: string; data: any }) {
-  const base =
-    API_BASE ||
-    (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
+  const base = getApiBaseUrl();
   if (!base) {
     throw new Error("No se pudo resolver la URL de la API");
   }

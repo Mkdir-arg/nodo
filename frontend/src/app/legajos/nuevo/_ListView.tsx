@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+import { getApiBaseUrl } from "@/lib/env";
 
 type ListResponse = {
   results: Array<Record<string, any>>;
@@ -21,9 +21,7 @@ async function fetchLegajos({
   page?: number;
   search?: string;
 }) {
-  const base =
-    API_BASE ||
-    (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
+  const base = getApiBaseUrl();
   if (!base) {
     throw new Error("No se configuró la URL de la API");
   }

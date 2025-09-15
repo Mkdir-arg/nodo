@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { getApiBaseUrl } from "@/lib/env";
 import ListView from "./_ListView";
 
 async function fetchPlantilla(formId: string) {
-  const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  const base = getApiBaseUrl();
   if (!base) return null;
   try {
     const res = await fetch(`${base}/api/plantillas/${formId}`, {

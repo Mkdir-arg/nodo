@@ -1,7 +1,12 @@
 import SectionRenderer from '@/components/legajo/SectionRenderer';
+import { getApiBaseUrl } from '@/lib/env';
 
 export default async function LegajoDetallePage({ params }: { params: { id: string } }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/legajos/${params.id}`, {
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error('No se configuró la URL de la API');
+  }
+  const res = await fetch(`${base}/api/legajos/${params.id}`, {
     cache: 'no-store',
   });
   const { data, schema, meta } = await res.json();

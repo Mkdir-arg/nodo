@@ -1,6 +1,8 @@
 "use client";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getApiBaseUrl } from "@/lib/env";
+
+const API = getApiBaseUrl() || "http://localhost:8000";
 
 type Tokens = { access: string; refresh: string };
 

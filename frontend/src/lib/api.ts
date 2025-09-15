@@ -1,5 +1,11 @@
+import { getApiBaseUrl } from "@/lib/env";
+
 export async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("No se configuró la URL de la API");
+  }
+  const res = await fetch(`${base}${url}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
