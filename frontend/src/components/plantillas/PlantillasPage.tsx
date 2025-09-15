@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import DeleteConfirm from './DeleteConfirm';
@@ -38,7 +38,7 @@ export default function PlantillasPage() {
         page,
         page_size: 10,
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const del = useMutation({

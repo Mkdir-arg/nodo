@@ -1,6 +1,6 @@
 "use client";
 
-import { getJSON, postJSON } from "@/lib/api";
+import { login as requestLogin, me as requestMe, refreshToken } from "@/lib/services/auth";
 import { Tokens, clearStoredTokens, getStoredTokens, storeTokens } from "@/lib/tokens";
 
 export function getTokens(): Tokens | null {
@@ -20,9 +20,7 @@ export async function refreshAccessToken(): Promise<string | null> {
   if (!tokens) return null;
 
   try {
-    const data = await postJSON<{ access: string }>("/api/token/refresh/", {
-      refresh: tokens.refresh,
-    });
+    const data = await refreshToken(tokens.refresh);
     const access = data.access;
     if (!access) return null;
 
@@ -34,29 +32,23 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 export async function login(identifier: string, password: string, remember = true) {
-  try {
-    const data = await postJSON<Tokens>("/api/token/", {
-      username: identifier,
-      password,
-    });
-    setTokens(data);
+  const tokens = await requestLogin(identifier, password);
+  setTokens(tokens);
 
-    if (!remember) {
-      window.addEventListener("beforeunload", () => clearTokens());
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.startsWith("HTTP")) {
-      throw new Error("Credenciales inválidas");
-    }
-    throw error;
+  if (!remember) {
+    window.addEventListener("beforeunload", () => clearTokens());
   }
 }
 
 export async function me() {
+  const tokens = getTokens();
+  if (!tokens?.access) {
+    throw new Error("No autenticado");
+  }
   try {
-    return await getJSON("/api/auth/me/");
+    return await requestMe(tokens.access);
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("HTTP 401")) {
+    if (error instanceof Error && error.message.includes("HTTP 401")) {
       throw new Error("No autenticado");
     }
     throw error;
