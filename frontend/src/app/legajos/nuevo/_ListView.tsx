@@ -2,8 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+import { getJSON } from "@/lib/api";
 
 type ListResponse = {
   results: Array<Record<string, any>>;
@@ -21,23 +20,18 @@ async function fetchLegajos({
   page?: number;
   search?: string;
 }) {
-  const base =
-    API_BASE ||
-    (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
-  if (!base) {
-    throw new Error("No se configuró la URL de la API");
+  if (typeof window === "undefined") {
+    throw new Error("fetchLegajos solo está disponible en el cliente");
   }
-  const url = new URL(`/api/legajos`, base);
+
+  const url = new URL(`/api/legajos`, window.location.origin);
   url.searchParams.set("plantilla_id", formId);
   url.searchParams.set("page", String(page));
   if (search) {
     url.searchParams.set("search", search);
   }
-  const res = await fetch(url.toString(), { credentials: "include" });
-  if (!res.ok) {
-    throw new Error("No se pudo cargar la lista de legajos");
-  }
-  return (await res.json()) as ListResponse;
+
+  return getJSON<ListResponse>(`${url.pathname}${url.search}`);
 }
 
 function fmtDate(value?: string) {

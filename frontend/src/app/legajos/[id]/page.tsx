@@ -1,10 +1,8 @@
-import SectionRenderer from '@/components/legajo/SectionRenderer';
+import SectionRenderer from "@/components/legajo/SectionRenderer";
+import { getJSON } from "@/lib/api";
 
 export default async function LegajoDetallePage({ params }: { params: { id: string } }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/legajos/${params.id}`, {
-    cache: 'no-store',
-  });
-  const { data, schema, meta } = await res.json();
+  const { data, schema, meta } = await getJSON(`/api/legajos/${params.id}`, { cache: "no-store" });
   const sections = schema?.nodes || schema?.sections || [];
 
   return (
