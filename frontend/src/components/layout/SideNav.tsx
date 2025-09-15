@@ -91,9 +91,17 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
 }
 
 // ===== Fallbacks seguros para íconos de carpeta =====
-function InlineFolder(props: SVGProps<SVGSVGElement>) {
+
+interface IconProps extends SVGProps<SVGSVGElement> {
+  size?: number | string;
+}
+
+function InlineFolder({ size = 24, ...props }: IconProps) {
   return (
     <svg
+      width={size}
+      height={size}
+
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -103,14 +111,20 @@ function InlineFolder(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+
     </svg>
   );
 }
 
-function InlineFolderOpen(props: SVGProps<SVGSVGElement>) {
+
+function InlineFolderOpen({ size = 24, ...props }: IconProps) {
   return (
     <svg
+      width={size}
+      height={size}
+
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -120,8 +134,11 @@ function InlineFolderOpen(props: SVGProps<SVGSVGElement>) {
       aria-hidden
       {...props}
     >
-      <path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2" />
-      <path d="M3 12h18l-2 6H5z" />
+
+      <path d="M3 3h6l2 3h10a2 2 0 0 1 2 2v4" />
+      <path d="M3 7v10a2 2 0 0 0 2 2h14" />
+      <path d="M3 7h18l-2 8H5l-2-8Z" />
+
     </svg>
   );
 }
@@ -151,7 +168,11 @@ function LegajosMenu() {
         )}
       >
 
-        {open ? <FolderOpenIcon size={18} /> : <FolderClosedIcon size={18} />}
+        {open ? (
+          <FolderOpenIcon className="h-5 w-5" />
+        ) : (
+          <FolderClosedIcon className="h-5 w-5" />
+        )}
 
         <span className="flex-1 text-left">Legajos</span>
       </button>
