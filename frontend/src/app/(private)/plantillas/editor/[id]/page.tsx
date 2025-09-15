@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,10 +10,11 @@ import Palette from "./_components/Palette";
 import CanvasGrid, { CanvasGridProvider } from "./_components/CanvasGrid";
 import PropertiesPanel from "./_components/PropertiesPanel";
 import Toolbar from "./_components/Toolbar";
+import Preview from "./_components/Preview";
 
 export default function PlantillaEditorPage() {
   const params = useParams();
-  const rawId = params?.id;
+  const rawId = (params as any)?.id;
   const plantillaId = Array.isArray(rawId) ? rawId[0] : rawId ?? "";
 
   const layoutQuery = useQuery({
@@ -24,6 +26,16 @@ export default function PlantillaEditorPage() {
   const layoutVersion = layoutQuery.data?.layoutVersion ?? 1;
   const updatedAt = layoutQuery.data?.updatedAt ?? "";
   const layoutDefinitionVersion = layout?.version ?? 1;
+
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const handleTogglePreview = useCallback(() => {
+    setIsPreviewOpen((prev) => !prev);
+  }, []);
+
+  const handleClosePreview = useCallback(() => {
+    setIsPreviewOpen(false);
+  }, []);
 
   if (!plantillaId) {
     return (
@@ -57,6 +69,8 @@ export default function PlantillaEditorPage() {
           layoutVersion={layoutVersion}
           layoutDefinitionVersion={layoutDefinitionVersion}
           updatedAt={updatedAt}
+          isPreviewOpen={isPreviewOpen}
+          onTogglePreview={handleTogglePreview}
         />
 
         <div className="grid min-h-[28rem] flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)_minmax(15rem,20rem)]">
@@ -64,6 +78,8 @@ export default function PlantillaEditorPage() {
           <CanvasGrid />
           <PropertiesPanel />
         </div>
+
+        <Preview open={isPreviewOpen} onClose={handleClosePreview} />
       </div>
     </CanvasGridProvider>
   );
