@@ -44,14 +44,25 @@ export interface CanvasPaletteItem {
   colSpan?: number;
 }
 
-interface CanvasNode {
+export interface CanvasNode {
   id: string;
   componentKey: string;
   label: string;
+  name: string;
   description?: string;
+  placeholder?: string;
+  required?: boolean;
   row: number;
   col: number;
   colSpan: number;
+  options?: Array<{ label: string; value: string }>;
+  min?: number;
+  max?: number;
+  step?: number;
+  minDate?: string;
+  maxDate?: string;
+  accept?: string[];
+  maxSizeMB?: number;
 }
 
 interface GridPosition {
@@ -72,6 +83,57 @@ type ActiveDragItem =
   | { type: "palette"; component: CanvasPaletteItem }
   | { type: "node"; node: CanvasNode };
 
+const OPTION_COMPONENT_KEYS = new Set([
+  "select",
+  "dropdown",
+  "multiselect",
+  "select_with_filter",
+  "radio",
+]);
+
+function slugifyName(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-")
+    .trim();
+}
+
+function generateUniqueName(
+  base: string,
+  nodes: CanvasNode[],
+  currentId?: string,
+): string {
+  const existing = new Set(
+    nodes
+      .filter((node) => (currentId ? node.id !== currentId : true))
+      .map((node) => node.name)
+      .filter(Boolean),
+  );
+
+  const initial = slugifyName(base) || "campo";
+  if (!existing.has(initial)) return initial;
+
+  let counter = 2;
+  let candidate = `${initial}-${counter}`;
+  while (existing.has(candidate)) {
+    counter += 1;
+    candidate = `${initial}-${counter}`;
+  }
+  return candidate;
+}
+
+function buildDefaultOptions(componentKey: string) {
+  if (!OPTION_COMPONENT_KEYS.has(componentKey)) return undefined;
+  return [
+    { label: "Opción 1", value: "option_1" },
+    { label: "Opción 2", value: "option_2" },
+  ];
+}
+
 interface CanvasGridContextValue {
   nodes: CanvasNode[];
   previewNode: CanvasPreviewNode | null;
@@ -79,6 +141,7 @@ interface CanvasGridContextValue {
   activeNodeId: string | null;
   selectNode: (id: string | null) => void;
   removeNode: (id: string) => void;
+  updateNode: (id: string, patch: Partial<CanvasNode>) => void;
   setGridElement: (element: HTMLDivElement | null) => void;
 }
 
@@ -86,7 +149,7 @@ const CanvasGridContext = createContext<CanvasGridContextValue | undefined>(
   undefined,
 );
 
-function useCanvasGridContext() {
+export function useCanvasGridContext() {
   const context = useContext(CanvasGridContext);
   if (!context) {
     throw new Error("CanvasGrid must be used within a CanvasGridProvider");
@@ -133,6 +196,45 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
     setNodes((prev) => prev.filter((node) => node.id !== id));
     setSelectedNodeId((current) => (current === id ? null : current));
   }, []);
+
+  const updateNode = useCallback(
+    (id: string, patch: Partial<CanvasNode>) => {
+      setNodes((prev) => {
+        const index = prev.findIndex((node) => node.id === id);
+        if (index < 0) return prev;
+
+        const nextNodes = [...prev];
+        const current = nextNodes[index];
+        let updated: CanvasNode = { ...current, ...patch };
+
+        if (patch.colSpan != null) {
+          const numericColSpan =
+            typeof patch.colSpan === "number"
+              ? patch.colSpan
+              : Number(patch.colSpan);
+          const desiredColSpan = normalizeColSpan(
+            Number.isNaN(numericColSpan) ? current.colSpan : numericColSpan,
+          );
+          const resolved = resolvePosition(
+            { row: current.row, col: current.col },
+            desiredColSpan,
+            prev,
+            id,
+          );
+          updated = {
+            ...updated,
+            colSpan: desiredColSpan,
+            row: resolved.row,
+            col: resolved.col,
+          };
+        }
+
+        nextNodes[index] = updated;
+        return nextNodes;
+      });
+    },
+    [],
+  );
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -218,16 +320,29 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
         let createdId: string | null = null;
         setNodes((prev) => {
           const resolved = resolvePosition(desired, colSpan, prev);
+          const id = nanoid();
+          const name = generateUniqueName(data.component.label, prev);
           const newNode: CanvasNode = {
-            id: nanoid(),
+            id,
             componentKey: data.component.key,
             label: data.component.label,
-            description: data.component.description,
+            name,
+            description: data.component.description ?? "",
+            placeholder: "",
+            required: false,
             row: resolved.row,
             col: resolved.col,
             colSpan,
+            options: buildDefaultOptions(data.component.key),
+            min: undefined,
+            max: undefined,
+            step: undefined,
+            minDate: undefined,
+            maxDate: undefined,
+            accept: data.component.key === "file" ? [] : undefined,
+            maxSizeMB: undefined,
           };
-          createdId = newNode.id;
+          createdId = id;
           return [...prev, newNode];
         });
         if (createdId) {
@@ -290,6 +405,7 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
       activeNodeId,
       selectNode,
       removeNode,
+      updateNode,
       setGridElement,
     }),
     [
@@ -299,6 +415,7 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
       activeNodeId,
       selectNode,
       removeNode,
+      updateNode,
       setGridElement,
     ],
   );
