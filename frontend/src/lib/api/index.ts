@@ -1,5 +1,6 @@
 // frontend/src/lib/api/index.ts
 import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
+import { apiUrl } from "@/services/api";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
 const isServer = typeof window === "undefined";
@@ -36,20 +37,7 @@ export function resolveApiUrl(path: string): string {
   if (ABSOLUTE_URL_REGEX.test(path)) {
     return path;
   }
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-
-  if (isServer) {
-    // Dentro del contenedor / SSR: hablar directo con el backend por red interna
-    const base =
-      (process.env.API_URL_INTERNAL ||
-        process.env.API_URL || // fallback por si usan esta
-        "http://backend:8000").replace(/\/$/, "");
-    return `${base}${normalized}`;
-  }
-
-  // En el navegador: si hay NEXT_PUBLIC_API_URL, úsala; si no, relativo (requiere proxy)
-  const publicBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-  return publicBase ? `${publicBase}${normalized}` : normalized;
+  return apiUrl(path);
 }
 
 /** Construye la URL final y aplica slash según método */

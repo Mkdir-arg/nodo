@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import { LegajosService } from '@/lib/services/legajos';
@@ -100,7 +100,7 @@ export default function LegajosListPage() {
         results: rawResults.map(normalizeRow),
       } satisfies LegajosListResponse;
     },
-    placeholderData: (previousData) => previousData,
+    placeholderData: keepPreviousData,
   });
 
   const { data: plantillas = [] } = useQuery<PlantillaOption[]>({

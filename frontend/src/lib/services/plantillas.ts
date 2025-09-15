@@ -22,38 +22,45 @@ const normalizeList = (res: any) => {
   return { count: res?.count ?? 0, results: res?.results ?? [] };
 };
 
-const getWithFallback = (a: string, b: string) => getJSON(a).catch(() => getJSON(b));
+const getWithFallback = <T = any>(a: string, b: string) =>
+  getJSON<T>(a).catch(() => getJSON<T>(b));
 
 export const PlantillasService = {
   fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
-    const qs = qsOf({ search: p.search, estado: p.estado, page: p.page, page_size: p.page_size });
-    const res = await getWithFallback(`/plantillas/${qs}`, `/formularios/${qs}`);
+    const qs = qsOf({
+      search: p.search,
+      estado: p.estado,
+      page: p.page,
+      page_size: p.page_size,
+    });
+    const res = await getWithFallback(`/api/plantillas/${qs}`, `/api/formularios/${qs}`);
     return normalizeList(res);
   },
 
-  fetchPlantilla: (id: string) => getWithFallback(`/plantillas/${id}/`, `/formularios/${id}/`),
+  fetchPlantilla: (id: string) =>
+    getWithFallback(`/api/plantillas/${id}/`, `/api/formularios/${id}/`),
 
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
     type ExistsResponse = { exists?: boolean };
     try {
-      const r = await getJSON<ExistsResponse>(`/plantillas/exists/${qs}`);
+      const r = await getJSON<ExistsResponse>(`/api/plantillas/exists/${qs}`);
       return Boolean(r?.exists);
     } catch {
-      const r = await getJSON<ExistsResponse>(`/formularios/exists/${qs}`);
+      const r = await getJSON<ExistsResponse>(`/api/formularios/exists/${qs}`);
       return Boolean(r?.exists);
     }
   },
 
   savePlantilla: (payload: any) =>
-    postJSON(`/plantillas/`, payload).catch(() => postJSON(`/formularios/`, payload)),
+    postJSON(`/api/plantillas/`, payload).catch(() => postJSON(`/api/formularios/`, payload)),
 
   updatePlantilla: (id: string, payload: any) =>
-    putJSON(`/plantillas/${id}/`, payload).catch(() => putJSON(`/formularios/${id}/`, payload)),
+    putJSON(`/api/plantillas/${id}/`, payload).catch(() => putJSON(`/api/formularios/${id}/`, payload)),
 
   updateVisualConfig: (id: string, cfg: any) =>
-    patchJSON(`/plantillas/${id}/visual-config/`, cfg),
+    patchJSON(`/api/plantillas/${id}/visual-config/`, cfg),
 
   deletePlantilla: (id: string) =>
-    deleteJSON(`/plantillas/${id}/`).catch(() => deleteJSON(`/formularios/${id}/`)),
+    deleteJSON(`/api/plantillas/${id}/`).catch(() => deleteJSON(`/api/formularios/${id}/`)),
 };
