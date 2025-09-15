@@ -1,4 +1,8 @@
+"use client";
+
 import * as Icons from "lucide-react";
+import SectionGridView from "./SectionGridView";
+
 function isUiNode(n:any){ return n?.kind==="ui" || String(n?.type||"").startsWith("ui:"); }
 
 function getPath(obj:any, path?:string){ if(!obj || !path) return ""; return path.split(".").reduce((o:any,k:string)=>o?.[k], obj) ?? ""; }
@@ -11,10 +15,24 @@ const AttachmentsCard = (props:any)=> <div className="text-sm text-slate-500">Ar
 const Timeline = (props:any)=> <div className="text-sm text-slate-500">Timeline</div>;
 const SummaryPinned = ({cfg, ctx}:{cfg:any; ctx:any})=> <div className="text-sm text-slate-500">Resumen</div>;
 
-export function SectionRenderer({ section, ctx }:{ section:any; ctx:any }) {
+export default function SectionRenderer({ section, ctx }:{ section:any; ctx:any }) {
+  const nodes = section?.nodes || section?.children || [];
+  const layoutMode = section?.layout_mode === "grid" ? "grid" : "flow";
+
+  if (layoutMode === "grid") {
+    return (
+      <SectionGridView
+        section={{ ...section, nodes }}
+        ctx={ctx}
+        renderField={(node) => <FieldReadOnly node={node} ctx={ctx} />}
+        renderUi={(node) => <UiBlock node={node} ctx={ctx} />}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {section.nodes.map((n:any)=>{
+      {nodes.map((n:any)=>{
         if (isUiNode(n)) return <UiBlock key={n.id} node={n} ctx={ctx} />;
         return <FieldReadOnly key={n.id} node={n} ctx={ctx} />;
       })}
@@ -53,3 +71,5 @@ function UiBlock({ node, ctx }:{ node:any; ctx:any }) {
   if (node.type === "ui:summary-pinned") return <SummaryPinned cfg={cfg} ctx={ctx} />;
   return null;
 }
+
+export { SectionRenderer };

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
+import SectionGridDesigner from '@/components/plantillas/SectionGridDesigner';
 import SortableField from './SortableField';
 import SectionEndDrop from './SectionEndDrop';
 
@@ -28,7 +29,9 @@ export default function SortableSection({
 
   const { selected, setSelected, updateSection, duplicateSection, removeSection } = useBuilderStore();
   const isSel = selected?.type === 'section' && selected.id === id;
-  const fieldIds = useMemo(() => (section.children || []).map((n: any) => n.id), [section.children]);
+  const nodes = section.nodes || section.children || [];
+  const fieldIds = useMemo(() => nodes.map((n: any) => n.id), [nodes]);
+  const layoutMode = section.layout_mode === 'grid' ? 'grid' : 'flow';
 
   return (
     <section
@@ -39,7 +42,7 @@ export default function SortableSection({
       }`}
       onClick={() => setSelected({ type: 'section', id })}
     >
-      <header className="flex items-center justify-between rounded-xl px-3 py-2 mb-3 bg-slate-100 dark:bg-slate-700">
+      <header className="flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2 mb-3 bg-slate-100 dark:bg-slate-700">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -62,7 +65,18 @@ export default function SortableSection({
             <h3 className="font-semibold">{section.title || 'Sección'}</h3>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <label className="text-xs flex items-center gap-1">
+            <span>Disposición</span>
+            <select
+              className="border rounded px-2 py-1 text-xs dark:bg-slate-800 dark:border-slate-600"
+              value={layoutMode}
+              onChange={(e) => updateSection(id, { layout_mode: e.target.value as 'flow' | 'grid' })}
+            >
+              <option value="flow">Lista</option>
+              <option value="grid">Grid</option>
+            </select>
+          </label>
           <button
             type="button"
             onClick={(e) => {
@@ -86,14 +100,21 @@ export default function SortableSection({
         </div>
       </header>
 
-      <SortableContext items={fieldIds} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2 min-h-[12px]">
-          {(section.children || []).map((node: any) => (
-            <SortableField key={node.id} node={node} sectionId={id} />
-          ))}
-          <SectionEndDrop id={dropId} sectionId={id} />
-        </div>
-      </SortableContext>
+      {layoutMode === 'grid' ? (
+        <SectionGridDesigner
+          section={{ ...section, nodes }}
+          onUpdateNodes={(nextNodes) => updateSection(id, { nodes: nextNodes })}
+        />
+      ) : (
+        <SortableContext items={fieldIds} strategy={verticalListSortingStrategy}>
+          <div className="space-y-2 min-h-[12px]">
+            {nodes.map((node: any) => (
+              <SortableField key={node.id} node={node} sectionId={id} />
+            ))}
+            <SectionEndDrop id={dropId} sectionId={id} />
+          </div>
+        </SortableContext>
+      )}
     </section>
   );
 }
