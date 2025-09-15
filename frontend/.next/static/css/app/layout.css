@@ -1216,9 +1216,6 @@ input:checked + .toggle-bg {
 .max-h-\[65vh\] {
   max-height: 65vh;
 }
-.min-h-0 {
-  min-height: 0px;
-}
 .min-h-\[12px\] {
   min-height: 12px;
 }
@@ -1263,6 +1260,9 @@ input:checked + .toggle-bg {
 }
 .w-80 {
   width: 20rem;
+}
+.w-9 {
+  width: 2.25rem;
 }
 .w-\[min\(520px\2c 92vw\)\] {
   width: min(520px,92vw);
@@ -1374,6 +1374,9 @@ input:checked + .toggle-bg {
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -1388,12 +1391,6 @@ input:checked + .toggle-bg {
 }
 .grid-cols-\[9rem_1fr\] {
   grid-template-columns: 9rem 1fr;
-}
-.grid-rows-\[0fr\] {
-  grid-template-rows: 0fr;
-}
-.grid-rows-\[1fr\] {
-  grid-template-rows: 1fr;
 }
 .flex-col {
   flex-direction: column;
@@ -1427,6 +1424,9 @@ input:checked + .toggle-bg {
 }
 .justify-between {
   justify-content: space-between;
+}
+.gap-1 {
+  gap: 0.25rem;
 }
 .gap-2 {
   gap: 0.5rem;
@@ -1638,9 +1638,6 @@ input:checked + .toggle-bg {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
 }
-.bg-slate-200\/60 {
-  background-color: rgb(226 232 240 / 0.6);
-}
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
@@ -1698,6 +1695,10 @@ input:checked + .toggle-bg {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
 }
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
 .py-1 {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -1724,9 +1725,6 @@ input:checked + .toggle-bg {
 }
 .pl-2 {
   padding-left: 0.5rem;
-}
-.pl-6 {
-  padding-left: 1.5rem;
 }
 .pl-8 {
   padding-left: 2rem;
@@ -1772,6 +1770,10 @@ input:checked + .toggle-bg {
 .text-sm {
   font-size: 0.875rem;
   line-height: 1.25rem;
+}
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
 }
 .text-xs {
   font-size: 0.75rem;
@@ -1863,6 +1865,9 @@ input:checked + .toggle-bg {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
+.underline-offset-4 {
+  text-underline-offset: 4px;
+}
 .antialiased {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -1939,11 +1944,6 @@ input:checked + .toggle-bg {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
-.transition-\[grid-template-rows\2c opacity\] {
-  transition-property: grid-template-rows,opacity;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
 .transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -1999,14 +1999,6 @@ input:checked + .toggle-bg {
 .hover\:bg-slate-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-slate-200\/50:hover {
-  background-color: rgb(226 232 240 / 0.5);
-}
-
-.hover\:bg-slate-200\/60:hover {
-  background-color: rgb(226 232 240 / 0.6);
 }
 
 .hover\:bg-white:hover {
@@ -2083,6 +2075,21 @@ input:checked + .toggle-bg {
 .focus\:ring-gray-200:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(229 231 235 / var(--tw-ring-opacity, 1));
+}
+
+.focus-visible\:outline-none:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-visible\:ring-2:focus-visible {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.disabled\:pointer-events-none:disabled {
+  pointer-events: none;
 }
 
 .disabled\:opacity-50:disabled {
@@ -2272,10 +2279,6 @@ input:checked + .toggle-bg {
 .dark\:hover\:bg-slate-800:hover:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(30 41 59 / var(--tw-bg-opacity, 1));
-}
-
-.dark\:hover\:bg-slate-800\/60:hover:is(.dark *) {
-  background-color: rgb(30 41 59 / 0.6);
 }
 
 .dark\:hover\:text-blue-500:hover:is(.dark *) {
