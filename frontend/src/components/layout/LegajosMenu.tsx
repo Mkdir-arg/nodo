@@ -27,12 +27,7 @@ export default function LegajosMenu({ items, title = "Legajos" }: Props) {
 
   return (
     <nav className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        <Button asChild size="sm" variant="secondary">
-          <Link href="/legajos/nuevo">Nuevo</Link>
-        </Button>
-      </div>
+
 
       <ul className="flex flex-col gap-1">
         {safeItems.map((it) => {
