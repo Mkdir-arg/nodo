@@ -13,6 +13,7 @@ class Plantilla(models.Model):
     nombre = models.CharField(max_length=255, unique=False)
     descripcion = models.TextField(null=True, blank=True)
     schema = models.JSONField()
+    visual_config = models.JSONField(default=dict, blank=True)
     version = models.PositiveIntegerField(default=1)
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
     created_at = models.DateTimeField(auto_now_add=True)
