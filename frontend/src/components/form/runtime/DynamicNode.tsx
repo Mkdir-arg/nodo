@@ -11,6 +11,8 @@ import CuitRazonSocialField from "./fields/CuitRazonSocialField";
 import InfoField from "./fields/InfoField";
 import GroupField from "./fields/GroupField";
 
+function isUiNode(n:any){ return n?.kind==='ui' || String(n?.type||'').startsWith('ui:'); }
+
 export default function DynamicNode({ node, prefix="" }:{node:any, prefix?:string}) {
   const { control } = useFormContext();
   const allValues = useWatch({ control });
@@ -18,6 +20,7 @@ export default function DynamicNode({ node, prefix="" }:{node:any, prefix?:strin
   const hidden = node.condicionesOcultar ? evalConditions(allValues, node.condicionesOcultar) : false;
   if (hidden) return null;
 
+  if (isUiNode(node)) return null;
   if (node.type === "section") {
     return (
       <fieldset className="rounded-2xl border p-4 space-y-3">

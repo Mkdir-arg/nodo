@@ -49,3 +49,52 @@ export function newField(type: FieldType) {
     options: [{ value:"opcion_1", label:"Opción 1" }],
   };
 }
+
+export function createNode(type: string) {
+  if (type.startsWith("ui:")) return createUiNode(type);
+  return newField(type as FieldType);
+}
+
+function createUiNode(type: string) {
+  switch (type) {
+    case "ui:header":
+      return {
+        id: crypto.randomUUID(),
+        kind: "ui",
+        type,
+        config: {
+          variant: "hero",
+          title: "{{ data.ciudadano.apellido }}, {{ data.ciudadano.nombre }}",
+          subtitle: "Legajo de Ciudadano",
+          show_photo: true,
+        },
+      };
+    case "ui:kpi-grid":
+      return {
+        id: crypto.randomUUID(),
+        kind: "ui",
+        type,
+        config: {
+          layout: "grid-4",
+          items: [
+            { id: "kpi1", label: "Intervenciones", value: "{{ meta.counts.intervenciones }}" },
+            { id: "kpi2", label: "Archivos", value: "{{ meta.counts.archivos }}" },
+            { id: "kpi3", label: "Alertas", value: "{{ meta.counts.alertas_activas }}" },
+            { id: "kpi4", label: "Completitud", value: "{{ meta.completitud }}%" },
+          ],
+        },
+      };
+    case "ui:divider":
+      return { id: crypto.randomUUID(), kind: "ui", type, config: { label: "Sección", subtle: true } };
+    case "ui:banner":
+      return { id: crypto.randomUUID(), kind: "ui", type, config: { intent: "info", text: "Mensaje" } };
+    case "ui:summary-pinned":
+      return { id: crypto.randomUUID(), kind: "ui", type, config: { fields: [] } };
+    case "ui:attachments":
+      return { id: crypto.randomUUID(), kind: "ui", type, config: { allow_preview: true } };
+    case "ui:timeline":
+      return { id: crypto.randomUUID(), kind: "ui", type, config: { dense: false } };
+    default:
+      return { id: crypto.randomUUID(), kind: "ui", type, config: {} };
+  }
+}

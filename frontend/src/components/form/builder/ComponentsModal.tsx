@@ -16,6 +16,16 @@ const GROUPS: Record<string,[FieldType,string][]> = {
   ],
 };
 
+const ESTETICA = [
+  { type: "ui:header", label: "Encabezado" },
+  { type: "ui:kpi-grid", label: "Contadores / KPIs" },
+  { type: "ui:divider", label: "Separador" },
+  { type: "ui:banner", label: "Banner" },
+  { type: "ui:summary-pinned", label: "Resumen (pinned)" },
+  { type: "ui:attachments", label: "Archivos" },
+  { type: "ui:timeline", label: "Timeline" },
+];
+
 export default function ComponentsModal({ open, onClose }:{open:boolean; onClose:()=>void}) {
   const { addField, getSectionIdForInsert } = useBuilderStore();
 
@@ -52,6 +62,22 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
               </div>
             </div>
           ))}
+
+          <section className="mt-6">
+            <h4 className="text-sm font-semibold mb-2">Estética</h4>
+            <div className="grid gap-2" style={{gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))"}}>
+              {ESTETICA.map((c) => (
+                <button
+                  key={c.type}
+                  type="button"
+                  className="border rounded-md h-10 px-3 text-left"
+                  onClick={() => insert(c.type)}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
         <div className="text-right mt-4">
           <button onClick={onClose} className="px-3 py-2 border rounded-xl dark:border-slate-700">Cerrar</button>
