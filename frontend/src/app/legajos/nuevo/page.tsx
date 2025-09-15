@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { getJSON } from "@/lib/api";
 import ListView from "./_ListView";
 
-async function fetchPlantilla(formId: string) {
+type PlantillaSummary = {
+  nombre?: string;
+};
 
+async function fetchPlantilla(formId: string): Promise<PlantillaSummary | null> {
   try {
-    return await getJSON(`/api/plantillas/${formId}`, { cache: "no-store" });
+    return await getJSON<PlantillaSummary>(`/api/plantillas/${formId}`, { cache: "no-store" });
   } catch (error) {
     console.error("fetchPlantilla", error);
     return null;

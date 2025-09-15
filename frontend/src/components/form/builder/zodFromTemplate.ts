@@ -105,7 +105,7 @@ function schemaForNode(n: Node): z.ZodTypeAny {
 
   // CHECKBOX
   if (t === "checkbox" || t === "switch" || t === "boolean") {
-    let s = z.boolean();
+    let s: z.ZodTypeAny = z.boolean();
     // si es requerido, obligamos true (marca explícita)
     if (n.required) s = s.refine((v) => v === true, { message: "Debe estar marcado" });
     return n.required ? s : s.optional();

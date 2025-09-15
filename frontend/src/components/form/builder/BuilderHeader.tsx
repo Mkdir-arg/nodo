@@ -27,13 +27,19 @@ export default function BuilderHeader() {
     try {
       const schema = serializeTemplateSchema(nombre.trim(), sections || []);
       const { visualConfig } = useTemplateStore.getState();
-      const saved = await PlantillasService.savePlantilla({
+      type SavePlantillaResult = {
+        id?: string | number;
+      };
+
+      const saved = (await PlantillasService.savePlantilla({
         nombre: nombre.trim(),
         descripcion: '',
         schema,
         visual_config: visualConfig,
-      });
-      const id = saved?.id || schema?.id;
+      })) as SavePlantillaResult;
+      const schemaId =
+        schema && typeof schema === 'object' ? (schema as { id?: string | number }).id : undefined;
+      const id = saved?.id ?? schemaId;
       if (id) {
         try {
           await PlantillasService.updateVisualConfig(String(id), visualConfig);

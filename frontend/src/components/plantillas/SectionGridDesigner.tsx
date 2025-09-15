@@ -7,7 +7,7 @@ import { useBuilderStore } from "@/lib/store/usePlantillaBuilderStore";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-const RGL = dynamic(async () => {
+const RGL = dynamic<any>(async () => {
   const mod: any = await import("react-grid-layout");
   return mod.WidthProvider(mod.default);
 }, { ssr: false });

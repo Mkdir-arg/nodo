@@ -21,14 +21,14 @@ function extractSchemaFields(schema: unknown): NonNullable<CollectOptions["field
   const visit = (nodes: any[]) => {
     nodes.forEach((node) => {
       if (!node || typeof node !== "object") return;
-      const type = String(node.type || "").toLowerCase();
+      const type = String((node as any).type || "").toLowerCase();
       if (type === "section") {
-        visit(asArray(node.children || node.nodes));
+        visit(asArray((node as any).children || (node as any).nodes));
         return;
       }
       if (type === "group") {
-        const baseKey = typeof node.key === "string" ? node.key : undefined;
-        asArray(node.children).forEach((child: any) => {
+        const baseKey = typeof (node as any).key === "string" ? (node as any).key : undefined;
+        asArray((node as any).children).forEach((child: any) => {
           if (!child || typeof child !== "object") return;
           const cloned = { ...child };
           if (baseKey && typeof cloned.key === "string") {
@@ -51,7 +51,7 @@ function extractSchemaFields(schema: unknown): NonNullable<CollectOptions["field
 
 export default function PlantillaRenderPage() {
   const params = useParams();
-  const rawId = params?.id;
+  const rawId = (params as any)?.id;
   const plantillaId = Array.isArray(rawId) ? rawId[0] : rawId ?? "";
 
   const layoutQuery = useQuery({
@@ -65,17 +65,11 @@ export default function PlantillaRenderPage() {
     enabled: Boolean(plantillaId),
   });
 
-  const plantillaSchema = (
-    plantillaQuery.data as PlantillaDetail | undefined
-  )?.schema;
-  const plantillaNombre = (
-    plantillaQuery.data as PlantillaDetail | undefined
-  )?.nombre;
+  const plantillaData = plantillaQuery.data as PlantillaDetail | undefined;
+  const schemaSource = plantillaData?.schema;
+  const plantillaNombre = plantillaData?.nombre;
 
-  const schemaFields = useMemo(
-    () => extractSchemaFields(plantillaSchema),
-    [plantillaSchema]
-  );
+  const schemaFields = useMemo(() => extractSchemaFields(schemaSource), [schemaSource]);
 
   if (!plantillaId) {
     return (
@@ -109,7 +103,7 @@ export default function PlantillaRenderPage() {
     );
   }
 
-  const layout = layoutQuery.data.layout;
+  const layout = (layoutQuery.data as any).layout;
   const nombre = plantillaNombre ?? "Formulario";
 
   return (

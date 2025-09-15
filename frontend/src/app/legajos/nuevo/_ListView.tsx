@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getJSON } from "@/lib/api";
 
-
 type ListResponse = {
   results: Array<Record<string, any>>;
   next: string | null;
@@ -22,10 +21,8 @@ async function fetchLegajos({
   page?: number;
   search?: string;
 }) {
-
   if (typeof window === "undefined") {
     throw new Error("fetchLegajos solo está disponible en el cliente");
-
   }
 
   const url = new URL(`/api/legajos`, window.location.origin);
@@ -130,10 +127,18 @@ export default function ListView({ formId }: { formId: string }) {
             ) : (
               rows.map((row: any) => (
                 <tr key={row.id} className="border-t">
-                  <td className="px-4 py-2 font-medium text-slate-700">{guessDisplay(row)}</td>
-                  <td className="px-4 py-2 text-slate-600">{row.estado || "—"}</td>
-                  <td className="px-4 py-2 text-slate-600">{fmtDate(row.created_at)}</td>
-                  <td className="px-4 py-2 text-slate-600">{fmtDate(row.updated_at)}</td>
+                  <td className="px-4 py-2 font-medium text-slate-700">
+                    {guessDisplay(row)}
+                  </td>
+                  <td className="px-4 py-2 text-slate-600">
+                    {row.estado || "—"}
+                  </td>
+                  <td className="px-4 py-2 text-slate-600">
+                    {fmtDate(row.created_at)}
+                  </td>
+                  <td className="px-4 py-2 text-slate-600">
+                    {fmtDate(row.updated_at)}
+                  </td>
                 </tr>
               ))
             )}
@@ -151,7 +156,8 @@ export default function ListView({ formId }: { formId: string }) {
           Anterior
         </button>
         <div className="text-xs text-slate-500">
-          Página {page} {data?.count ? `de ${Math.max(1, Math.ceil(data.count / 10))}` : ""}
+          Página {page}{" "}
+          {data?.count ? `de ${Math.max(1, Math.ceil(data.count / 10))}` : ""}
         </div>
         <button
           type="button"

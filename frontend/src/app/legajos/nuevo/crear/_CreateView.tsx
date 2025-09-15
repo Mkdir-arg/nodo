@@ -6,8 +6,12 @@ import DynamicForm from "@/components/form/runtime/DynamicForm";
 
 import { getJSON, postJSON } from "@/lib/api";
 
-async function fetchPlantilla(id: string) {
-  return getJSON(`/api/plantillas/${id}`);
+type PlantillaResponse = {
+  schema?: unknown;
+};
+
+async function fetchPlantilla(id: string): Promise<PlantillaResponse> {
+  return getJSON<PlantillaResponse>(`/api/plantillas/${id}`);
 }
 
 async function createLegajo(payload: { plantilla_id: string; data: any }) {
@@ -19,7 +23,7 @@ export default function CreateView({ formId }: { formId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<PlantillaResponse>({
     queryKey: ["plantilla", formId],
     queryFn: () => fetchPlantilla(formId),
   });

@@ -22,25 +22,33 @@ const normalizeList = (res: any) => {
   return { count: res?.count ?? 0, results: res?.results ?? [] };
 };
 
-const getWithFallback = (a: string, b: string) => getJSON(a).catch(() => getJSON(b));
+const getWithFallback = <T = any>(a: string, b: string) =>
+  getJSON<T>(a).catch(() => getJSON<T>(b));
 
 export const PlantillasService = {
   fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
-    const qs = qsOf({ search: p.search, estado: p.estado, page: p.page, page_size: p.page_size });
+    const qs = qsOf({
+      search: p.search,
+      estado: p.estado,
+      page: p.page,
+      page_size: p.page_size,
+    });
     const res = await getWithFallback(`/api/plantillas/${qs}`, `/api/formularios/${qs}`);
     return normalizeList(res);
   },
 
-  fetchPlantilla: (id: string) => getWithFallback(`/api/plantillas/${id}/`, `/api/formularios/${id}/`),
+  fetchPlantilla: (id: string) =>
+    getWithFallback(`/api/plantillas/${id}/`, `/api/formularios/${id}/`),
 
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
+    type ExistsResponse = { exists?: boolean };
     try {
-      const r = await getJSON(`/api/plantillas/exists/${qs}`);
-      return !!r?.exists;
+      const r = await getJSON<ExistsResponse>(`/api/plantillas/exists/${qs}`);
+      return Boolean(r?.exists);
     } catch {
-      const r = await getJSON(`/api/formularios/exists/${qs}`);
-      return !!r?.exists;
+      const r = await getJSON<ExistsResponse>(`/api/formularios/exists/${qs}`);
+      return Boolean(r?.exists);
     }
   },
 

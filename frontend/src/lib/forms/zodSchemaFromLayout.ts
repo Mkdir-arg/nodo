@@ -207,7 +207,7 @@ function traverseChildren(
     return;
   }
 
-  const anyNode = node as Record<string, unknown>;
+  const anyNode = node as unknown as Record<string, unknown>;
   if (Array.isArray(anyNode.children)) anyNode.children.forEach((child) => traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex));
   if (Array.isArray(anyNode.columns)) anyNode.columns.forEach((child) => traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex));
   if (Array.isArray(anyNode.nodes)) anyNode.nodes.forEach((child) => traverseChildren(child as any, lookup, acc, usedNames, fallbackIndex));
@@ -273,29 +273,20 @@ function schemaForField(field: FieldLike): z.ZodTypeAny | null {
   }
 
   if (["number", "int", "float", "decimal", "sum"].includes(type)) {
-    if (required) {
-      let schema = z.preprocess(
-        preprocessNumber,
-        z.number({ required_error: "Campo obligatorio", invalid_type_error: "Debe ser un número" })
-      );
-      if (typeof field.min === "number") schema = schema.min(field.min, { message: `Debe ser ≥ ${field.min}` });
-      if (typeof field.max === "number") schema = schema.max(field.max, { message: `Debe ser ≤ ${field.max}` });
-      return schema;
-    }
-    let schema = z
-      .preprocess(preprocessNumber, z.number({ invalid_type_error: "Debe ser un número" }))
-      .optional();
+    let numberSchema = z.number({
+      required_error: "Campo obligatorio",
+      invalid_type_error: "Debe ser un número",
+    });
+
     if (typeof field.min === "number") {
-      schema = schema.refine((value) => value === undefined || value >= field.min!, {
-        message: `Debe ser ≥ ${field.min}`,
-      });
+      numberSchema = numberSchema.min(field.min, { message: `Debe ser ≥ ${field.min}` });
     }
     if (typeof field.max === "number") {
-      schema = schema.refine((value) => value === undefined || value <= field.max!, {
-        message: `Debe ser ≤ ${field.max}`,
-      });
+      numberSchema = numberSchema.max(field.max, { message: `Debe ser ≤ ${field.max}` });
     }
-    return schema;
+
+    const processed = z.preprocess(preprocessNumber, numberSchema);
+    return required ? processed : processed.optional();
   }
 
   if (type === "date" || type === "datetime" || type === "datetime-local") {
@@ -312,7 +303,7 @@ function schemaForField(field: FieldLike): z.ZodTypeAny | null {
     const maxDate = field.maxDate ? new Date(field.maxDate) : undefined;
 
     if (required) {
-      let schema = z.preprocess(
+      let schema: z.ZodTypeAny = z.preprocess(
         parseDate,
         z.date({ required_error: "Campo obligatorio", invalid_type_error: "Fecha inválida" })
       );
@@ -328,7 +319,9 @@ function schemaForField(field: FieldLike): z.ZodTypeAny | null {
       }
       return schema;
     }
-    let schema = z.preprocess(parseDate, z.date({ invalid_type_error: "Fecha inválida" })).optional();
+    let schema: z.ZodTypeAny = z
+      .preprocess(parseDate, z.date({ invalid_type_error: "Fecha inválida" }))
+      .optional();
     if (minDate && !Number.isNaN(minDate.getTime())) {
       schema = schema.refine((value) => value === undefined || value >= minDate, {
         message: `Debe ser posterior a ${minDate.toISOString().slice(0, 10)}`,
