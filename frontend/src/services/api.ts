@@ -8,13 +8,11 @@ function joinUrl(base: string, path = "") {
   return p ? `${b}/${p}` : `${b}/`;
 }
 
-// ¡IMPORTANTE! Resolver en runtime, no top-level:
+// Resolver base en runtime (cliente vs SSR)
 export function getApiBase(): string {
   const publicBase = ensureTrailingSlash(process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/");
-  const internalBase = ensureTrailingSlash(
-    (process.env.API_URL_INTERNAL ? trimEndSlash(process.env.API_URL_INTERNAL) + "/api" : publicBase)
-  );
-  // Si hay window => estamos en el navegador ⇒ usar publicBase
+  const internal = process.env.API_URL_INTERNAL ? trimEndSlash(process.env.API_URL_INTERNAL) : "";
+  const internalBase = ensureTrailingSlash(internal ? `${internal}/api` : publicBase);
   return (typeof window === "undefined") ? internalBase : publicBase;
 }
 
