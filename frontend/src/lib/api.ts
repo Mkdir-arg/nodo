@@ -1,6 +1,4 @@
-
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
+import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
 
@@ -61,7 +59,7 @@ function withAuth(init: RequestInit = {}): RequestInit {
   const headers = new Headers(init.headers ?? {});
 
   if (!isServer) {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const token = getAccessToken();
     if (token && !headers.has("Authorization")) {
       headers.set("Authorization", `Bearer ${token}`);
     }
@@ -86,8 +84,7 @@ export async function api(path: string, init: RequestInit = {}) {
 
   if (response.status === 401) {
     if (!isServer) {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      clearStoredTokens();
       window.location.href = "/login";
     }
     throw new Error("Unauthorized");

@@ -1,13 +1,7 @@
 "use client";
 
-
 import { buildApiUrl } from "@/lib/api";
-
-
-type Tokens = { access: string; refresh: string };
-
-const LS_ACCESS = "access_token";
-const LS_REFRESH = "refresh_token";
+import { Tokens, clearStoredTokens, getStoredTokens, storeTokens } from "@/lib/tokens";
 
 function resolvePath(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
@@ -15,19 +9,15 @@ function resolvePath(path: string): string {
 }
 
 export function getTokens(): Tokens | null {
-  const access = typeof window !== "undefined" ? localStorage.getItem(LS_ACCESS) : null;
-  const refresh = typeof window !== "undefined" ? localStorage.getItem(LS_REFRESH) : null;
-  return access && refresh ? { access, refresh } : null;
+  return getStoredTokens();
 }
 
 export function setTokens(t: Tokens) {
-  localStorage.setItem(LS_ACCESS, t.access);
-  localStorage.setItem(LS_REFRESH, t.refresh);
+  storeTokens(t);
 }
 
 export function clearTokens() {
-  localStorage.removeItem(LS_ACCESS);
-  localStorage.removeItem(LS_REFRESH);
+  clearStoredTokens();
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -35,7 +25,6 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!tokens) return null;
 
   const res = await fetch(buildApiUrl("/api/token/refresh/", "POST"), {
-
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh: tokens.refresh }),
