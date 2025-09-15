@@ -6,6 +6,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./vitest.setup.ts",
   },
+  esbuild: {
+    jsxInject: "import React from 'react'",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
