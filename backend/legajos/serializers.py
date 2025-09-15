@@ -3,6 +3,7 @@ from typing import Dict, Any, List, Optional
 from .models import Legajo
 from plantillas.models import Plantilla
 from plantillas.validators import run_schema_validations
+from .utils import guess_legajo_display
 
 
 class LegajoSerializer(serializers.ModelSerializer):
@@ -27,48 +28,11 @@ class LegajoSerializer(serializers.ModelSerializer):
         read_only_fields = ("display", "estado", "created_at", "updated_at")
 
     def get_display(self, obj: Legajo) -> Optional[str]:
-        data = obj.data or {}
-        grid_values = obj.grid_values or {}
-        if isinstance(grid_values, dict):
-            display = grid_values.get("display") or grid_values.get("nombre")
-            if display:
-                return display
-        if isinstance(data, dict):
-            display = data.get("display")
-            if display:
-                return display
-
-            def pick_name(container: Dict[str, Any]) -> Optional[str]:
-                apellido = (
-                    container.get("apellido")
-                    or container.get("last_name")
-                    or container.get("apellidos")
-                )
-                nombre = (
-                    container.get("nombre")
-                    or container.get("first_name")
-                    or container.get("nombres")
-                )
-                if apellido and nombre:
-                    return f"{apellido}, {nombre}"
-                if nombre:
-                    return str(nombre)
-                if apellido:
-                    return str(apellido)
-                return None
-
-            for key in ("ciudadano", "persona", "titular"):
-                container = data.get(key)
-                if isinstance(container, dict):
-                    guess = pick_name(container)
-                    if guess:
-                        return guess
-
-            guess = pick_name(data)
-            if guess:
-                return guess
-
-        return str(obj.id)
+        return guess_legajo_display(
+            obj.data or {},
+            obj.grid_values or {},
+            str(obj.id),
+        )
 
     def get_estado(self, obj: Legajo) -> Optional[str]:
         candidates = []
@@ -126,10 +90,17 @@ class LegajoSerializer(serializers.ModelSerializer):
 
     def create(self, validated):
         legajo = super().create(validated)
+        updates = []
         try:
             from plantillas.utils import build_grid_values
-            legajo.grid_values = build_grid_values(legajo.plantilla.schema, legajo.data)
-            legajo.save(update_fields=["grid_values"])
+
+            legajo.grid_values = build_grid_values(
+                legajo.plantilla.schema, legajo.data
+            )
+            updates.append("grid_values")
         except Exception:
             pass
+
+        if updates:
+            legajo.save(update_fields=updates)
         return legajo
