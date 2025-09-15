@@ -26,6 +26,27 @@ function extractSchemaFields(schema: unknown): NonNullable<CollectOptions["field
         visit(asArray((node as any).children || (node as any).nodes));
         return;
       }
+      if (type === "tabs") {
+        const tabsChildren = (node as any).tabsChildren;
+        if (tabsChildren && typeof tabsChildren === "object") {
+          Object.values(tabsChildren).forEach((children: any) => {
+            visit(asArray(children));
+          });
+        }
+        return;
+      }
+      if (type === "repeater") {
+        const baseKey = typeof (node as any).key === "string" ? (node as any).key : undefined;
+        asArray((node as any).children).forEach((child: any) => {
+          if (!child || typeof child !== "object") return;
+          const cloned = { ...child };
+          if (baseKey && typeof cloned.key === "string") {
+            cloned.key = `${baseKey}.${cloned.key}`;
+          }
+          visit([cloned]);
+        });
+        return;
+      }
       if (type === "group") {
         const baseKey = typeof (node as any).key === "string" ? (node as any).key : undefined;
         asArray((node as any).children).forEach((child: any) => {
