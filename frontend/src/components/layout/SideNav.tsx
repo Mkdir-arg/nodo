@@ -143,8 +143,12 @@ function InlineFolderOpen({ size = 24, ...props }: IconProps) {
   );
 }
 
-const FolderClosedIcon = (Folder as any) ?? ((p: any) => <InlineFolder {...p} />);
-const FolderOpenIcon = (FolderOpen as any) ?? ((p: any) => <InlineFolderOpen {...p} />);
+
+const FolderClosedIcon = (props: IconProps) =>
+  (typeof Folder === 'function' ? <Folder {...props} /> : <InlineFolder {...props} />);
+const FolderOpenIcon = (props: IconProps) =>
+  (typeof FolderOpen === 'function' ? <FolderOpen {...props} /> : <InlineFolderOpen {...props} />);
+
 
 function LegajosMenu() {
   const pathname = usePathname();
