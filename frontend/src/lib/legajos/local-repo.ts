@@ -44,14 +44,32 @@ export class LocalRepo implements ITemplatesRepo {
   async upsertTemplate(t: Template) {
     try {
       console.log('💾 LOCAL PASO 1: Template recibido:', JSON.stringify(t, null, 2));
+      console.log('💾 LOCAL: Nombre original antes de parse:', t.name);
       
       const list = await this.listTemplates();
       const idx = list.findIndex(x=>x.id===t.id);
+      
+      // Si es un template nuevo y ya existe el nombre, agregar sufijo
+      if (idx < 0) {
+        const existingNames = list.map(template => template.name);
+        if (existingNames.includes(t.name)) {
+          console.log('⚠️ LOCAL: Nombre duplicado detectado, agregando sufijo');
+          let counter = 1;
+          let newName = `${t.name} (${counter})`;
+          while (existingNames.includes(newName)) {
+            counter++;
+            newName = `${t.name} (${counter})`;
+          }
+          t = { ...t, name: newName };
+          console.log('💾 LOCAL: Nuevo nombre:', t.name);
+        }
+      }
       
       console.log('💾 LOCAL PASO 2: Parseando template...');
       const parsed = templateSchema.parse(t);
       
       console.log('💾 LOCAL PASO 3: Template parseado exitosamente:', JSON.stringify(parsed, null, 2));
+      console.log('💾 LOCAL: Nombre final después de parse:', parsed.name);
       
       if (idx >= 0) list[idx] = parsed; else list.push(parsed);
       this._templatesCache = list;

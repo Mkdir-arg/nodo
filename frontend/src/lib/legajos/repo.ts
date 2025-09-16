@@ -42,16 +42,24 @@ class SimpleRepo implements ITemplatesRepo {
         return result;
       } catch (error) {
         console.error('❌ PASO 3: Error backend:', error);
+        
+        // Si es error de nombre duplicado, mostrar error y no usar fallback
+        if (error instanceof Error && error.message.includes('Nombre ya utilizado')) {
+          throw new Error('El nombre de la plantilla ya existe. Por favor elige otro nombre.');
+        }
+        
+        // Solo usar fallback para otros errores (conectividad, etc)
         console.log('💾 PASO 4: Guardando en local como fallback');
+        const localResult = await this.localRepo.upsertTemplate(t);
+        console.log('✅ PASO 5: Guardado en local exitoso:', JSON.stringify(localResult, null, 2));
+        return localResult;
       }
     } else {
       console.log('🔒 PASO 2: No autenticado, guardando en local');
+      const localResult = await this.localRepo.upsertTemplate(t);
+      console.log('✅ PASO 3: Guardado en local exitoso:', JSON.stringify(localResult, null, 2));
+      return localResult;
     }
-    
-    console.log('💾 PASO 4: Usando repositorio local');
-    const localResult = await this.localRepo.upsertTemplate(t);
-    console.log('✅ PASO 5: Guardado en local exitoso:', JSON.stringify(localResult, null, 2));
-    return localResult;
   }
 
   async publishTemplate(id: string) {

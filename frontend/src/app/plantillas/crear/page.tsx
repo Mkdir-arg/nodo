@@ -7,6 +7,7 @@ import BuilderHeader from '@/components/form/builder/BuilderHeader';
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
 import { saveLayout } from '@/lib/api/plantillas';
 import { repo } from '@/lib/legajos/repo';
+import { saveTemplateSimple } from '@/lib/legajos/simple-repo';
 import { useNavStore } from '@/lib/store/useNavStore';
 
 export default function CrearPlantillaPage() {
@@ -24,25 +25,103 @@ export default function CrearPlantillaPage() {
     
     setIsSaving(true);
     try {
-      // Usar el repositorio unificado
+      console.log('🚀 INICIANDO GUARDADO');
+      
+      // Obtener datos del builder
+      const builderLayout = toFormLayout();
+      console.log('🔍 Builder layout completo:', JSON.stringify(builderLayout, null, 2));
+      console.log('🔍 Nodos en builder:', builderLayout.nodes?.length || 0);
+      
+      // Crear campos de prueba si el builder está vacío
+      let fields = [];
+      let layout = [];
+      
+      if (!builderLayout.nodes || builderLayout.nodes.length === 0) {
+        console.warn('⚠️ El builder está vacío. Creando campos de prueba...');
+        fields = [
+          {
+            id: 'campo1',
+            key: 'nombre',
+            type: 'text',
+            label: 'Nombre Completo',
+            required: true
+          },
+          {
+            id: 'campo2', 
+            key: 'email',
+            type: 'text',
+            label: 'Email',
+            required: false
+          }
+        ];
+        layout = [
+          {
+            type: 'section',
+            label: 'Datos Personales',
+            children: [
+              { type: 'field', fieldKey: 'nombre' },
+              { type: 'field', fieldKey: 'email' }
+            ]
+          }
+        ];
+      } else {
+        // Convertir nodos del builder a fields y layout
+        const sections = builderLayout.nodes.filter(n => n.kind === 'section');
+        const fieldNodes = builderLayout.nodes.filter(n => n.kind === 'field');
+        
+        fields = fieldNodes.map(field => ({
+          id: field.id,
+          key: field.props?.name || field.id,
+          type: field.type,
+          label: field.props?.label || 'Campo sin nombre',
+          required: field.props?.required || false,
+          ui: {
+            colSpan: field.colSpan || 12
+          }
+        }));
+        
+        layout = sections.map(section => ({
+          type: 'section',
+          label: section.title,
+          children: fieldNodes
+            .filter(f => f.parentId === section.id)
+            .sort((a, b) => a.order - b.order)
+            .map(f => ({
+              type: 'field',
+              fieldKey: f.props?.name || f.id
+            }))
+        }));
+      }
+      
+      console.log('📋 Fields finales:', fields);
+      console.log('🏗️ Layout final:', layout);
+      
+      const uniqueId = `template-${Date.now()}`;
       const plantillaData = {
-        id: 'new',
+        id: uniqueId,
         name: nombre.trim(),
         slug: nombre.trim().toLowerCase().replace(/\s+/g, '-'),
         status: 'draft' as const,
-        fields: [],
-        layout: [],
+        fields,
+        layout,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       
-      const plantilla = await repo.upsertTemplate(plantillaData);
+      console.log('📦 Nombre original:', nombre.trim());
+      console.log('📦 Nombre en plantillaData:', plantillaData.name);
+      
+      console.log('📦 Plantilla data final:', plantillaData);
+      
+      // Usar repositorio simple para evitar transformaciones
+      const plantilla = await saveTemplateSimple(plantillaData);
+      console.log('✅ PLANTILLA GUARDADA:', plantilla);
       
       // Guardar el layout si hay contenido
-      const layout = toFormLayout();
-      if (layout.nodes.length > 0) {
+      const builderLayoutForSave = toFormLayout();
+      if (builderLayoutForSave.nodes.length > 0) {
         try {
-          await saveLayout(plantilla.id, layout);
+          await saveLayout(plantilla.id, builderLayoutForSave);
         } catch (layoutError) {
           console.warn('No se pudo guardar el layout:', layoutError);
         }

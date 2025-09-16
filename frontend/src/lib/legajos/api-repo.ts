@@ -86,6 +86,8 @@ export class ApiRepo implements ITemplatesRepo {
         nombre: t.name,
         descripcion: t.description || '',
         schema: {
+          type: 'object',
+          properties: {},
           fields: t.fields || [],
           layout: t.layout || []
         }
