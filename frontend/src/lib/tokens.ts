@@ -30,8 +30,16 @@ export function getStoredTokens(): Tokens | null {
   return { access, refresh };
 }
 
+function isValidToken(token: string): boolean {
+  return typeof token === 'string' && token.length > 0 && !/[<>"'&]/.test(token);
+}
+
 export function storeTokens(tokens: Tokens) {
   if (!hasWindow()) return;
+  if (!isValidToken(tokens.access) || !isValidToken(tokens.refresh)) {
+    console.warn('Invalid token format detected');
+    return;
+  }
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access);
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh);
@@ -42,6 +50,10 @@ export function storeTokens(tokens: Tokens) {
 
 export function storeAccessToken(access: string) {
   if (!hasWindow()) return;
+  if (!isValidToken(access)) {
+    console.warn('Invalid access token format detected');
+    return;
+  }
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, access);
   } catch {

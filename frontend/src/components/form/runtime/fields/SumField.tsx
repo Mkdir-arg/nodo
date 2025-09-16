@@ -1,9 +1,9 @@
 import { useFormContext, useWatch } from "react-hook-form";
 export default function SumField({ field }:{field:any}) {
   const { control } = useFormContext();
-  const values = useWatch({ control });
-  const total = (field.sources || []).reduce((acc: number, key: string) => {
-    const v = parseFloat(values[key] || 0);
+  const watchedFields = useWatch({ control, name: field.sources || [] });
+  const total = (field.sources || []).reduce((acc: number, key: string, index: number) => {
+    const v = parseFloat(watchedFields[index] || 0);
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
   return (

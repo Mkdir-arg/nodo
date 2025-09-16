@@ -17,6 +17,11 @@ class PlantillaViewSet(viewsets.ModelViewSet):
     search_fields = ["nombre"]
     filterset_fields = ["estado"]
 
+    def create(self, request, *args, **kwargs):
+        if not request.user.has_perm("plantillas.add_plantilla"):
+            raise exceptions.PermissionDenied()
+        return super().create(request, *args, **kwargs)
+
     def destroy(self, request, *args, **kwargs):
         inst = self.get_object()
         inst.estado = Plantilla.Estado.INACTIVO

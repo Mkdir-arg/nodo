@@ -36,7 +36,8 @@
     "react-hook-form": "^7.62.0",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.25.8",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "isomorphic-dompurify": "^2.9.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",

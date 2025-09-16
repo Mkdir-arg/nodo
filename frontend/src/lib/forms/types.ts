@@ -26,6 +26,8 @@ export interface FormLayout {
 }
 
 export interface PlantillaLayoutResponse {
+  id: string;
+  nombre: string;
   layout_json: FormLayout;
   layout_version: number;
   updated_at: string;

@@ -19,8 +19,8 @@ export function FormBuilderPage({ plantillaId }: FormBuilderPageProps) {
   );
 
   useEffect(() => {
-    if (layoutData?.layout) {
-      loadFromFormLayout(layoutData.layout);
+    if (layoutData?.layout_json) {
+      loadFromFormLayout(layoutData.layout_json);
     }
   }, [layoutData, loadFromFormLayout]);
 
@@ -42,7 +42,7 @@ export function FormBuilderPage({ plantillaId }: FormBuilderPageProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      <BuilderHeader plantillaId={plantillaId} />
+      <BuilderHeader plantillaId={plantillaId} plantillaNombre={layoutData?.nombre || 'Plantilla sin nombre'} />
       <div className="flex-1 overflow-hidden">
         <Builder />
       </div>

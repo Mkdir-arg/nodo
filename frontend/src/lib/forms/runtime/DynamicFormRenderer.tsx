@@ -2,6 +2,7 @@
 
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { zodSchemaFromLayout } from "../zodSchemaFromLayout";
 import { TextField } from "./fields/TextField";
@@ -11,7 +12,23 @@ import { CheckboxField } from "./fields/CheckboxField";
 import { DateField } from "./fields/DateField";
 import type { FormLayout, LayoutNode, FieldProps } from "../types";
 
-function renderField(field: FieldProps) {
+// Mapeo de clases para evitar problemas con Tailwind purging
+const colSpanClasses: Record<number, string> = {
+  1: 'col-span-1',
+  2: 'col-span-2', 
+  3: 'col-span-3',
+  4: 'col-span-4',
+  5: 'col-span-5',
+  6: 'col-span-6',
+  7: 'col-span-7',
+  8: 'col-span-8',
+  9: 'col-span-9',
+  10: 'col-span-10',
+  11: 'col-span-11',
+  12: 'col-span-12'
+};
+
+const renderField = (field: FieldProps) => {
   switch (field.type) {
     case "text":
     case "textarea":
@@ -25,9 +42,10 @@ function renderField(field: FieldProps) {
     case "date":
       return <DateField key={field.name} field={field} />;
     default:
+      console.warn(`Unsupported field type: ${field.type}`);
       return null;
   }
-}
+};
 
 export function DynamicFormRenderer({ 
   layout, 
@@ -38,7 +56,7 @@ export function DynamicFormRenderer({
   onSubmit: (data: any) => void;
   defaultValues?: Record<string, any>;
 }) {
-  const schema = zodSchemaFromLayout(layout);
+  const schema = useMemo(() => zodSchemaFromLayout(layout), [layout]);
   
   const methods = useForm({
     resolver: zodResolver(schema),
@@ -52,7 +70,7 @@ export function DynamicFormRenderer({
           {layout.nodes.map((node) => {
             if (node.kind === "field" && node.field) {
               return (
-                <div key={node.id} className={`col-span-${node.colSpan}`}>
+                <div key={node.id} className={colSpanClasses[node.colSpan] || 'col-span-12'}>
                   {renderField(node.field)}
                 </div>
               );

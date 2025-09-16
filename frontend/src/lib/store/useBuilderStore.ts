@@ -17,6 +17,7 @@ interface BuilderState {
   markDirty: () => void;
   clearDirty: () => void;
   toFormLayout: () => FormLayout;
+  getFormLayout: () => FormLayout;
   loadFromFormLayout: (layout: FormLayout) => void;
 }
 
@@ -159,6 +160,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   clearDirty: () => set({ dirty: false }),
 
   toFormLayout: (): FormLayout => ({
+    version: 1,
+    nodes: get().nodes
+  }),
+
+  getFormLayout: (): FormLayout => ({
     version: 1,
     nodes: get().nodes
   }),
