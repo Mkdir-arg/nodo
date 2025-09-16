@@ -8,34 +8,50 @@ Este repositorio centraliza el código del backend y frontend del proyecto. Cada
 - Node.js y npm
 
 ## Despliegue e inicio
-1. Copia el archivo de ejemplo y ajusta las variables:
+
+### Inicio rápido
+```bash
+# Inicialización automática (recomendado)
+chmod +x scripts/init.sh
+./scripts/init.sh
+
+# O usando Make
+make help  # Ver todos los comandos disponibles
+make up    # Levantar servicios
+```
+
+### Configuración manual
+1. Copia y configura las variables de entorno:
    ```bash
    cp .env.example .env
+   # Edita .env con tus valores
    ```
-2. Levanta MySQL, el backend y el frontend:
+
+2. Desarrollo:
    ```bash
-   docker-compose up --build
+   make build  # Construir imágenes
+   make up     # Levantar servicios
    ```
-3. Aplica las migraciones y crea un superusuario:
+
+3. Producción:
    ```bash
-   docker-compose exec backend python manage.py migrate
-   docker-compose exec backend python manage.py createsuperuser
+   make up-prod  # Levantar en modo producción
    ```
-4. Comandos de desarrollo local:
-   - Backend:
-     ```bash
-     python manage.py runserver
-     ```
-   - Frontend:
-     ```bash
-     npm run dev
-     npm run build
-     ```
-5. Comandos de mantenimiento:
-   ```bash
-   docker-compose restart
-   docker-compose down -v
-   ```
+
+### Comandos útiles
+```bash
+# Gestión de servicios
+make up / make down / make restart
+make logs / make logs-backend / make logs-frontend
+
+# Base de datos
+make migrate / make makemigrations / make superuser
+make backup-db / make restore-db FILE=backup.sql
+
+# Desarrollo
+make test / make shell / make collectstatic
+make clean  # Limpiar contenedores y volúmenes
+```
 
 ## Arquitectura
 El proyecto se compone de varios servicios definidos en `docker-compose.yml`:
