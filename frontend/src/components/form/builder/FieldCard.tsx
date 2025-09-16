@@ -1,224 +1,146 @@
 'use client';
-import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 
-function MiniPreview({ node }: { node: any }) {
-  if (node.kind === 'ui' || String(node.type || '').startsWith('ui:')) {
-    return <div className="font-medium text-slate-500">{node.type}</div>;
-  }
-  const label = node.label || 'Sin título';
-  switch (node.type) {
-    case 'text':
-    case 'textarea':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <input
-            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-            placeholder={node.placeholder || ''}
-            readOnly
-          />
-        </>
-      );
-    case 'number':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <input
-            type="number"
-            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-            readOnly
-          />
-        </>
-      );
-    case 'date':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <input
-            type="date"
-            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-            readOnly
-          />
-        </>
-      );
-    case 'select':
-    case 'dropdown':
-    case 'select_with_filter':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <select
-            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-            disabled
-          >
-            <option>{node.placeholder || 'Seleccione...'}</option>
-            {(node.options || []).map((o: any) => (
-              <option key={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </>
-      );
-    case 'multiselect':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <div className="flex flex-wrap gap-2">
-            {(node.options || []).slice(0, 3).map((o: any) => (
-              <span
-                key={o.value}
-                className="px-2 py-1 rounded border text-xs dark:border-slate-700"
-              >
-                {o.label}
-              </span>
-            ))}
-          </div>
-        </>
-      );
-    case 'document':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <input
-            type="file"
-            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-            disabled
-          />
-          <p className="text-xs opacity-60">
-            Ext: {(node.accept || []).join(', ')} • Max {node.maxSizeMB || '—'}MB
-          </p>
-        </>
-      );
-    case 'sum':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <input
-            className="w-full border rounded p-2 bg-gray-50 dark:bg-slate-700 dark:border-slate-700"
-            value="(auto)"
-            readOnly
-          />
-        </>
-      );
-    case 'phone':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <input
-            type="tel"
-            className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-            readOnly
-          />
-        </>
-      );
-    case 'cuit_razon_social':
-      return (
-        <>
-          <div className="font-medium">{label}</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <input
-              placeholder="CUIT"
-              className="border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-              readOnly
-            />
-            <input
-              placeholder="Razón social"
-              className="border rounded p-2 dark:bg-slate-900 dark:border-slate-700"
-              readOnly
-            />
-          </div>
-        </>
-      );
-    case 'info':
-      return <div className="font-medium">{node.label || 'Texto informativo'}</div>;
-    case 'group':
-      return (
-        <>
-          <div className="font-medium">{node.label || 'Grupo'}</div>
-          <div className="rounded border p-2 text-xs opacity-70 dark:border-slate-700">
-            Contiene {(node.children || []).length} subcampos
-          </div>
-        </>
-      );
-    default:
-      return <div className="font-medium">{label}</div>;
-  }
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, Settings, Copy, Trash2 } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import type { FieldNode } from '@/lib/forms/types';
+
+interface FieldCardProps {
+  field: FieldNode;
 }
 
-type DragHandle = { attributes: any; listeners: any };
-export default function FieldCard({
-  node,
-  dragHandle,
-  readonly,
-}: {
-  node: any;
-  dragHandle?: DragHandle;
-  readonly?: boolean;
-}) {
-  const { selected, setSelected, duplicateNode, removeNode } = useBuilderStore();
-  const isSel = selected?.type === 'field' && selected?.id === node.id;
+export function FieldCard({ field }: FieldCardProps) {
+  const { resizeField, markDirty } = useBuilderStore();
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const startXRef = useRef(0);
+  const startColSpanRef = useRef(field.colSpan);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: field.id,
+    data: {
+      type: 'field',
+      sectionId: field.parentId,
+      index: field.order,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  // Handle resize
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startXRef.current;
+      const containerWidth = resizeRef.current?.parentElement?.offsetWidth || 1200;
+      const columnWidth = containerWidth / 12;
+      const deltaColumns = Math.round(deltaX / columnWidth);
+      const newColSpan = Math.min(Math.max(startColSpanRef.current + deltaColumns, 1), 12);
+      
+      if (newColSpan !== field.colSpan) {
+        resizeField(field.id, newColSpan);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      markDirty();
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, field.colSpan, field.id, resizeField, markDirty]);
+
+  // Keyboard resize
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!resizeRef.current?.contains(document.activeElement)) return;
+      
+      if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        const delta = e.key === 'ArrowLeft' ? -1 : 1;
+        const newColSpan = Math.min(Math.max(field.colSpan + delta, 1), 12);
+        resizeField(field.id, newColSpan);
+        markDirty();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [field.colSpan, field.id, resizeField, markDirty]);
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startColSpanRef.current = field.colSpan;
+  };
 
   return (
     <div
-      className={`rounded-xl border bg-white p-3 space-y-2 dark:bg-slate-800 dark:border-slate-700 ${
-        readonly ? 'pointer-events-none' : 'cursor-pointer'
-      } ${isSel ? 'ring-2 ring-sky-300' : 'hover:bg-gray-50 dark:hover:bg-slate-700'}`}
-      onClick={() => !readonly && setSelected({ type: 'field', id: node.id })}
+      ref={setNodeRef}
+      style={style}
+      className={`col-span-${field.colSpan} relative bg-white border rounded-lg p-3 ${
+        isDragging ? 'opacity-50' : ''
+      }`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {dragHandle && (
-            <button
-              type="button"
-              aria-label="Arrastrar campo"
-              className="px-2 py-1 border rounded text-xs cursor-grab dark:border-slate-700 dark:text-slate-200"
-              {...dragHandle.attributes}
-              {...dragHandle.listeners}
-              onMouseDownCapture={(e) => e.stopPropagation()}
-              onPointerDownCapture={(e) => e.stopPropagation()}
-            >
-              ⠿
-            </button>
-          )}
-          <span className="text-xs uppercase opacity-60">{node.type}</span>
+      <div className="flex items-center gap-2 mb-2">
+        <button
+          {...attributes}
+          {...listeners}
+          className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="w-4 h-4 text-gray-400" />
+        </button>
+        <span className="text-xs text-gray-500 uppercase">{field.type}</span>
+        <div className="ml-auto flex gap-1">
+          <button className="p-1 hover:bg-gray-100 rounded">
+            <Settings className="w-3 h-3 text-gray-400" />
+          </button>
+          <button className="p-1 hover:bg-gray-100 rounded">
+            <Copy className="w-3 h-3 text-gray-400" />
+          </button>
+          <button className="p-1 hover:bg-gray-100 rounded">
+            <Trash2 className="w-3 h-3 text-red-400" />
+          </button>
         </div>
-        {!readonly && (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.dispatchEvent(
-                  new CustomEvent('builder:open-props', { detail: { id: node.id } }),
-                );
-              }}
-              className="text-xs px-2 py-1 border rounded dark:border-slate-700"
-            >
-              Editar
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                duplicateNode(node.id);
-              }}
-              className="text-xs px-2 py-1 border rounded dark:border-slate-700"
-            >
-              Duplicar
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeNode(node.id);
-              }}
-              className="text-xs px-2 py-1 border rounded dark:border-slate-700 text-red-600"
-            >
-              Eliminar
-            </button>
-          </div>
-        )}
       </div>
-      <MiniPreview node={node} />
+
+      <div className="space-y-2">
+        <div className="font-medium text-sm">
+          {field.props?.label || `Campo ${field.type}`}
+        </div>
+        <div className="text-xs text-gray-500">
+          Tamaño: {field.colSpan}/12 columnas
+        </div>
+      </div>
+
+      {/* Resize handle */}
+      <div
+        ref={resizeRef}
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-200 opacity-0 hover:opacity-100"
+        onMouseDown={handleResizeStart}
+        title="Arrastrar para redimensionar (Alt+←/→ para teclado)"
+      />
     </div>
   );
 }

@@ -53,10 +53,17 @@ export async function getLayout(plantillaId: string): Promise<PlantillaLayout> {
 }
 
 export async function saveLayout(plantillaId: string, layout: FormLayout): Promise<PlantillaLayout> {
-  const response = await putJSON<PlantillaLayoutResponse>(layoutPath(plantillaId), {
-    layout_json: layout,
-  });
-  return normalizeLayout(response);
+  try {
+    const response = await putJSON<PlantillaLayoutResponse>(layoutPath(plantillaId), {
+      layout_json: layout,
+    });
+    return normalizeLayout(response);
+  } catch (error: any) {
+    if (error?.status === 404) {
+      throw new Error('Endpoint de layout no encontrado (404). Verificar ruta en Django: /api/plantillas/<id>/layout/');
+    }
+    throw error;
+  }
 }
 
 export const plantillasKeys = {

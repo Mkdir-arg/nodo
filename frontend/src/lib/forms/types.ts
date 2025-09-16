@@ -229,7 +229,30 @@ export type LayoutNode =
   | LayoutTabsNode
   | LayoutRepeaterNode;
 
+// Nuevos tipos para el constructor visual
+export type NodeKind = 'section' | 'field';
+
+export interface BaseNode {
+  id: string;
+  kind: NodeKind;
+  order: number;
+  parentId?: string;
+}
+
+export interface SectionNode extends BaseNode {
+  kind: 'section';
+  title: string;
+  columns: number;
+}
+
+export interface FieldNode extends BaseNode {
+  kind: 'field';
+  type: string;
+  colSpan: number;
+  props?: Record<string, unknown>;
+}
+
 export interface FormLayout {
   version: number;
-  nodes: Array<LayoutSectionNode | LayoutRowNode>;
+  nodes: Array<SectionNode | FieldNode>;
 }

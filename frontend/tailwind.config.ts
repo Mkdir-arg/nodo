@@ -5,6 +5,7 @@ const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   safelist: [
     // Clases de grilla dinámicas para el form builder
+    { pattern: /col-span-(1|2|3|4|5|6|7|8|9|10|11|12)/ },
     ...Array.from({length: 12}, (_, i) => `col-span-${i + 1}`),
   ],
   theme: { 
