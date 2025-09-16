@@ -11,7 +11,7 @@ interface FieldCardProps {
   field: FieldNode;
 }
 
-export function FieldCard({ field }: FieldCardProps) {
+export default function FieldCard({ field }: FieldCardProps) {
   const { resizeField, markDirty } = useBuilderStore();
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<HTMLDivElement>(null);

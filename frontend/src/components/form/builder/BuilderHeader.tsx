@@ -10,7 +10,7 @@ interface BuilderHeaderProps {
   plantillaId?: string;
 }
 
-export function BuilderHeader({ plantillaId }: BuilderHeaderProps) {
+export default function BuilderHeader({ plantillaId }: BuilderHeaderProps) {
   const router = useRouter();
   const { dirty, toFormLayout, clearDirty } = useBuilderStore();
   const [saving, setSaving] = useState(false);

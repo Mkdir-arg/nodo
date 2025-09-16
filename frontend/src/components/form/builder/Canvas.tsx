@@ -1,9 +1,9 @@
 'use client';
 
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
-import { Section } from './Section';
+import Section from './Section';
 
-export function Canvas() {
+export default function Canvas() {
   const { nodes, addSection } = useBuilderStore();
   
   const sections = nodes

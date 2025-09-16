@@ -5,14 +5,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { GripVertical } from 'lucide-react';
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
-import { FieldCard } from './FieldCard';
+import FieldCard from './FieldCard';
 import type { SectionNode } from '@/lib/forms/types';
 
 interface SectionProps {
   section: SectionNode;
 }
 
-export function Section({ section }: SectionProps) {
+export default function Section({ section }: SectionProps) {
   const { nodes, addField } = useBuilderStore();
   
   const fields = nodes

@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPlantillaLayoutQueryOptions } from '@/lib/api/plantillas';
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
-import { Builder } from './Builder';
-import { BuilderHeader } from './BuilderHeader';
+import Builder from './Builder';
+import BuilderHeader from './BuilderHeader';
 
 interface FormBuilderPageProps {
   plantillaId: string;

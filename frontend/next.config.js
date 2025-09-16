@@ -3,7 +3,24 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: true,
   experimental: {
-    turbo: {},
+    turbo: {
+      loaders: {
+        '.svg': ['@svgr/webpack'],
+      },
+    },
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+  compiler: {
+    removeConsole: false,
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+    }
+    return config;
   },
 };
 

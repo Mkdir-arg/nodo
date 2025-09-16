@@ -5,10 +5,10 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { restrictToParentElement } from '@dnd-kit/modifiers';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
-import { Canvas } from './Canvas';
+import Canvas from './Canvas';
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
 
-export function Builder() {
+export default function Builder() {
   const { nodes, moveSection, moveFieldWithin, moveFieldAcross, markDirty } = useBuilderStore();
   
   const sections = nodes.filter(n => n.kind === 'section');
