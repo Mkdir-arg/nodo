@@ -46,18 +46,18 @@ services:
   frontend:
     build: ./frontend
     env_file: .env
-    command: npm run dev -- -p 3000 -H 0.0.0.0
+    command: npm run dev -- -p 3000 -H 0.0.0.0 --turbo
     ports:
       - "3008:3000"
-    # 🔸 Monta el código del host + evita pisar node_modules
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    # 🔸 Forzá polling para que el watcher detecte cambios en Windows/WSL/Docker Desktop
+      - /app/.next
     environment:
-      - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=300
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=false
+      - CHOKIDAR_USEPOLLING=false
 
 volumes:
   db_data:
