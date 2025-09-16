@@ -6,6 +6,10 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { PlantillasService } from '@/lib/services/plantillas';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import DeleteConfirm from './DeleteConfirm';
+import { HoverCard } from '@/components/ui/hover-card';
+import { FloatingButton } from '@/components/ui/floating-button';
+import { SkeletonCard } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/toast';
 
 type Estado = 'TODAS' | 'ACTIVO' | 'INACTIVO';
 const cols = 'grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center';
@@ -39,11 +43,17 @@ export default function PlantillasPage() {
     placeholderData: keepPreviousData,
   });
 
+  const { showToast } = useToast();
+
   const del = useMutation({
     mutationFn: (id: string) => PlantillasService.deletePlantilla(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
       setToDelete(null);
+      showToast('Plantilla eliminada correctamente', 'success');
+    },
+    onError: () => {
+      showToast('Error al eliminar la plantilla', 'error');
     },
   });
 
@@ -56,7 +66,13 @@ export default function PlantillasPage() {
         schema: tpl.schema,
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['plantillas', 'list'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
+      showToast('Plantilla duplicada correctamente', 'success');
+    },
+    onError: () => {
+      showToast('Error al duplicar la plantilla', 'error');
+    },
   });
 
   const results = (data as any)?.results ?? [];
@@ -123,22 +139,23 @@ export default function PlantillasPage() {
         ) : results.length === 0 ? (
           <EmptyState onCreate={() => router.push('/plantillas/crear')} />
         ) : (
-          <div className="divide-y">
+          <div className="p-4 space-y-4">
             {results.map((p: any) => (
-              <Row
-                key={p.id}
-                data={p}
-                onEditar={() => router.push(`/plantillas/editar/${p.id}`)}
-                onPreview={() => {
-                  try {
-                    localStorage.setItem('nodo.plantilla.preview', JSON.stringify(p.schema));
-                  } catch {}
-                  window.open('/plantillas/previsualizacion', '_blank');
-                }}
-                onUsar={() => router.push(`/legajos/nuevo?formId=${p.id}`)}
-                onDuplicar={() => duplicar.mutate(p)}
-                onEliminar={() => setToDelete({ id: p.id, nombre: p.nombre })}
-              />
+              <HoverCard key={p.id} className="p-6">
+                <Row
+                  data={p}
+                  onEditar={() => router.push(`/plantillas/editar/${p.id}`)}
+                  onPreview={() => {
+                    try {
+                      localStorage.setItem('nodo.plantilla.preview', JSON.stringify(p.schema));
+                    } catch {}
+                    window.open('/plantillas/previsualizacion', '_blank');
+                  }}
+                  onUsar={() => router.push(`/legajos/nuevo?formId=${p.id}`)}
+                  onDuplicar={() => duplicar.mutate(p)}
+                  onEliminar={() => setToDelete({ id: p.id, nombre: p.nombre })}
+                />
+              </HoverCard>
             ))}
           </div>
         )}
@@ -167,6 +184,11 @@ export default function PlantillasPage() {
           </button>
         </div>
       </div>
+
+      {/* Floating Action Button */}
+      <FloatingButton 
+        onClick={() => router.push('/plantillas/crear')}
+      />
 
       {/* Modal borrar */}
       <DeleteConfirm
@@ -241,24 +263,9 @@ function Row({
 
 function SkeletonRows() {
   return (
-    <div className="divide-y">
+    <div className="p-4 space-y-4">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          className="px-4 py-3 animate-pulse grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-slate-200" />
-            <div className="space-y-2">
-              <div className="h-3 w-40 bg-slate-200 rounded" />
-              <div className="h-2 w-24 bg-slate-200 rounded" />
-            </div>
-          </div>
-          <div className="h-3 w-8 bg-slate-200 rounded" />
-          <div className="h-3 w-24 bg-slate-200 rounded" />
-          <div className="h-6 w-20 bg-slate-200 rounded-full" />
-          <div />
-        </div>
+        <SkeletonCard key={i} />
       ))}
     </div>
   );

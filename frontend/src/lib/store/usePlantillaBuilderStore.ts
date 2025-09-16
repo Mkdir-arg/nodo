@@ -467,8 +467,11 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     const keys = new Set<string>();
     (get().sections || []).forEach((s: any) => (s.nodes || s.children || []).forEach((n: any) => n.key && keys.add(n.key)));
     let k = base;
-    let c = 2;
-    while (keys.has(k)) k = `${base}_${c++}`;
+    let c = 1;
+    while (keys.has(k)) {
+      c++;
+      k = c === 2 ? `${base}_2` : `${base}_${c}`;
+    }
     return k;
   },
 

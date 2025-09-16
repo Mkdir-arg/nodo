@@ -6,8 +6,11 @@ import { newField, FieldType } from "@/lib/form-builder/factory";
 type Item = { type: FieldType; label: string; note?: string };
 const BASICOS: Item[] = [
   { type:"text", label:"Texto corto" },
+  { type:"email", label:"Email" },
   { type:"textarea", label:"Texto largo" },
   { type:"number", label:"Número" },
+  { type:"phone", label:"Teléfono" },
+  { type:"checkbox", label:"Checkbox" },
   { type:"info", label:"Texto informativo" },
   { type:"sum", label:"Suma (readonly)" },
 ];
@@ -20,7 +23,7 @@ const SELECCION: Item[] = [
 const AVANZADOS: Item[] = [
   { type:"date", label:"Fecha" },
   { type:"document", label:"Archivo" },
-  { type:"phone", label:"Teléfono" },
+  { type:"image", label:"Imagen" },
   { type:"cuit_razon_social", label:"CUIT y Razón social" },
   { type:"group", label:"Grupo iterativo" },
 ];

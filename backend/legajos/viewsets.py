@@ -27,29 +27,79 @@ class LegajoViewSet(viewsets.ModelViewSet):
         return qs
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        from django.db import DatabaseError
+        from django.core.exceptions import ValidationError
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
 
-        search = (request.query_params.get("search") or "").strip()
-        if search:
-            for term in filter(None, search.split()):
-                queryset = queryset.filter(search_document__icontains=term)
+            search = (request.query_params.get("search") or "").strip()
+            if search:
+                for term in filter(None, search.split()):
+                    queryset = queryset.filter(search_document__icontains=term)
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
-        return response.Response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response(serializer.data)
+        except ValidationError as e:
+            logger.warning(f"Validation error in legajo list: {e}")
+            return response.Response(
+                {"error": "Datos de consulta inválidos", "detail": str(e)},
+                status=400
+            )
+        except DatabaseError as e:
+            logger.error(f"Database error in legajo list: {e}")
+            return response.Response(
+                {"error": "Error de base de datos"},
+                status=500
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in legajo list: {e}")
+            return response.Response(
+                {"error": "Error interno del servidor"},
+                status=500
+            )
 
     def retrieve(self, request, *args, **kwargs):
-        inst = self.get_object()
-        meta = LegajoMetaService.compute(inst)
-        return response.Response(
-            {
-                "data": inst.data,
-                "plantilla": str(inst.plantilla_id),
-                "visual_config": inst.plantilla.visual_config or {},
-                "meta": meta,
-            }
-        )
+        from django.db import DatabaseError
+        from django.core.exceptions import ValidationError
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        try:
+            inst = self.get_object()
+            meta = LegajoMetaService.compute(inst)
+            return response.Response(
+                {
+                    "data": inst.data,
+                    "plantilla": str(inst.plantilla_id),
+                    "visual_config": inst.plantilla.visual_config or {},
+                    "meta": meta,
+                }
+            )
+        except ValidationError as e:
+            logger.warning(f"Validation error in legajo retrieve: {e}")
+            return response.Response(
+                {"error": "Datos inválidos"},
+                status=400
+            )
+        except DatabaseError as e:
+            logger.error(f"Database error in legajo retrieve: {e}")
+            return response.Response(
+                {"error": "Error de base de datos"},
+                status=500
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in legajo retrieve: {e}")
+            return response.Response(
+                {"error": "Error interno del servidor"},
+                status=500
+            )

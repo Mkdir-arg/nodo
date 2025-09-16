@@ -6,10 +6,14 @@ import { useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { zodSchemaFromLayout } from "../zodSchemaFromLayout";
 import { TextField } from "./fields/TextField";
+import TextareaField from "./fields/TextareaField";
 import { NumberField } from "./fields/NumberField";
 import { SelectField } from "./fields/SelectField";
 import { CheckboxField } from "./fields/CheckboxField";
 import { DateField } from "./fields/DateField";
+import FileField from "./fields/FileField";
+import PhoneField from "./fields/PhoneField";
+import InfoField from "./fields/InfoField";
 import type { FormLayout, LayoutNode, FieldProps } from "../types";
 
 // Mapeo de clases para evitar problemas con Tailwind purging
@@ -31,16 +35,34 @@ const colSpanClasses: Record<number, string> = {
 const renderField = (field: FieldProps) => {
   switch (field.type) {
     case "text":
-    case "textarea":
+    case "email":
+    case "cuit_razon_social":
       return <TextField key={field.name} field={field} />;
+    case "textarea":
+      return <TextareaField key={field.name} field={field} name={field.name} />;
     case "number":
+    case "sum":
       return <NumberField key={field.name} field={field} />;
+    case "phone":
+      return <PhoneField key={field.name} field={field} name={field.name} />;
     case "select":
+    case "dropdown":
+    case "multiselect":
+    case "select_with_filter":
       return <SelectField key={field.name} field={field} />;
     case "checkbox":
       return <CheckboxField key={field.name} field={field} />;
     case "date":
       return <DateField key={field.name} field={field} />;
+    case "document":
+    case "file":
+    case "image":
+      return <FileField key={field.name} field={field} name={field.name} />;
+    case "info":
+      return <InfoField key={field.name || field.id} field={field} />;
+    case "group":
+      // TODO: Implementar GroupField
+      return <div key={field.name} className="p-2 border border-orange-200 bg-orange-50 rounded">Grupo iterativo (pendiente)</div>;
     default:
       console.warn(`Unsupported field type: ${field.type}`);
       return null;
@@ -65,8 +87,8 @@ export function DynamicFormRenderer({
   
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-12 gap-4">
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="grid grid-cols-12 gap-6">
           {layout.nodes.map((node) => {
             if (node.kind === "field" && node.field) {
               return (
@@ -78,7 +100,14 @@ export function DynamicFormRenderer({
             return null;
           })}
         </div>
-        <Button type="submit">Enviar</Button>
+        <div className="flex justify-end pt-6 border-t border-gray-100">
+          <Button 
+            type="submit" 
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all duration-200 hover:shadow-md focus:ring-4 focus:ring-blue-500/20"
+          >
+            Enviar Formulario
+          </Button>
+        </div>
       </form>
     </FormProvider>
   );

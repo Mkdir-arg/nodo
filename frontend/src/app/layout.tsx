@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import '../styles/globals.css';
 import Providers from './providers';
 import MainLayout from '@/components/layout/MainLayout';
+import { ToastProvider } from '@/components/ui/toast';
 
 export const metadata: Metadata = {
   title: 'Nodo',
@@ -14,8 +15,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es" suppressHydrationWarning>
       <body className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 antialiased">
         <Providers>
-          {/* MainLayout se monta UNA sola vez acá */}
-          <MainLayout>{children}</MainLayout>
+          <ToastProvider>
+            {/* MainLayout se monta UNA sola vez acá */}
+            <MainLayout>{children}</MainLayout>
+          </ToastProvider>
         </Providers>
       </body>
     </html>

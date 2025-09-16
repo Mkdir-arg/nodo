@@ -4,6 +4,10 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 
 
+def default_json():
+    return {}
+
+
 class Plantilla(models.Model):
     class Estado(models.TextChoices):
         ACTIVO = "ACTIVO", "ACTIVO"
@@ -13,8 +17,8 @@ class Plantilla(models.Model):
     nombre = models.CharField(max_length=255, unique=False)
     descripcion = models.TextField(null=True, blank=True)
     schema = models.JSONField()
-    visual_config = models.JSONField(default=dict, blank=True)
-    layout_json = models.JSONField(default=dict, blank=True)
+    visual_config = models.JSONField(default=default_json, blank=True)
+    layout_json = models.JSONField(default=default_json, blank=True)
     layout_version = models.PositiveIntegerField(default=1)
     version = models.PositiveIntegerField(default=1)
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)

@@ -23,10 +23,28 @@ class PlantillaViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        inst = self.get_object()
-        inst.estado = Plantilla.Estado.INACTIVO
-        inst.save(update_fields=["estado"])
-        return response.Response(status=status.HTTP_204_NO_CONTENT)
+        from django.db import DatabaseError
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        try:
+            inst = self.get_object()
+            inst.estado = Plantilla.Estado.INACTIVO
+            inst.save(update_fields=["estado"])
+            return response.Response(status=status.HTTP_204_NO_CONTENT)
+        except DatabaseError as e:
+            logger.error(f"Database error in plantilla destroy: {e}")
+            return response.Response(
+                {"error": "Error al desactivar plantilla"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error in plantilla destroy: {e}")
+            return response.Response(
+                {"error": "Error interno del servidor"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @decorators.action(detail=False, methods=["get"], url_path="exists")
     def exists(self, request):

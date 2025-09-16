@@ -74,3 +74,4 @@ def build_search_document(data: Any, grid_values: Any, fallback: str) -> str:
             parts.append(json.dumps(source, ensure_ascii=False, sort_keys=True))
 
     return " ".join(filter(None, parts))
+

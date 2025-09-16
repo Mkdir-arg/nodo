@@ -1,10 +1,11 @@
 import re
 from typing import Dict, Any, List
 
-VALID_OPS = {"eq","ne","in","nin","gt","gte","lt","lte","contains"}
+VALID_OPS = {"eq", "ne", "in", "nin", "gt", "gte", "lt", "lte", "contains"}
 
 
 def _collect_fields(nodes, acc):
+    """Collect all fields from schema nodes into a dictionary."""
     for n in nodes:
         t = n.get("type")
         if t == "section":
@@ -19,6 +20,7 @@ def _collect_fields(nodes, acc):
 
 
 def _walk(nodes, fn):
+    """Walk through all nodes and apply function to each."""
     for n in nodes:
         fn(n)
         if n.get("type") in {"section", "group"}:
@@ -26,6 +28,7 @@ def _walk(nodes, fn):
 
 
 def validate_conditions(schema: Dict[str, Any]):
+    """Validate that all condition operators and keys are valid."""
     fields = {}
     _collect_fields(schema.get("nodes", []), fields)
     for f in fields.values():
@@ -37,14 +40,16 @@ def validate_conditions(schema: Dict[str, Any]):
 
 
 def validate_select_options(schema: Dict[str, Any]):
+    """Validate that select fields have at least one option."""
     def fn(n):
-        if n.get("type") in {"select","dropdown","multiselect","select_with_filter"}:
+        if n.get("type") in {"select", "dropdown", "multiselect", "select_with_filter"}:
             if len(n.get("options") or []) < 1:
                 raise ValueError(f'{n.get("key")} requiere al menos 1 opción')
     _walk(schema.get("nodes", []), fn)
 
 
 def validate_sum_sources(schema: Dict[str, Any]):
+    """Validate that sum fields reference valid number fields."""
     fields = {}
     _collect_fields(schema.get("nodes", []), fields)
     for f in fields.values():
@@ -55,12 +60,14 @@ def validate_sum_sources(schema: Dict[str, Any]):
 
 
 def validate_non_empty_sections(schema: Dict[str, Any]):
+    """Validate that sections are not empty."""
     for n in schema.get("nodes", []):
         if n.get("type") == "section" and len(n.get("children", [])) == 0:
             raise ValueError("Sección vacía")
 
 
 def validate_unique_keys(schema: Dict[str, Any]):
+    """Validate that all field keys are unique."""
     keys = set()
     def fn(n):
         k = n.get("key")
@@ -72,6 +79,7 @@ def validate_unique_keys(schema: Dict[str, Any]):
 
 
 def validate_group_children(schema: Dict[str, Any]):
+    """Validate that groups have children."""
     def fn(n):
         if n.get("type") == "group" and not n.get("children"):
             raise ValueError(f'Grupo {n.get("key")} sin hijos')
@@ -79,6 +87,7 @@ def validate_group_children(schema: Dict[str, Any]):
 
 
 def run_schema_validations(schema: Dict[str, Any]):
+    """Run all schema validations."""
     validate_conditions(schema)
     validate_select_options(schema)
     validate_sum_sources(schema)

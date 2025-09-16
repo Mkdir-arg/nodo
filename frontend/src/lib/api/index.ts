@@ -1,6 +1,13 @@
 // frontend/src/lib/api/index.ts
 import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
-import { apiUrl } from "@/services/api";
+import { getApiBase } from "@/services/api";
+
+/** Construye URL de API */
+function apiUrl(path = ""): string {
+  const base = getApiBase();
+  const trimmedPath = String(path ?? "").replace(/^\/+/, "");
+  return trimmedPath ? `${base.replace(/\/+$/, "")}/${trimmedPath}` : base;
+}
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
 const isServer = typeof window === "undefined";

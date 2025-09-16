@@ -16,6 +16,9 @@ class Legajo(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
+    def __str__(self):
+        return f"Legajo {self.id} - {self.plantilla.nombre}"
+
     def save(self, *args, **kwargs):
         document = build_search_document(
             self.data or {}, self.grid_values or {}, str(self.id or "")

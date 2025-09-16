@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Type, Hash, Calendar, CheckSquare, List } from "lucide-react";
+import { Type, Hash, Calendar, CheckSquare, List, FileText, Image } from "lucide-react";
 import type { FieldType } from "@/lib/forms/types";
 
 const FIELDS = [
@@ -11,6 +11,8 @@ const FIELDS = [
   { type: "date" as FieldType, label: "Fecha", icon: Calendar },
   { type: "select" as FieldType, label: "Selección", icon: List },
   { type: "checkbox" as FieldType, label: "Checkbox", icon: CheckSquare },
+  { type: "document" as FieldType, label: "Archivo", icon: FileText },
+  { type: "image" as FieldType, label: "Imagen", icon: Image },
 ];
 
 export function Palette({ onAddField }: { onAddField: (type: FieldType) => void }) {

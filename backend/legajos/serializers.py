@@ -52,16 +52,38 @@ class LegajoSerializer(serializers.ModelSerializer):
         return data
 
     def _eval_conds(self, values: Dict[str, Any], conds: List[Dict[str, Any]]):
-        def ok(c):
-            v = values.get(c["key"]); val=c.get("value"); op=c["op"]
-            return (op=="eq" and v==val) or (op=="ne" and v!=val) or \
-                   (op=="in" and v in val) or (op=="nin" and v not in val) or \
-                   (op=="gt" and isinstance(v,(int,float)) and v>val) or \
-                   (op=="gte" and isinstance(v,(int,float)) and v>=val) or \
-                   (op=="lt" and isinstance(v,(int,float)) and v<val) or \
-                   (op=="lte" and isinstance(v,(int,float)) and v<=val) or \
-                   (op=="contains" and ((isinstance(v,str) and str(val) in v) or (isinstance(v,list) and val in v)))
-        return all(ok(c) for c in (conds or []))
+        def evaluate_condition(condition):
+            value = values.get(condition["key"])
+            expected = condition.get("value")
+            operator = condition["op"]
+            
+            if operator == "eq":
+                return value == expected
+            elif operator == "ne":
+                return value != expected
+            elif operator == "in":
+                return value in expected
+            elif operator == "nin":
+                return value not in expected
+            elif operator in ["gt", "gte", "lt", "lte"]:
+                if not isinstance(value, (int, float)):
+                    return False
+                if operator == "gt":
+                    return value > expected
+                elif operator == "gte":
+                    return value >= expected
+                elif operator == "lt":
+                    return value < expected
+                elif operator == "lte":
+                    return value <= expected
+            elif operator == "contains":
+                if isinstance(value, str):
+                    return str(expected) in value
+                elif isinstance(value, list):
+                    return expected in value
+            return False
+            
+        return all(evaluate_condition(c) for c in (conds or []))
 
     def validate(self, attrs):
         plantilla: Plantilla = attrs["plantilla"]

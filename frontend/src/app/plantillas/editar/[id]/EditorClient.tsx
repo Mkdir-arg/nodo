@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { repo } from "@/lib/legajos/repo";
 
-export default function EditorClient({ id }: { id: string }) {
+export default function EditorClient({ plantillaId }: { plantillaId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
 
   const { data: template, isLoading } = useQuery({
-    queryKey: ['template', id],
-    queryFn: () => repo.getTemplate(id)
+    queryKey: ['template', plantillaId],
+    queryFn: () => repo.getTemplate(plantillaId)
   });
 
   // Actualizar estado cuando cambie la data
@@ -34,7 +34,7 @@ export default function EditorClient({ id }: { id: string }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['template', id] });
+      queryClient.invalidateQueries({ queryKey: ['template', plantillaId] });
       alert("Plantilla actualizada exitosamente");
       router.push("/plantillas");
     }

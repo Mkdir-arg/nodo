@@ -6,31 +6,40 @@ from .models import Legajo
 
 class LegajoMetaService:
     @staticmethod
+    def _count_fields(nodes, values):
+        """Count total and filled fields in a node structure."""
+        total = 0
+        filled = 0
+        
+        for node in nodes or []:
+            node_type = node.get("type")
+            
+            if node_type == "section":
+                section_total, section_filled = LegajoMetaService._count_fields(
+                    node.get("children", []), values
+                )
+                total += section_total
+                filled += section_filled
+            elif node_type == "group":
+                # ignore groups for simplicity
+                for child in node.get("children", []):
+                    total += 1
+                    if values.get(child.get("key")) not in (None, "", [], {}):
+                        filled += 1
+            else:
+                total += 1
+                if values.get(node.get("key")) not in (None, "", [], {}):
+                    filled += 1
+                    
+        return total, filled
+
+    @staticmethod
     def compute(legajo: Legajo) -> Dict[str, Any]:
         data = legajo.data or {}
-
-        def count_fields(nodes, values):
-            total = 0
-            filled = 0
-            for n in nodes or []:
-                t = n.get("type")
-                if t == "section":
-                    t_tot, t_fill = count_fields(n.get("children", []), values)
-                    total += t_tot
-                    filled += t_fill
-                elif t == "group":
-                    # ignore groups for simplicity
-                    for c in n.get("children", []):
-                        total += 1
-                        if values.get(c.get("key")) not in (None, "", [], {}):
-                            filled += 1
-                else:
-                    total += 1
-                    if values.get(n.get("key")) not in (None, "", [], {}):
-                        filled += 1
-            return total, filled
-
-        total, filled = count_fields(legajo.plantilla.schema.get("nodes", []), data)
+        
+        total, filled = LegajoMetaService._count_fields(
+            legajo.plantilla.schema.get("nodes", []), data
+        )
         completitud = int((filled / total) * 100) if total else 0
 
         counts = {

@@ -6,7 +6,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """Serializer that uses the email field for authentication."""
 
-    username_field = get_user_model().EMAIL_FIELD
+    @property
+    def username_field(self):
+        return get_user_model().EMAIL_FIELD
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

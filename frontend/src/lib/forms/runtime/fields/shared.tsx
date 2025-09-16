@@ -5,16 +5,16 @@ import { ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 
 export const inputBaseClass =
-  "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:ring-blue-400";
+  "flex h-11 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50";
 
 export const textareaBaseClass =
-  "min-h-[120px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:ring-blue-400";
+  "min-h-[120px] w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50 resize-none";
 
 export const selectBaseClass =
-  "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus-visible:ring-blue-400";
+  "flex h-11 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm transition-all duration-200 hover:border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50";
 
 export const checkboxBaseClass =
-  "h-4 w-4 rounded border border-slate-300 text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 dark:border-slate-600";
+  "h-5 w-5 rounded-md border-2 border-gray-200 text-blue-600 transition-all duration-200 hover:border-gray-300 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 checked:bg-blue-600 checked:border-blue-600";
 
 interface FieldWrapperProps {
   id: string;
@@ -44,21 +44,26 @@ export function FieldWrapper({
       {renderLabel && label ? (
         <label
           htmlFor={id}
-          className="text-sm font-medium text-slate-700 dark:text-slate-200"
+          className="text-sm font-semibold text-gray-700 tracking-tight"
         >
           {label}
-          {required ? <span className="ml-1 text-red-600">*</span> : null}
+          {required ? <span className="ml-1 text-red-500">*</span> : null}
         </label>
       ) : null}
       {children}
       {description ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
+        <p className="text-xs text-gray-500">{description}</p>
       ) : null}
       {helpText ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">{helpText}</p>
+        <p className="text-xs text-gray-500">{helpText}</p>
       ) : null}
       {error ? (
-        <p className="text-xs font-medium text-red-600">{error}</p>
+        <p className="text-xs font-medium text-red-500 flex items-center gap-1">
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          {error}
+        </p>
       ) : null}
     </div>
   );

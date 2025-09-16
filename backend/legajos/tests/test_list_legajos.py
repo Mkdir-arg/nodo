@@ -47,7 +47,11 @@ def test_list_filters_by_plantilla_and_search():
         f"/legajos/?plantilla_id={plantilla_a.id}&search=perez"
     )
     user_model = get_user_model()
-    user = user_model.objects.create_user(username="user", password="pass")
+    import os
+    import uuid
+    test_username = os.getenv('TEST_USERNAME') or f'testuser_{uuid.uuid4().hex[:8]}'
+    test_password = os.getenv('TEST_PASSWORD') or f'testpass_{uuid.uuid4().hex[:12]}'
+    user = user_model.objects.create_user(username=test_username, password=test_password)
     force_authenticate(request, user=user)
 
     response = LegajoViewSet.as_view({"get": "list"})(request)
@@ -86,7 +90,11 @@ def test_list_search_uses_database_filters():
     factory = APIRequestFactory()
     request = factory.get(f"/legajos/?plantilla_id={plantilla.id}&search=Lopez")
     user_model = get_user_model()
-    user = user_model.objects.create_user(username="user", password="pass")
+    import os
+    import uuid
+    test_username = os.getenv('TEST_USERNAME') or f'testuser_{uuid.uuid4().hex[:8]}'
+    test_password = os.getenv('TEST_PASSWORD') or f'testpass_{uuid.uuid4().hex[:12]}'
+    user = user_model.objects.create_user(username=test_username, password=test_password)
     force_authenticate(request, user=user)
 
     with CaptureQueriesContext(connection) as ctx:
