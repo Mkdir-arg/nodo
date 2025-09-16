@@ -1,70 +1,78 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Save, Plus, FolderPlus } from 'lucide-react';
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
-import { saveLayout } from '@/lib/api/plantillas';
+import { toast } from '@/lib/toast';
 
 interface BuilderHeaderProps {
-  plantillaId?: string;
+  onSave: () => Promise<void>;
+  isSaving?: boolean;
 }
 
-export default function BuilderHeader({ plantillaId }: BuilderHeaderProps) {
-  const router = useRouter();
-  const { dirty, toFormLayout, clearDirty } = useBuilderStore();
-  const [saving, setSaving] = useState(false);
+export default function BuilderHeader({ onSave, isSaving = false }: BuilderHeaderProps) {
+  const { dirty, addSection, addField, nodes } = useBuilderStore();
+  
+  const sections = nodes.filter(n => n.kind === 'section');
+  const firstSectionId = sections[0]?.id;
 
   const handleSave = async () => {
-    if (!plantillaId) {
-      toast.error('ID de plantilla no disponible');
-      return;
-    }
-
-    setSaving(true);
     try {
-      const layout = toFormLayout();
-      await saveLayout(plantillaId, layout);
-      clearDirty();
+      await onSave();
       toast.success('Layout guardado correctamente');
     } catch (error: any) {
-      console.error('Error al guardar:', error);
-      if (error.message?.includes('404')) {
-        toast.error(error.message);
+      if (error.status === 404) {
+        toast.error('Endpoint de layout no encontrado (404). Verificar ruta en Django: /api/plantillas/<id>/layout/');
       } else {
         toast.error('Error al guardar el layout');
       }
-    } finally {
-      setSaving(false);
     }
   };
 
+  const handleAddField = () => {
+    if (!firstSectionId) {
+      toast.error('Primero agrega una sección');
+      return;
+    }
+    
+    addField(firstSectionId, {
+      type: 'text',
+      colSpan: 6,
+      props: { label: 'Nuevo campo' }
+    });
+  };
+
   return (
-    <div className="flex items-center justify-between p-4 bg-white border-b">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => router.back()}
-          className="px-3 py-2 text-gray-600 hover:text-gray-800"
+    <div className="flex items-center justify-between p-4 border-b bg-white">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => addSection()}
         >
-          ← Volver
-        </button>
-        <h1 className="text-xl font-semibold">Constructor de Formularios</h1>
+          <FolderPlus className="h-4 w-4 mr-2" />
+          Agregar Sección
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAddField}
+          disabled={!firstSectionId}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Agregar Campo
+        </Button>
       </div>
 
-      <div className="flex items-center gap-3">
-        {dirty && (
-          <span className="text-sm text-orange-600">
-            Cambios sin guardar
-          </span>
-        )}
-        <button
-          onClick={handleSave}
-          disabled={!dirty || saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
-        >
-          {saving ? 'Guardando...' : 'Guardar'}
-        </button>
-      </div>
+      <Button
+        onClick={handleSave}
+        disabled={!dirty || isSaving}
+        size="sm"
+      >
+        <Save className="h-4 w-4 mr-2" />
+        {isSaving ? 'Guardando...' : 'Guardar'}
+      </Button>
     </div>
   );
 }

@@ -4,29 +4,23 @@ import { useBuilderStore } from '@/lib/store/useBuilderStore';
 import Section from './Section';
 
 export default function Canvas() {
-  const { nodes, addSection } = useBuilderStore();
+  const { nodes } = useBuilderStore();
   
   const sections = nodes
     .filter(n => n.kind === 'section')
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="mb-4">
-        <button
-          type="button"
-          onClick={() => addSection()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          + Agregar Sección
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        {sections.map((section) => (
-          <Section key={section.id} section={section} />
-        ))}
-      </div>
+    <div className="p-6 space-y-4">
+      {sections.map((section) => (
+        <Section key={section.id} section={section} />
+      ))}
+      
+      {sections.length === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          <p>No hay secciones. Agrega una sección para comenzar.</p>
+        </div>
+      )}
     </div>
   );
 }

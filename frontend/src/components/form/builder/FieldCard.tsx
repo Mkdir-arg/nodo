@@ -1,22 +1,23 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Settings, Copy, Trash2 } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { GripVertical, Settings } from 'lucide-react';
+
 import { useBuilderStore } from '@/lib/store/useBuilderStore';
 import type { FieldNode } from '@/lib/forms/types';
 
 interface FieldCardProps {
   field: FieldNode;
+  sectionId: string;
 }
 
-export default function FieldCard({ field }: FieldCardProps) {
-  const { resizeField, markDirty } = useBuilderStore();
+export default function FieldCard({ field, sectionId }: FieldCardProps) {
+  const { resizeField } = useBuilderStore();
   const [isResizing, setIsResizing] = useState(false);
-  const resizeRef = useRef<HTMLDivElement>(null);
-  const startXRef = useRef(0);
-  const startColSpanRef = useRef(field.colSpan);
+  const startX = useRef(0);
+  const startColSpan = useRef(0);
 
   const {
     attributes,
@@ -29,9 +30,9 @@ export default function FieldCard({ field }: FieldCardProps) {
     id: field.id,
     data: {
       type: 'field',
-      sectionId: field.parentId,
-      index: field.order,
-    },
+      sectionId,
+      index: field.order
+    }
   });
 
   const style = {
@@ -39,16 +40,17 @@ export default function FieldCard({ field }: FieldCardProps) {
     transition,
   };
 
-  // Handle resize
-  useEffect(() => {
-    if (!isResizing) return;
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    startX.current = e.clientX;
+    startColSpan.current = field.colSpan;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startXRef.current;
-      const containerWidth = resizeRef.current?.parentElement?.offsetWidth || 1200;
-      const columnWidth = containerWidth / 12;
+      const deltaX = e.clientX - startX.current;
+      const columnWidth = 60; // Aproximado
       const deltaColumns = Math.round(deltaX / columnWidth);
-      const newColSpan = Math.min(Math.max(startColSpanRef.current + deltaColumns, 1), 12);
+      const newColSpan = Math.max(1, Math.min(12, startColSpan.current + deltaColumns));
       
       if (newColSpan !== field.colSpan) {
         resizeField(field.id, newColSpan);
@@ -57,89 +59,81 @@ export default function FieldCard({ field }: FieldCardProps) {
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      markDirty();
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+  };
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing, field.colSpan, field.id, resizeField, markDirty]);
-
-  // Keyboard resize
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!resizeRef.current?.contains(document.activeElement)) return;
-      
-      if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+  const handleKeyResize = (e: React.KeyboardEvent) => {
+    if (e.altKey) {
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        const delta = e.key === 'ArrowLeft' ? -1 : 1;
-        const newColSpan = Math.min(Math.max(field.colSpan + delta, 1), 12);
-        resizeField(field.id, newColSpan);
-        markDirty();
+        resizeField(field.id, Math.max(1, field.colSpan - 1));
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        resizeField(field.id, Math.min(12, field.colSpan + 1));
       }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [field.colSpan, field.id, resizeField, markDirty]);
-
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizing(true);
-    startXRef.current = e.clientX;
-    startColSpanRef.current = field.colSpan;
+    }
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`col-span-${field.colSpan} relative bg-white border rounded-lg p-3 ${
+      className={`col-span-${field.colSpan} relative bg-gray-50 border-2 border-gray-200 rounded-lg p-3 group ${
         isDragging ? 'opacity-50' : ''
-      }`}
+      } ${isResizing ? 'ring-2 ring-blue-500' : ''}`}
+      onKeyDown={handleKeyResize}
+      tabIndex={0}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <button
-          {...attributes}
-          {...listeners}
-          className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="w-4 h-4 text-gray-400" />
-        </button>
-        <span className="text-xs text-gray-500 uppercase">{field.type}</span>
-        <div className="ml-auto flex gap-1">
-          <button className="p-1 hover:bg-gray-100 rounded">
-            <Settings className="w-3 h-3 text-gray-400" />
-          </button>
-          <button className="p-1 hover:bg-gray-100 rounded">
-            <Copy className="w-3 h-3 text-gray-400" />
-          </button>
-          <button className="p-1 hover:bg-gray-100 rounded">
-            <Trash2 className="w-3 h-3 text-red-400" />
-          </button>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              {...attributes}
+              {...listeners}
+              className="p-1 hover:bg-gray-200 rounded cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <GripVertical className="h-3 w-3 text-gray-400" />
+            </button>
+            <span className="text-sm font-medium text-gray-700">
+              {field.props?.label || field.type}
+            </span>
+          </div>
+          
+          <div className="text-xs text-gray-500 mb-2">
+            {field.type} • {field.colSpan}/12 columnas
+          </div>
+          
+          {/* Preview del campo */}
+          <div className="text-xs">
+            {field.type === 'text' && (
+              <input className="w-full px-2 py-1 border rounded text-xs" placeholder="Texto..." disabled />
+            )}
+            {field.type === 'number' && (
+              <input type="number" className="w-full px-2 py-1 border rounded text-xs" placeholder="0" disabled />
+            )}
+            {field.type === 'select' && (
+              <select className="w-full px-2 py-1 border rounded text-xs" disabled>
+                <option>Seleccionar...</option>
+              </select>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <div className="font-medium text-sm">
-          {field.props?.label || `Campo ${field.type}`}
-        </div>
-        <div className="text-xs text-gray-500">
-          Tamaño: {field.colSpan}/12 columnas
-        </div>
+        <button className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          <Settings className="h-3 w-3 text-gray-400" />
+        </button>
       </div>
 
       {/* Resize handle */}
       <div
-        ref={resizeRef}
-        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-200 opacity-0 hover:opacity-100"
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 hover:bg-blue-500 transition-all"
         onMouseDown={handleResizeStart}
-        title="Arrastrar para redimensionar (Alt+←/→ para teclado)"
+        title="Arrastrar para redimensionar (Alt + ←/→)"
       />
     </div>
   );
