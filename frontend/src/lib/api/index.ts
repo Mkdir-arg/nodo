@@ -25,32 +25,33 @@ function ensureTrailingSlash(url: string): string {
   const search = queryIndex >= 0 ? baseNoHash.slice(queryIndex) : "";
   const pathname = queryIndex >= 0 ? baseNoHash.slice(0, queryIndex) : baseNoHash;
 
-  if (!pathname || pathname.endsWith("/")) {
-    return url;
-  }
+  if (!pathname || pathname.endsWith("/")) return url;
   const newBase = `${pathname}/${search}`;
   return `${newBase}${hash}`;
 }
 
-/** Resuelve URL absoluta si hay base configurada; si no, usa ruta relativa */
+/** Quita slashes iniciales y un prefijo 'api/' si viene en el path */
+function normalizeIncomingPath(path: string): string {
+  const p = String(path ?? "");
+  if (ABSOLUTE_URL_REGEX.test(p)) return p;                // ya es absoluta
+  const noLead = p.replace(/^\/+/, "");                    // quita "/" inicial
+  return noLead.startsWith("api/") ? noLead.slice(4) : noLead; // quita "api/"
+}
+
+/** Resuelve URL absoluta con la base correcta (cliente/SSR) */
 export function resolveApiUrl(path: string): string {
-  if (ABSOLUTE_URL_REGEX.test(path)) {
-    return path;
-  }
-  return apiUrl(path);
+  const normalized = normalizeIncomingPath(path);
+  return ABSOLUTE_URL_REGEX.test(normalized) ? normalized : apiUrl(normalized);
 }
 
 /** Construye la URL final y aplica slash según método */
 export function buildApiUrl(path: string, method?: string): string {
   const resolved = resolveApiUrl(path);
   const normalizedMethod = normalizeMethod(method);
-  if (!shouldForceTrailingSlash(normalizedMethod)) {
-    return resolved;
-  }
-  return ensureTrailingSlash(resolved);
+  return shouldForceTrailingSlash(normalizedMethod) ? ensureTrailingSlash(resolved) : resolved;
 }
 
-/** Inyecta Authorization y mantiene credentials=include (como tenías) */
+/** Inyecta Authorization y mantiene credentials=include */
 function withAuth(init: RequestInit = {}): RequestInit {
   const headers = new Headers(init.headers ?? {});
   if (!isServer) {
@@ -59,13 +60,8 @@ function withAuth(init: RequestInit = {}): RequestInit {
       headers.set("Authorization", `Bearer ${token}`);
     }
   }
-  const requestInit: RequestInit = {
-    ...init,
-    headers,
-  };
-  if (!requestInit.credentials) {
-    requestInit.credentials = "include";
-  }
+  const requestInit: RequestInit = { ...init, headers };
+  if (!requestInit.credentials) requestInit.credentials = "include";
   return requestInit;
 }
 
@@ -78,72 +74,43 @@ export async function api(path: string, init: RequestInit = {}) {
   if (res.status === 401) {
     if (!isServer) {
       clearStoredTokens?.();
-      // Si tenés refresh flow, acá podrías intentar refrescar antes de redirigir.
       window.location.href = "/login";
     }
     throw new Error("Unauthorized");
   }
-
   return res;
 }
 
-/** GET JSON con manejo de error simple */
+/** Helpers JSON */
 export async function getJSON<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await api(path, init);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
-
-/** POST JSON forzando Content-Type y slash */
 export async function postJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-
-  const res = await api(path, {
-    ...init,
-    method: init?.method ?? "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
+  const res = await api(path, { ...init, method: init?.method ?? "POST", headers, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
-
-/** PUT JSON */
 export async function putJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-
-  const res = await api(path, {
-    ...init,
-    method: "PUT",
-    headers,
-    body: JSON.stringify(body),
-  });
+  const res = await api(path, { ...init, method: "PUT", headers, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
-
-/** PATCH JSON */
 export async function patchJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-
-  const res = await api(path, {
-    ...init,
-    method: "PATCH",
-    headers,
-    body: JSON.stringify(body),
-  });
+  const res = await api(path, { ...init, method: "PATCH", headers, body: JSON.stringify(body) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
-
-/** DELETE (devuelve JSON si hay) */
 export async function deleteJSON<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await api(path, { ...(init || {}), method: "DELETE" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  // Algunos endpoints devuelven 204 sin body
   const text = await res.text();
   return (text ? JSON.parse(text) : ({} as T)) as T;
 }

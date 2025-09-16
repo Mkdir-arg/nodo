@@ -1,54 +1,45 @@
 "use client";
 
-import { useController, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import type { FieldProps } from "../../types";
 
-import type { SelectFieldProps, SelectOption } from "@/lib/forms/types";
+interface SelectFieldProps {
+  field: Extract<FieldProps, { type: "select" }>;
+}
 
-import { FieldWrapper, selectBaseClass, useFieldError } from "./shared";
-
-type Props = {
-  field: (SelectFieldProps & { type?: string }) | { type?: string; options?: SelectOption[]; [key: string]: any };
-  name: string;
-};
-
-export default function SelectField({ field, name }: Props) {
-  const { control } = useFormContext();
-  const { field: controllerField } = useController({ name, control });
-  const { error } = useFieldError(name);
-  const id = field.id ?? name;
-  const value = controllerField.value ?? "";
-  const options: SelectOption[] = Array.isArray(field.options)
-    ? field.options.filter((opt): opt is SelectOption => !!opt && typeof opt.value === "string")
-    : [];
-
+export function SelectField({ field }: SelectFieldProps) {
+  const { setValue, watch, formState: { errors } } = useFormContext();
+  const value = watch(field.name);
+  const error = errors[field.name];
+  
   return (
-    <FieldWrapper
-      id={id}
-      label={field.label}
-      required={field.required}
-      description={field.description}
-      helpText={field.helpText}
-      error={error}
-    >
-      <select
-        id={id}
-        value={value}
-        onChange={(event) => {
-          const next = event.target.value;
-          controllerField.onChange(next === "" ? undefined : next);
-        }}
-        onBlur={controllerField.onBlur}
-        className={selectBaseClass}
-      >
-        <option value="" disabled={field.required}>
-          {field.placeholder ?? "Seleccione una opción"}
-        </option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value} disabled={opt.disabled}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </FieldWrapper>
+    <div className="space-y-2">
+      {field.label && (
+        <Label htmlFor={field.name}>
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </Label>
+      )}
+      <Select value={value} onValueChange={(val) => setValue(field.name, val)}>
+        <SelectTrigger className={error ? "border-red-500" : ""}>
+          <SelectValue placeholder={field.placeholder || "Seleccionar..."} />
+        </SelectTrigger>
+        <SelectContent>
+          {field.options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {field.description && (
+        <p className="text-sm text-muted-foreground">{field.description}</p>
+      )}
+      {error && (
+        <p className="text-sm text-red-500">{error.message as string}</p>
+      )}
+    </div>
   );
 }

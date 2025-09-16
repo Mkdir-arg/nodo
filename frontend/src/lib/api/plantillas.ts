@@ -1,5 +1,4 @@
 import { queryOptions } from "@tanstack/react-query";
-
 import { getJSON, putJSON } from "@/lib/api";
 import type { FormLayout } from "@/lib/forms/types";
 
@@ -19,7 +18,8 @@ export interface PlantillaLayout {
 
 export const DEFAULT_FORM_LAYOUT: FormLayout = { version: 1, nodes: [] };
 
-const layoutPath = (plantillaId: string) => `/api/plantillas/${plantillaId}/layout/`;
+// ANTES: `/api/plantillas/${id}/layout/`  →  genera /api/api/...
+const layoutPath = (plantillaId: string) => `plantillas/${plantillaId}/layout/`;
 
 function isFormLayout(value: unknown): value is FormLayout {
   if (!value || typeof value !== "object") return false;

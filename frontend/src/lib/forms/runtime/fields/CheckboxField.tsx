@@ -1,51 +1,40 @@
 "use client";
 
-import clsx from "clsx";
-import { useController, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import type { FieldProps } from "../../types";
 
-import type { FieldProps } from "@/lib/forms/types";
+interface CheckboxFieldProps {
+  field: Extract<FieldProps, { type: "checkbox" }>;
+}
 
-import { FieldWrapper, checkboxBaseClass, useFieldError } from "./shared";
-
-type Props = {
-  field: (FieldProps & { type?: string }) | { type?: string; [key: string]: any };
-  name: string;
-};
-
-export default function CheckboxField({ field, name }: Props) {
-  const { control } = useFormContext();
-  const { field: controllerField } = useController({ name, control });
-  const { error } = useFieldError(name);
-  const id = field.id ?? name;
-  const checked = !!controllerField.value;
-
+export function CheckboxField({ field }: CheckboxFieldProps) {
+  const { setValue, watch, formState: { errors } } = useFormContext();
+  const value = watch(field.name);
+  const error = errors[field.name];
+  
   return (
-    <FieldWrapper
-      id={id}
-      label={field.label}
-      required={field.required}
-      description={field.description}
-      helpText={field.helpText}
-      error={error}
-      renderLabel={false}
-    >
-      <label
-        htmlFor={id}
-        className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"
-      >
-        <input
-          id={id}
-          type="checkbox"
-          className={clsx(checkboxBaseClass, "shrink-0")}
-          checked={checked}
-          onChange={(event) => controllerField.onChange(event.target.checked)}
-          onBlur={controllerField.onBlur}
+    <div className="space-y-2">
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id={field.name}
+          checked={value || false}
+          onCheckedChange={(checked) => setValue(field.name, checked)}
         />
-        <span>
-          {field.label}
-          {field.required ? <span className="ml-1 text-red-600">*</span> : null}
-        </span>
-      </label>
-    </FieldWrapper>
+        {field.label && (
+          <Label htmlFor={field.name} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            {field.label}
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+          </Label>
+        )}
+      </div>
+      {field.description && (
+        <p className="text-sm text-muted-foreground">{field.description}</p>
+      )}
+      {error && (
+        <p className="text-sm text-red-500">{error.message as string}</p>
+      )}
+    </div>
   );
 }

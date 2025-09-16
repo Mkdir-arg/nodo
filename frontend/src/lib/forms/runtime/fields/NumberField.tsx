@@ -1,52 +1,42 @@
 "use client";
 
-import { useController, useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { FieldProps } from "../../types";
 
-import type { NumberFieldProps } from "@/lib/forms/types";
+interface NumberFieldProps {
+  field: Extract<FieldProps, { type: "number" }>;
+}
 
-import { FieldWrapper, inputBaseClass, useFieldError } from "./shared";
-
-type Props = {
-  field: NumberFieldProps & { type?: string };
-  name: string;
-};
-
-export default function NumberField({ field, name }: Props) {
-  const { control } = useFormContext();
-  const { field: controllerField } = useController({ name, control });
-  const { error } = useFieldError(name);
-  const id = field.id ?? name;
-  const value = controllerField.value;
-
+export function NumberField({ field }: NumberFieldProps) {
+  const { register, formState: { errors } } = useFormContext();
+  const error = errors[field.name];
+  
   return (
-    <FieldWrapper
-      id={id}
-      label={field.label}
-      required={field.required}
-      description={field.description}
-      helpText={field.helpText}
-      error={error}
-    >
-      <input
-        id={id}
+    <div className="space-y-2">
+      {field.label && (
+        <Label htmlFor={field.name}>
+          {field.label}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
+        </Label>
+      )}
+      <Input
+        id={field.name}
         type="number"
-        inputMode="decimal"
-        value={value ?? ""}
-        onChange={(event) => {
-          const raw = event.target.value;
-          if (raw === "") {
-            controllerField.onChange(undefined);
-            return;
-          }
-          const next = Number(raw);
-          controllerField.onChange(Number.isNaN(next) ? undefined : next);
-        }}
-        onBlur={controllerField.onBlur}
+        placeholder={field.placeholder}
         min={field.min}
         max={field.max}
         step={field.step}
-        className={inputBaseClass}
+        {...register(field.name)}
+        className={error ? "border-red-500" : ""}
       />
-    </FieldWrapper>
+      {field.description && (
+        <p className="text-sm text-muted-foreground">{field.description}</p>
+      )}
+      {error && (
+        <p className="text-sm text-red-500">{error.message as string}</p>
+      )}
+    </div>
   );
 }

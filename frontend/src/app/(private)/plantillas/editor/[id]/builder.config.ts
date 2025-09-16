@@ -1,272 +1,219 @@
-import type { ComponentConfig, Config, FieldConfig } from "@measured/puck";
+import type { Config } from "@measured/puck";
+import { TextField } from "@/lib/forms/runtime/fields/TextField";
+import { NumberField } from "@/lib/forms/runtime/fields/NumberField";
+import { SelectField } from "@/lib/forms/runtime/fields/SelectField";
+import { CheckboxField } from "@/lib/forms/runtime/fields/CheckboxField";
+import { DateField } from "@/lib/forms/runtime/fields/DateField";
 
-export type BuilderFieldConfig = FieldConfig;
-export type BuilderComponentConfig = ComponentConfig<Record<string, unknown>>;
-
-const baseFieldControls: Record<string, BuilderFieldConfig> = {
-  key: {
-    type: "text",
-    label: "Identificador",
-    helperText:
-      "Se utiliza para enlazar el campo con los datos de la plantilla. Debe ser único dentro del formulario.",
-  },
-  label: {
-    type: "text",
-    label: "Etiqueta visible",
-    helperText: "Texto mostrado como título principal del campo.",
-  },
-  description: {
-    type: "textarea",
-    label: "Descripción",
-    helperText: "Mensaje de ayuda que se mostrará debajo del campo.",
-  },
-  required: {
-    type: "checkbox",
-    label: "Es requerido",
-    helperText: "Determina si el campo es obligatorio para el usuario.",
-    defaultValue: false,
-  },
+export type Props = {
+  TextField: {
+    field: {
+      type: "text" | "textarea";
+      name: string;
+      label?: string;
+      placeholder?: string;
+      required?: boolean;
+      description?: string;
+    };
+  };
+  NumberField: {
+    field: {
+      type: "number";
+      name: string;
+      label?: string;
+      placeholder?: string;
+      required?: boolean;
+      description?: string;
+      min?: number;
+      max?: number;
+      step?: number;
+    };
+  };
+  SelectField: {
+    field: {
+      type: "select";
+      name: string;
+      label?: string;
+      placeholder?: string;
+      required?: boolean;
+      description?: string;
+      options: Array<{ label: string; value: string }>;
+    };
+  };
+  CheckboxField: {
+    field: {
+      type: "checkbox";
+      name: string;
+      label?: string;
+      required?: boolean;
+      description?: string;
+    };
+  };
+  DateField: {
+    field: {
+      type: "date";
+      name: string;
+      label?: string;
+      required?: boolean;
+      description?: string;
+      minDate?: string;
+      maxDate?: string;
+    };
+  };
 };
 
-const builderComponents: Record<string, BuilderComponentConfig> = {
-  text: {
-    label: "Campo de texto",
-    description: "Entrada de texto de una sola línea.",
-    category: "fields",
-    defaultProps: {
-      label: "Campo sin título",
-      placeholder: "Ingresá un valor",
-      required: false,
+export const config: Config<Props> = {
+  components: {
+    TextField: {
+      fields: {
+        field: {
+          type: "object",
+          objectFields: {
+            type: {
+              type: "select",
+              options: [
+                { label: "Texto", value: "text" },
+                { label: "Área de texto", value: "textarea" },
+              ],
+            },
+            name: { type: "text" },
+            label: { type: "text" },
+            placeholder: { type: "text" },
+            required: { type: "radio", options: [
+              { label: "Sí", value: true },
+              { label: "No", value: false },
+            ]},
+            description: { type: "textarea" },
+          },
+        },
+      },
+      defaultProps: {
+        field: {
+          type: "text",
+          name: "campo",
+          label: "Campo de texto",
+          required: false,
+        },
+      },
+      render: ({ field }) => <TextField field={field} />,
     },
-    fields: {
-      ...baseFieldControls,
-      placeholder: {
-        type: "text",
-        label: "Placeholder",
-        helperText: "Texto de ejemplo que se mostrará dentro del campo.",
+    NumberField: {
+      fields: {
+        field: {
+          type: "object",
+          objectFields: {
+            name: { type: "text" },
+            label: { type: "text" },
+            placeholder: { type: "text" },
+            required: { type: "radio", options: [
+              { label: "Sí", value: true },
+              { label: "No", value: false },
+            ]},
+            description: { type: "textarea" },
+            min: { type: "number" },
+            max: { type: "number" },
+            step: { type: "number" },
+          },
+        },
       },
-      maxLength: {
-        type: "number",
-        label: "Longitud máxima",
-        helperText: "Cantidad máxima de caracteres permitidos.",
+      defaultProps: {
+        field: {
+          type: "number",
+          name: "numero",
+          label: "Campo numérico",
+          required: false,
+        },
       },
+      render: ({ field }) => <NumberField field={field} />,
     },
-  },
-  number: {
-    label: "Número",
-    description: "Campo numérico con validaciones básicas.",
-    category: "fields",
-    defaultProps: {
-      label: "Número",
-      placeholder: "0",
-      required: false,
+    SelectField: {
+      fields: {
+        field: {
+          type: "object",
+          objectFields: {
+            name: { type: "text" },
+            label: { type: "text" },
+            placeholder: { type: "text" },
+            required: { type: "radio", options: [
+              { label: "Sí", value: true },
+              { label: "No", value: false },
+            ]},
+            description: { type: "textarea" },
+            options: {
+              type: "array",
+              arrayFields: {
+                label: { type: "text" },
+                value: { type: "text" },
+              },
+            },
+          },
+        },
+      },
+      defaultProps: {
+        field: {
+          type: "select",
+          name: "seleccion",
+          label: "Campo de selección",
+          required: false,
+          options: [
+            { label: "Opción 1", value: "opt1" },
+            { label: "Opción 2", value: "opt2" },
+          ],
+        },
+      },
+      render: ({ field }) => <SelectField field={field} />,
     },
-    fields: {
-      ...baseFieldControls,
-      placeholder: {
-        type: "text",
-        label: "Placeholder",
-        helperText: "Texto de ejemplo que se mostrará dentro del campo.",
+    CheckboxField: {
+      fields: {
+        field: {
+          type: "object",
+          objectFields: {
+            name: { type: "text" },
+            label: { type: "text" },
+            required: { type: "radio", options: [
+              { label: "Sí", value: true },
+              { label: "No", value: false },
+            ]},
+            description: { type: "textarea" },
+          },
+        },
       },
-      minValue: {
-        type: "number",
-        label: "Valor mínimo",
-        helperText: "Restringe el valor mínimo permitido.",
+      defaultProps: {
+        field: {
+          type: "checkbox",
+          name: "checkbox",
+          label: "Campo de checkbox",
+          required: false,
+        },
       },
-      maxValue: {
-        type: "number",
-        label: "Valor máximo",
-        helperText: "Restringe el valor máximo permitido.",
-      },
-      step: {
-        type: "number",
-        label: "Incremento",
-        helperText: "Valor utilizado para incrementar o decrementar.",
-      },
+      render: ({ field }) => <CheckboxField field={field} />,
     },
-  },
-  select: {
-    label: "Lista desplegable",
-    description: "Permite seleccionar una opción entre múltiples alternativas.",
-    category: "fields",
-    defaultProps: {
-      label: "Seleccioná una opción",
-      required: false,
-    },
-    fields: {
-      ...baseFieldControls,
-      placeholder: {
-        type: "text",
-        label: "Placeholder",
-        helperText: "Mensaje mostrado cuando no hay una opción seleccionada.",
+    DateField: {
+      fields: {
+        field: {
+          type: "object",
+          objectFields: {
+            name: { type: "text" },
+            label: { type: "text" },
+            required: { type: "radio", options: [
+              { label: "Sí", value: true },
+              { label: "No", value: false },
+            ]},
+            description: { type: "textarea" },
+            minDate: { type: "text" },
+            maxDate: { type: "text" },
+          },
+        },
       },
-      options: {
-        type: "textarea",
-        label: "Opciones",
-        helperText: "Ingresá una opción por línea en el formato valor|Etiqueta.",
+      defaultProps: {
+        field: {
+          type: "date",
+          name: "fecha",
+          label: "Campo de fecha",
+          required: false,
+        },
       },
-    },
-  },
-  date: {
-    label: "Fecha",
-    description: "Selector de fecha simple.",
-    category: "fields",
-    defaultProps: {
-      label: "Fecha",
-      required: false,
-    },
-    fields: {
-      ...baseFieldControls,
-      minDate: {
-        type: "date",
-        label: "Fecha mínima",
-        helperText: "Limita la selección a fechas posteriores o iguales.",
-      },
-      maxDate: {
-        type: "date",
-        label: "Fecha máxima",
-        helperText: "Limita la selección a fechas anteriores o iguales.",
-      },
-    },
-  },
-  checkbox: {
-    label: "Casilla",
-    description: "Campo booleano para activar o desactivar una opción.",
-    category: "fields",
-    defaultProps: {
-      label: "Aceptar",
-      required: false,
-    },
-    fields: {
-      ...baseFieldControls,
-      defaultChecked: {
-        type: "checkbox",
-        label: "Marcado por defecto",
-        helperText: "Define si la casilla aparece marcada inicialmente.",
-        defaultValue: false,
-      },
-    },
-  },
-  file: {
-    label: "Archivo",
-    description: "Permite adjuntar documentos al formulario.",
-    category: "fields",
-    defaultProps: {
-      label: "Documento",
-      required: false,
-    },
-    fields: {
-      ...baseFieldControls,
-      accept: {
-        type: "text",
-        label: "Formatos permitidos",
-        helperText: "Lista de extensiones separadas por coma (por ejemplo: pdf,jpg).",
-      },
-      maxSizeMB: {
-        type: "number",
-        label: "Tamaño máximo (MB)",
-        helperText: "Restringe el tamaño máximo por archivo en megabytes.",
-      },
-      isNewFileFlag: {
-        type: "checkbox",
-        label: "Requiere archivo nuevo",
-        helperText: "Obliga a subir un documento diferente al existente.",
-        defaultValue: false,
-      },
-    },
-  },
-  section: {
-    label: "Sección",
-    description: "Agrupa campos relacionados bajo un mismo encabezado.",
-    category: "structure",
-    defaultProps: {
-      title: "Nueva sección",
-    },
-    fields: {
-      title: {
-        type: "text",
-        label: "Título",
-        helperText: "Nombre principal mostrado en el encabezado de la sección.",
-      },
-      description: {
-        type: "textarea",
-        label: "Descripción",
-        helperText: "Texto opcional que se muestra debajo del título.",
-      },
-      showBorder: {
-        type: "checkbox",
-        label: "Mostrar borde",
-        helperText: "Agrega un contorno visual alrededor de la sección.",
-        defaultValue: true,
-      },
-    },
-  },
-  tabs: {
-    label: "Pestañas",
-    description: "Organiza contenidos en pestañas horizontales.",
-    category: "structure",
-    defaultProps: {
-      title: "Conjunto de pestañas",
-    },
-    fields: {
-      title: {
-        type: "text",
-        label: "Título",
-        helperText: "Nombre general del contenedor de pestañas.",
-      },
-      tabs: {
-        type: "textarea",
-        label: "Listado de pestañas",
-        helperText: "Ingresá una pestaña por línea. Cada pestaña creará un contenedor.",
-      },
-      description: {
-        type: "textarea",
-        label: "Descripción",
-        helperText: "Texto introductorio que acompaña el conjunto de pestañas.",
-      },
-    },
-  },
-  repeater: {
-    label: "Repetidor",
-    description: "Permite repetir un grupo de campos dinámicamente.",
-    category: "structure",
-    defaultProps: {
-      label: "Grupo",
-      minItems: 0,
-    },
-    fields: {
-      ...baseFieldControls,
-      minItems: {
-        type: "number",
-        label: "Mínimo de ítems",
-        helperText: "Cantidad mínima de repeticiones permitidas.",
-      },
-      maxItems: {
-        type: "number",
-        label: "Máximo de ítems",
-        helperText: "Cantidad máxima de repeticiones permitidas.",
-      },
+      render: ({ field }) => <DateField field={field} />,
     },
   },
 };
-
-export const builderConfig: Config<typeof builderComponents> = {
-  categories: [
-    {
-      id: "fields",
-      label: "Campos",
-      components: ["text", "number", "select", "date", "checkbox", "file"],
-    },
-    {
-      id: "structure",
-      label: "Estructura",
-      components: ["section", "tabs", "repeater"],
-    },
-  ],
-  components: builderComponents,
-};
-
-export type BuilderComponentId = keyof typeof builderComponents;
-export type BuilderConfig = typeof builderConfig;
-
-export default builderConfig;

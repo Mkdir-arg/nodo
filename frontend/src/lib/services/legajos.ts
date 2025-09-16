@@ -1,18 +1,32 @@
-import { getJSON, postJSON } from '@/lib/api';
+// frontend/src/services/legajos.ts
+"use client";
+
+import { fetchJSONAuth } from "@/services/request";
+
+export type CrearLegajoPayload = {
+  plantilla_id: string;              // UUID/ID de la plantilla
+  data: Record<string, any>;         // objeto JSON (no string)
+};
 
 export const LegajosService = {
-  create: (payload: { plantilla_id: string; data: any }) =>
-    postJSON(`/api/legajos/`, payload),
-  list: (
-    params: { formId?: string; page?: number; page_size?: number; search?: string } = {}
-  ) => {
+  // POST /api/legajos/
+  create: (payload: CrearLegajoPayload) =>
+    fetchJSONAuth<any>("legajos/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  // GET /api/legajos/?plantilla_id=...&page=...&page_size=...&search=...
+  list: (params: { formId?: string; page?: number; page_size?: number; search?: string } = {}) => {
     const q = new URLSearchParams();
-    if (params.formId) q.set('plantilla_id', params.formId);
-    if (params.page) q.set('page', String(params.page));
-    if (params.page_size) q.set('page_size', String(params.page_size));
-    if (params.search) q.set('search', params.search);
+    if (params.formId) q.set("plantilla_id", params.formId);
+    if (params.page) q.set("page", String(params.page));
+    if (params.page_size) q.set("page_size", String(params.page_size));
+    if (params.search) q.set("search", params.search);
     const qs = q.toString();
-    return getJSON(`/api/legajos/${qs ? `?${qs}` : ''}`);
+    return fetchJSONAuth<any>(`legajos/${qs ? `?${qs}` : ""}`);
   },
-  get: (id: string) => getJSON(`/api/legajos/${id}/`),
+
+  // GET /api/legajos/:id/
+  get: (id: string) => fetchJSONAuth<any>(`legajos/${id}/`),
 };
