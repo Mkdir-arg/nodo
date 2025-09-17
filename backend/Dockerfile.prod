@@ -1,38 +1,18 @@
 FROM python:3.11-slim
 
-# Crear usuario no-root
-RUN groupadd -r django && useradd -r -g django django
-
 WORKDIR /app
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    default-libmysqlclient-dev \
-    pkg-config \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Instalar dependencias de Python
+# Instalar dependencias
 COPY requirements/ /app/requirements/
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements/base.txt
+RUN pip install --no-cache-dir -r requirements/base.txt
 
 # Copiar código
 COPY . /app
 
-# Crear directorios necesarios
-RUN mkdir -p /app/staticfiles /app/media \
-    && chown -R django:django /app
-
-# Cambiar a usuario no-root
-USER django
-
-# Variables de entorno para producción
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV DJANGO_SETTINGS_MODULE=config.settings
+# Crear base de datos y archivos estáticos
+RUN python manage.py migrate --settings=config.settings_prod
+RUN python manage.py collectstatic --noinput --settings=config.settings_prod
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "config.wsgi:application", "--env", "DJANGO_SETTINGS_MODULE=config.settings_prod"]

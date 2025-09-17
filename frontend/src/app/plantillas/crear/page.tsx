@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Builder from '@/components/form/builder/Builder';
+import BuilderWrapper from '@/components/form/builder/BuilderWrapper';
 import BuilderHeader from '@/components/form/builder/BuilderHeader';
-import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import Palette from '@/components/form/builder/Palette';
+import PropertiesPanel from '@/components/form/builder/PropertiesPanel';
+import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { saveLayout } from '@/lib/api/plantillas';
 import { repo } from '@/lib/legajos/repo';
 import { saveTemplateSimple } from '@/lib/legajos/simple-repo';
@@ -14,7 +16,7 @@ export default function CrearPlantillaPage() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [nombre, setNombre] = useState('');
-  const { toFormLayout, clearDirty } = useBuilderStore();
+  const { buildSchema, resetDirty, sections } = useBuilderStore();
   const { refreshPlantillas } = useNavStore();
 
   const handleSave = async () => {
@@ -28,15 +30,15 @@ export default function CrearPlantillaPage() {
       console.log('🚀 INICIANDO GUARDADO');
       
       // Obtener datos del builder
-      const builderLayout = toFormLayout();
-      console.log('🔍 Builder layout completo:', JSON.stringify(builderLayout, null, 2));
-      console.log('🔍 Nodos en builder:', builderLayout.nodes?.length || 0);
+      const builderSchema = buildSchema();
+      console.log('🔍 Builder schema completo:', JSON.stringify(builderSchema, null, 2));
+      console.log('🔍 Secciones en builder:', sections?.length || 0);
       
       // Crear campos de prueba si el builder está vacío
       let fields = [];
       let layout = [];
       
-      if (!builderLayout.nodes || builderLayout.nodes.length === 0) {
+      if (!sections || sections.length === 0) {
         console.warn('⚠️ El builder está vacío. Creando campos de prueba...');
         fields = [
           {
@@ -65,30 +67,35 @@ export default function CrearPlantillaPage() {
           }
         ];
       } else {
-        // Convertir nodos del builder a fields y layout
-        const sections = builderLayout.nodes.filter(n => n.kind === 'section');
-        const fieldNodes = builderLayout.nodes.filter(n => n.kind === 'field');
+        // Convertir secciones del builder a fields y layout
+        const allFields: any[] = [];
         
-        fields = fieldNodes.map(field => ({
-          id: field.id,
-          key: field.props?.name || field.id,
-          type: field.type,
-          label: field.props?.label || 'Campo sin nombre',
-          required: field.props?.required || false,
-          ui: {
-            colSpan: field.colSpan || 12
-          }
-        }));
+        sections.forEach(section => {
+          const sectionFields = (section.nodes || section.children || []).filter((n: any) => n.kind !== 'ui');
+          sectionFields.forEach(field => {
+            allFields.push({
+              id: field.id,
+              key: field.key || field.id,
+              type: field.type,
+              label: field.label || 'Campo sin nombre',
+              required: field.required || false,
+              ui: {
+                colSpan: 6
+              }
+            });
+          });
+        });
+        
+        fields = allFields;
         
         layout = sections.map(section => ({
           type: 'section',
-          label: section.title,
-          children: fieldNodes
-            .filter(f => f.parentId === section.id)
-            .sort((a, b) => a.order - b.order)
-            .map(f => ({
+          label: section.title || 'Sección',
+          children: (section.nodes || section.children || [])
+            .filter((n: any) => n.kind !== 'ui')
+            .map((f: any) => ({
               type: 'field',
-              fieldKey: f.props?.name || f.id
+              fieldKey: f.key || f.id
             }))
         }));
       }
@@ -117,17 +124,9 @@ export default function CrearPlantillaPage() {
       const plantilla = await saveTemplateSimple(plantillaData);
       console.log('✅ PLANTILLA GUARDADA:', plantilla);
       
-      // Guardar el layout si hay contenido
-      const builderLayoutForSave = toFormLayout();
-      if (builderLayoutForSave.nodes.length > 0) {
-        try {
-          await saveLayout(plantilla.id, builderLayoutForSave);
-        } catch (layoutError) {
-          console.warn('No se pudo guardar el layout:', layoutError);
-        }
-      }
+      // El layout ya se guardó en el schema
       
-      clearDirty();
+      resetDirty();
       await refreshPlantillas();
       
       alert(`Plantilla "${nombre}" guardada exitosamente`);
@@ -169,8 +168,20 @@ export default function CrearPlantillaPage() {
       
       <BuilderHeader plantillaId="" plantillaNombre={nombre} />
       
-      <div className="flex-1 overflow-hidden">
-        <Builder />
+      <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 p-4">
+          <div className="flex gap-4 h-full">
+            <div className="w-64 flex-shrink-0">
+              <Palette />
+            </div>
+            <div className="flex-1">
+              <BuilderWrapper />
+            </div>
+            <div className="w-80 flex-shrink-0">
+              <PropertiesPanel />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

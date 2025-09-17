@@ -1,0 +1,25 @@
+services:
+  - name: nodo-backend
+    type: web
+    git:
+      branch: main
+      build_command: |
+        cd backend
+        pip install -r requirements/base.txt
+        python manage.py collectstatic --noinput
+      run_command: |
+        cd backend
+        gunicorn --bind 0.0.0.0:$PORT config.wsgi:application
+    instance_type: nano
+    env:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DATABASE_URL
+        value: "mysql://user:password@host:port/database"
+    ports:
+      - port: 8000
+        protocol: http

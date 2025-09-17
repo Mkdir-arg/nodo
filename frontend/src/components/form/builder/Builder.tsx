@@ -6,12 +6,10 @@ import { restrictToParentElement } from '@dnd-kit/modifiers';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 import Canvas from './Canvas';
-import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 
 export default function Builder() {
-  const { nodes, moveSection, moveFieldWithin, moveFieldAcross, markDirty } = useBuilderStore();
-  
-  const sections = nodes.filter(n => n.kind === 'section');
+  const { sections, moveSection, moveField, setDirty } = useBuilderStore();
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -30,23 +28,19 @@ export default function Builder() {
     const overData = over.data.current as { type: 'section' | 'field'; sectionId?: string; index?: number };
 
     if (activeData?.type === 'section' && overData?.type === 'section') {
-      moveSection(active.id as string, overData.index!);
-      markDirty();
+      moveSection(active.id as string, over.id as string);
+      setDirty(true);
       return;
     }
 
     if (activeData?.type === 'field') {
       const fieldId = active.id as string;
-      const fromSectionId = activeData.sectionId!;
-      const toSectionId = overData.sectionId!;
-      const toIndex = overData.index!;
-
-      if (fromSectionId === toSectionId) {
-        moveFieldWithin(toSectionId, fieldId, toIndex);
-      } else {
-        moveFieldAcross(fromSectionId, toSectionId, fieldId, toIndex);
+      const toSectionId = overData.sectionId;
+      
+      if (toSectionId) {
+        moveField(fieldId, over.id as string, toSectionId);
+        setDirty(true);
       }
-      markDirty();
     }
   }
 
@@ -58,7 +52,7 @@ export default function Builder() {
         modifiers={[restrictToParentElement]}
       >
         <SortableContext 
-          items={sections.map(s => s.id)} 
+          items={(sections || []).map(s => s.id)} 
           strategy={verticalListSortingStrategy}
         >
           <Canvas />

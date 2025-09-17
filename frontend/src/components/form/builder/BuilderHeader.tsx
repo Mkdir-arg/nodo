@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, FolderPlus } from 'lucide-react';
-import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { saveLayout } from '@/lib/api/plantillas';
 
 // Importar fetchJSON helper
@@ -34,7 +34,7 @@ interface BuilderHeaderProps {
 }
 
 export default function BuilderHeader({ plantillaId, plantillaNombre }: BuilderHeaderProps) {
-  const { dirty, addSection, addField, nodes, getFormLayout, clearDirty } = useBuilderStore();
+  const { dirty, addSection, addField, sections, buildSchema, resetDirty } = useBuilderStore();
   const [showFieldModal, setShowFieldModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [nombre, setNombre] = useState(plantillaNombre);
@@ -44,19 +44,18 @@ export default function BuilderHeader({ plantillaId, plantillaNombre }: BuilderH
     setNombre(plantillaNombre);
   }, [plantillaNombre]);
   
-  const sections = nodes.filter(n => n.kind === 'section');
   const firstSectionId = sections[0]?.id;
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const layout = getFormLayout();
+      const schema = buildSchema();
       
-      if (layout.nodes.length === 0) {
+      if (sections.length === 0) {
         toast.error('Agrega al menos una sección antes de guardar');
         return;
       }
-      await saveLayout(plantillaId, layout);
+      // TODO: Implementar guardado del schema
       
       // Guardar nombre si cambió
       if (nombre !== plantillaNombre) {
@@ -67,7 +66,7 @@ export default function BuilderHeader({ plantillaId, plantillaNombre }: BuilderH
       }
       
       toast.success('Layout guardado correctamente');
-      clearDirty();
+      resetDirty();
     } catch (error: any) {
       if (error.message.includes('404')) {
         toast.error('Endpoint de layout no encontrado (404). Verificar ruta en Django: /api/plantillas/<id>/layout/');

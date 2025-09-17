@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { GripVertical } from 'lucide-react';
 
-import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import FieldCard from './FieldCard';
 import type { SectionNode } from '@/lib/forms/types';
 
@@ -14,11 +14,7 @@ interface SectionProps {
 }
 
 export default function Section({ section }: SectionProps) {
-  const { nodes } = useBuilderStore();
-  
-  const fields = nodes
-    .filter(n => n.kind === 'field' && n.parentId === section.id)
-    .sort((a, b) => a.order - b.order);
+  const fields = (section.nodes || section.children || []).filter((n: any) => n.kind !== 'ui');
 
   const {
     attributes,

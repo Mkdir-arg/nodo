@@ -1,14 +1,10 @@
 'use client';
 
-import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import Section from './Section';
 
 export default function Canvas() {
-  const { nodes } = useBuilderStore();
-  
-  const sections = nodes
-    .filter(n => n.kind === 'section')
-    .sort((a, b) => a.order - b.order);
+  const { sections } = useBuilderStore();
 
   return (
     <div className="p-6 space-y-4">

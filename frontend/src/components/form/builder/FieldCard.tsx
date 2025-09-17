@@ -5,7 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Settings } from 'lucide-react';
 
-import { useBuilderStore } from '@/lib/store/useBuilderStore';
+import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import type { FieldNode } from '@/lib/forms/types';
 
 interface FieldCardProps {
@@ -14,7 +14,8 @@ interface FieldCardProps {
 }
 
 export default function FieldCard({ field, sectionId }: FieldCardProps) {
-  const { resizeField } = useBuilderStore();
+  const { selected, setSelected } = useBuilderStore();
+  const isSelected = selected?.type === 'field' && selected?.id === field.id;
   const [isResizing, setIsResizing] = useState(false);
   const startX = useRef(0);
   const startColSpan = useRef(0);
@@ -83,10 +84,12 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`col-span-${field.colSpan} relative bg-gray-50 border-2 border-gray-200 rounded-lg p-3 group ${
+      className={`relative bg-gray-50 border-2 rounded-lg p-3 group cursor-pointer ${
         isDragging ? 'opacity-50' : ''
-      } ${isResizing ? 'ring-2 ring-blue-500' : ''}`}
-      onKeyDown={handleKeyResize}
+      } ${
+        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+      }`}
+      onClick={() => setSelected({ type: 'field', id: field.id })}
       tabIndex={0}
     >
       <div className="flex items-start justify-between">
@@ -100,12 +103,12 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
               <GripVertical className="h-3 w-3 text-gray-400" />
             </button>
             <span className="text-sm font-medium text-gray-700">
-              {field.props?.label || field.type}
+              {field.label || field.type}
             </span>
           </div>
           
           <div className="text-xs text-gray-500 mb-2">
-            {field.type} • {field.colSpan}/12 columnas
+            {field.type} • key: {field.key}
           </div>
           
           {/* Preview del campo */}
