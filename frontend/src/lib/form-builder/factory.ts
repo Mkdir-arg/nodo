@@ -91,6 +91,7 @@ export function createNode(type: string) {
     ...node,
     id,
     kind: "field",
+    colSpan: w, // Usar el ancho del layout como colSpan por defecto
     layout: { i: id, x: 0, y: Number.POSITIVE_INFINITY, w, h },
   };
 }

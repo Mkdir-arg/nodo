@@ -14,11 +14,12 @@ interface FieldCardProps {
 }
 
 export default function FieldCard({ field, sectionId }: FieldCardProps) {
-  const { selected, setSelected } = useBuilderStore();
+  const { selected, setSelected, resizeField } = useBuilderStore();
   const isSelected = selected?.type === 'field' && selected?.id === field.id;
   const [isResizing, setIsResizing] = useState(false);
   const startX = useRef(0);
   const startColSpan = useRef(0);
+  const colSpan = field.colSpan || 6; // Default a 6 columnas
 
   const {
     attributes,
@@ -45,7 +46,7 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     e.preventDefault();
     setIsResizing(true);
     startX.current = e.clientX;
-    startColSpan.current = field.colSpan;
+    startColSpan.current = colSpan;
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX.current;
@@ -53,7 +54,7 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
       const deltaColumns = Math.round(deltaX / columnWidth);
       const newColSpan = Math.max(1, Math.min(12, startColSpan.current + deltaColumns));
       
-      if (newColSpan !== field.colSpan) {
+      if (newColSpan !== colSpan) {
         resizeField(field.id, newColSpan);
       }
     };
@@ -72,10 +73,10 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     if (e.altKey) {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        resizeField(field.id, Math.max(1, field.colSpan - 1));
+        resizeField(field.id, Math.max(1, colSpan - 1));
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        resizeField(field.id, Math.min(12, field.colSpan + 1));
+        resizeField(field.id, Math.min(12, colSpan + 1));
       }
     }
   };
@@ -84,12 +85,13 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative bg-gray-50 border-2 rounded-lg p-3 group cursor-pointer ${
+      className={`relative bg-gray-50 border-2 rounded-lg p-3 group cursor-pointer col-span-${colSpan} ${
         isDragging ? 'opacity-50' : ''
       } ${
         isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
       }`}
       onClick={() => setSelected({ type: 'field', id: field.id })}
+      onKeyDown={handleKeyResize}
       tabIndex={0}
     >
       <div className="flex items-start justify-between">

@@ -99,6 +99,7 @@ export interface BuilderState {
 
   moveSection: (activeId: string, overId: string) => void;
   moveField: (activeId: string, overId?: string | null, toSectionId?: string) => void;
+  resizeField: (fieldId: string, newColSpan: number) => void;
 
   collectKeysByType: (t: string) => string[];
   ensureUniqueKey: (base: string) => string;
@@ -391,6 +392,29 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       sections[destSi] = syncSection({ ...destSection, nodes: destNodes });
 
       return { ...state, sections, selected: { type: 'field', id: removed.id }, dirty: true };
+    }),
+
+  resizeField: (fieldId: string, newColSpan: number) =>
+    set((state) => {
+      const hit = (get() as any)._locateNode(fieldId);
+      if (!hit) return state;
+      
+      const sections = [...state.sections];
+      const section = sections[hit.si];
+      const nodes = [...(section.nodes || section.children || [])];
+      
+      if (hit.groupIndex != null) {
+        const grp = { ...(nodes[hit.groupIndex] || {}) } as any;
+        const inner = [...(grp.children || [])];
+        inner[hit.innerIndex] = { ...inner[hit.innerIndex], colSpan: newColSpan };
+        grp.children = inner;
+        nodes[hit.groupIndex] = grp;
+      } else {
+        nodes[hit.fi] = { ...nodes[hit.fi], colSpan: newColSpan };
+      }
+      
+      sections[hit.si] = syncSection({ ...section, nodes });
+      return { ...state, sections, dirty: true };
     }),
 
   validateAll: () => {
