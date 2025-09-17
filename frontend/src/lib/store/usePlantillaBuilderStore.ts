@@ -524,6 +524,16 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   buildSchema: () => {
     const sections = (get().sections || []).map((sec) => syncSection(sec));
-    return { id: get().plantillaId || undefined, name: get().nombre, version: get().version, nodes: sections };
+    // Aplanar todos los campos de todas las secciones
+    const allFields = sections.flatMap(sec => 
+      (sec.nodes || sec.children || []).filter((n: any) => n.kind !== 'ui')
+    );
+    return { 
+      id: get().plantillaId || undefined, 
+      name: get().nombre, 
+      version: get().version, 
+      nodes: allFields,
+      sections // Mantener las secciones para el builder
+    };
   },
 }));

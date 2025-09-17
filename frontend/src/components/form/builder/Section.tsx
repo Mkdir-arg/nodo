@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Trash2 } from 'lucide-react';
 
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import FieldCard from './FieldCard';
@@ -14,6 +14,7 @@ interface SectionProps {
 }
 
 export default function Section({ section }: SectionProps) {
+  const { removeSection } = useBuilderStore();
   const fields = (section.nodes || section.children || []).filter((n: any) => n.kind !== 'ui');
 
   const {
@@ -40,19 +41,28 @@ export default function Section({ section }: SectionProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-lg border-2 border-dashed border-gray-200 p-4 ${
+      className={`bg-white rounded-lg border-2 border-dashed border-gray-200 p-4 group ${
         isDragging ? 'opacity-50' : ''
       }`}
     >
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4 text-gray-400" />
+          </button>
+          <h3 className="font-medium text-gray-900">{section.title}</h3>
+        </div>
         <button
-          {...attributes}
-          {...listeners}
-          className="p-1 hover:bg-gray-100 rounded cursor-grab active:cursor-grabbing"
+          onClick={() => removeSection(section.id)}
+          className="p-1 hover:bg-red-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Eliminar sección"
         >
-          <GripVertical className="h-4 w-4 text-gray-400" />
+          <Trash2 className="h-4 w-4 text-red-500" />
         </button>
-        <h3 className="font-medium text-gray-900">{section.title}</h3>
       </div>
 
       <SortableContext 

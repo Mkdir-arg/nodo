@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Settings } from 'lucide-react';
+import { GripVertical, Settings, Trash2 } from 'lucide-react';
 
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import type { FieldNode } from '@/lib/forms/types';
@@ -14,7 +14,7 @@ interface FieldCardProps {
 }
 
 export default function FieldCard({ field, sectionId }: FieldCardProps) {
-  const { selected, setSelected, resizeField } = useBuilderStore();
+  const { selected, setSelected, resizeField, removeNode } = useBuilderStore();
   const isSelected = selected?.type === 'field' && selected?.id === field.id;
   const [isResizing, setIsResizing] = useState(false);
   const startX = useRef(0);
@@ -129,9 +129,21 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
           </div>
         </div>
 
-        <button className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-          <Settings className="h-3 w-3 text-gray-400" />
-        </button>
+        <div className="flex gap-1">
+          <button className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            <Settings className="h-3 w-3 text-gray-400" />
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              removeNode(field.id);
+            }}
+            className="p-1 hover:bg-red-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Eliminar campo"
+          >
+            <Trash2 className="h-3 w-3 text-red-500" />
+          </button>
+        </div>
       </div>
 
       {/* Resize handle */}
