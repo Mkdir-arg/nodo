@@ -8,15 +8,16 @@ WORKDIR /app
 # Copiar solo package files primero (mejor cache)
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install && npm cache clean --force
+# Instalar dependencias con cache optimizado
+RUN npm ci --only=production --silent \
+    && npm cache clean --force
 
 # Copiar código fuente después
 COPY . .
 
 # Cambiar propietario
 RUN chown -R nextjs:nodejs /app
-# USER nextjs  # Comentado temporalmente para Windows
+USER nextjs
 
 EXPOSE 3000
 CMD ["npm", "run", "dev"]

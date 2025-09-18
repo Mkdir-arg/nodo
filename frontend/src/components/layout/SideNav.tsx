@@ -1,8 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
-import { useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
@@ -24,7 +24,8 @@ function Safe({ Comp, className, size, 'aria-hidden': ariaHidden }: { Comp: any;
 
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
-  const plantillasItem = NAV_ITEMS.find((i) => i.href === '/plantillas');
+  const configuracionesItem = NAV_ITEMS.find((i) => i.label === 'Configuraciones');
+  const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const { data } = usePlantillasMin();
 
   const legajoItems = useMemo(() => {
@@ -68,15 +69,41 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
 
           <LegajosMenu items={legajoItems} />
 
-          {plantillasItem && (
-            <ActiveLink
-              href={plantillasItem.href}
-              className={clsx(mini && 'justify-center')}
-              title={plantillasItem.label}
-            >
-              <Safe Comp={plantillasItem.icon} className="h-5 w-5" aria-hidden />
-              {mini ? <span className="sr-only">{plantillasItem.label}</span> : <span>{plantillasItem.label}</span>}
-            </ActiveLink>
+          {configuracionesItem && (
+            <div>
+              <button
+                onClick={() => setIsConfigExpanded(!isConfigExpanded)}
+                className={clsx(
+                  'w-full flex items-center px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md',
+                  mini && 'justify-center'
+                )}
+              >
+                <Safe Comp={configuracionesItem.icon} className="h-5 w-5" aria-hidden />
+                {!mini && (
+                  <>
+                    <span className="ml-3 flex-1 text-left">{configuracionesItem.label}</span>
+                    <ChevronDown className={clsx(
+                      'h-4 w-4 transition-transform',
+                      isConfigExpanded && 'rotate-180'
+                    )} />
+                  </>
+                )}
+              </button>
+              {!mini && isConfigExpanded && configuracionesItem.submenu && (
+                <div className="ml-6 space-y-1 mt-1">
+                  {configuracionesItem.submenu.map((item) => (
+                    <ActiveLink
+                      key={item.href}
+                      href={item.href}
+                      className="text-sm flex items-center gap-2"
+                    >
+                      {item.icon && <Safe Comp={item.icon} className="h-4 w-4" aria-hidden />}
+                      {item.label}
+                    </ActiveLink>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

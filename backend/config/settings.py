@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'templates_app',
     'plantillas',
     'legajos',
+    'flows',
 ]
 
 MIDDLEWARE = [

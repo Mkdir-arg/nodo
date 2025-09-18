@@ -7,3 +7,4 @@ django-cors-headers
 mysqlclient
 python-dotenv
 gunicorn
+requests
