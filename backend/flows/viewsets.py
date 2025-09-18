@@ -8,22 +8,22 @@ from django.utils import timezone
 from django.db import transaction
 from django.core.paginator import Paginator
 
-from .models import Flow, FlowExecution
-from .serializers import FlowSerializer, FlowExecutionSerializer
+from .models import Flujo, EjecucionFlujo, InstanciaFlujo
+from .serializers import FlujoSerializer, EjecucionFlujoSerializer
 from .flow_serializers import FlowInstanceSerializer, FlowStartSerializer, FlowCandidateSerializer
-from .flow_runner import FlowInstance
+from .flow_runner import FlowRunner
 from .executor import FlowExecutor
 from .flow_engine import execute_flow_instance
 
 
-class FlowViewSet(viewsets.ModelViewSet):
-    serializer_class = FlowSerializer
+class FlujoViewSet(viewsets.ModelViewSet):
+    serializer_class = FlujoSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
 
     def get_queryset(self):
-        return Flow.objects.filter(created_by=self.request.user)
+        return Flujo.objects.filter(created_by=self.request.user)
 
     @action(detail=True, methods=['post'])
     def execute(self, request, pk=None):
@@ -31,7 +31,7 @@ class FlowViewSet(viewsets.ModelViewSet):
         flow = self.get_object()
         
         # Create execution record
-        execution = FlowExecution.objects.create(
+        execution = EjecucionFlujo.objects.create(
             flow=flow,
             created_by=request.user,
             status='pending'
@@ -49,7 +49,7 @@ class FlowViewSet(viewsets.ModelViewSet):
             execution.completed_at = timezone.now()
             execution.save()
         
-        serializer = FlowExecutionSerializer(execution)
+        serializer = EjecucionFlujoSerializer(execution)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
@@ -57,7 +57,7 @@ class FlowViewSet(viewsets.ModelViewSet):
         """Get executions for a flow"""
         flow = self.get_object()
         executions = flow.executions.all()
-        serializer = FlowExecutionSerializer(executions, many=True)
+        serializer = EjecucionFlujoSerializer(executions, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'], url_path='candidates')
@@ -130,7 +130,7 @@ class FlowViewSet(viewsets.ModelViewSet):
                           status=status.HTTP_400_BAD_REQUEST)
         
         # Create flow instance
-        instance = FlowInstance.objects.create(
+        instance = InstanciaFlujo.objects.create(
             flow=flow,
             legajo_id=data['legajo_id'],
             plantilla_id=data['plantilla_id'],
@@ -176,7 +176,7 @@ class FlowViewSet(viewsets.ModelViewSet):
         instances = []
         with transaction.atomic():
             for legajo_id in data['legajo_ids']:
-                instance = FlowInstance.objects.create(
+                instance = InstanciaFlujo.objects.create(
                     flow=flow,
                     legajo_id=legajo_id,
                     plantilla_id=data['plantilla_id'],
@@ -204,7 +204,7 @@ class FlowViewSet(viewsets.ModelViewSet):
     def get_instances(self, request, pk=None):
         """Get flow instances (execution history)"""
         flow = self.get_object()
-        instances = FlowInstance.objects.filter(flow=flow, created_by=request.user)
+        instances = InstanciaFlujo.objects.filter(flow=flow, created_by=request.user)
         
         # Filter by status if provided
         status_filter = request.query_params.get('status')
@@ -217,14 +217,14 @@ class FlowViewSet(viewsets.ModelViewSet):
 
 
 
-class FlowExecutionViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = FlowExecutionSerializer
+class EjecucionFlujoViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = EjecucionFlujoSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'flow']
 
     def get_queryset(self):
-        return FlowExecution.objects.filter(created_by=self.request.user)
+        return EjecucionFlujo.objects.filter(created_by=self.request.user)
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):

@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import FlowInstance
+from .models import InstanciaFlujo
 
 
 class FlowInstanceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FlowInstance
+        model = InstanciaFlujo
         fields = ['id', 'flow', 'legajo_id', 'plantilla_id', 'status', 
                  'context_json', 'result_json', 'error_message', 
                  'started_at', 'completed_at', 'created_by']

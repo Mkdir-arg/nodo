@@ -11,7 +11,7 @@ def default_steps_data():
     return []
 
 
-class Flow(models.Model):
+class Flujo(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Borrador'),
         ('published', 'Publicado'),
@@ -56,32 +56,22 @@ class Flow(models.Model):
             self.steps_data = value if isinstance(value, list) else []
             
     def get_start_node_config(self):
-        """Extract StartNode config from graph_json"""
+        """Extract StartNode config from steps_data"""
         try:
-            # Handle both formats: {steps: [...]} and [...]
-            if isinstance(self.steps_data, dict):
-                steps = self.steps_data.get('steps', [])
-                nodes = self.steps_data.get('nodes', [])
-            else:
-                steps = self.steps_data
-                nodes = []
+            # steps_data should be a list of steps
+            steps = self.steps_data if isinstance(self.steps_data, list) else []
             
-            # Look in steps first
+            # Look for start step
             for step in steps:
                 if step.get('type') == 'start':
                     return step.get('config', {})
-            
-            # Look in nodes (React Flow format)
-            for node in nodes:
-                if node.get('type') == 'start':
-                    return node.get('data', {}).get('config', {})
                     
             return {}
         except (AttributeError, TypeError):
             return {}
 
 
-class FlowExecution(models.Model):
+class EjecucionFlujo(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pendiente'),
         ('running', 'Ejecutando'),
@@ -90,7 +80,7 @@ class FlowExecution(models.Model):
         ('cancelled', 'Cancelado'),
     ]
 
-    flow = models.ForeignKey(Flow, on_delete=models.CASCADE, related_name='executions')
+    flow = models.ForeignKey(Flujo, on_delete=models.CASCADE, related_name='executions')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -105,7 +95,7 @@ class FlowExecution(models.Model):
         return f"{self.flow.name} - {self.status}"
 
 
-class FlowInstance(models.Model):
+class InstanciaFlujo(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pendiente'),
         ('running', 'Ejecutando'),
@@ -114,7 +104,7 @@ class FlowInstance(models.Model):
         ('cancelled', 'Cancelado'),
     ]
 
-    flow = models.ForeignKey(Flow, on_delete=models.CASCADE, related_name='instances')
+    flow = models.ForeignKey(Flujo, on_delete=models.CASCADE, related_name='instances')
     legajo_id = models.CharField(max_length=255)
     plantilla_id = models.CharField(max_length=255)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

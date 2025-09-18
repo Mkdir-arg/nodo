@@ -96,15 +96,11 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
 
     try {
       if (isNew) {
-        const newFlow = await addFlow({
+        await addFlow({
           name: flowData.name,
           description: flowData.description,
           steps: currentFlow.steps,
         });
-        // Update currentFlow with real ID
-        if (newFlow && typeof newFlow === 'object' && 'id' in newFlow) {
-          setCurrentFlow({ ...currentFlow, id: newFlow.id as string });
-        }
       } else if (flowId && currentFlow) {
         await updateFlow(flowId, {
           name: flowData.name,
@@ -112,6 +108,7 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
           steps: currentFlow.steps,
         });
       }
+      // Navigate back to flows list
       router.push('/flujos');
     } catch (error) {
       console.error('Error al guardar:', error);

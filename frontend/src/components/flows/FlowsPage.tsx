@@ -14,6 +14,16 @@ export default function FlowsPage() {
     loadFlows();
   }, [loadFlows]);
 
+  // Force reload when component mounts
+  useEffect(() => {
+    const handleFocus = () => {
+      loadFlows();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [loadFlows]);
+
   const handleEdit = (flow: Flow) => {
     router.push(`/flujos/editar/${flow.id}`);
   };

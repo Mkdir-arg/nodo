@@ -5,13 +5,13 @@ import requests
 from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
-from .models import FlowExecution
+from .models import EjecucionFlujo
 
 logger = logging.getLogger(__name__)
 
 class FlowExecutor:
     def __init__(self, execution):
-        # Handle both FlowExecution and FlowInstance
+        # Handle both EjecucionFlujo and InstanciaFlujo
         self.execution = execution
         if hasattr(execution, 'flow'):
             self.flow = execution.flow

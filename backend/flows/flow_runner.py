@@ -1,4 +1,4 @@
-from .models import FlowInstance
+from .models import InstanciaFlujo
 
 
 class FlowRunner:

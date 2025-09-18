@@ -58,6 +58,11 @@ function CustomNode({ data }: { data: any }) {
           <div className="font-semibold text-sm text-gray-800">{data.label}</div>
           <div className="text-xs text-gray-500 capitalize">{data.type}</div>
         </div>
+        {data.stepNumber && (
+          <div className="bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+            {data.stepNumber}
+          </div>
+        )}
       </div>
       
       <div className="flex gap-1 justify-end">
@@ -102,32 +107,79 @@ export default function FlowCanvas({
   onUpdatePositions 
 }: FlowCanvasProps) {
   
-  const initialNodes: Node[] = useMemo(() => 
-    steps.map((step, index) => ({
+  const initialNodes: Node[] = useMemo(() => {
+    // Calculate step numbers
+    const stepOrder = new Map<string, number>();
+    const startStep = steps.find(step => step.type === 'start');
+    
+    if (startStep) {
+      let currentStep = startStep;
+      let stepNumber = 1;
+      while (currentStep) {
+        stepOrder.set(currentStep.id, stepNumber++);
+        currentStep = steps.find(step => step.id === currentStep?.nextStepId);
+      }
+    }
+    
+    return steps.map((step, index) => ({
       id: step.id,
       position: step.position || { x: 100 + index * 250, y: 100 },
       data: { 
         label: step.name,
         type: step.type,
         step,
+        stepNumber: stepOrder.get(step.id),
         onEdit: onEditStep,
         onDelete: onDeleteStep
       },
       type: 'custom',
       draggable: true
-    })), [steps, onEditStep, onDeleteStep]
-  );
+    }));
+  }, [steps, onEditStep, onDeleteStep]);
 
-  const initialEdges: Edge[] = useMemo(() => 
-    steps.filter(step => step.nextStepId).map(step => ({
-      id: `${step.id}-${step.nextStepId}`,
-      source: step.id,
-      target: step.nextStepId!,
-      type: 'smoothstep',
-      animated: true,
-      style: { stroke: '#6366f1', strokeWidth: 2 }
-    })), [steps]
-  );
+  const initialEdges: Edge[] = useMemo(() => {
+    const edges: Edge[] = [];
+    let stepNumber = 1;
+    
+    // Create a map to track step order
+    const stepOrder = new Map<string, number>();
+    const startStep = steps.find(step => step.type === 'start');
+    
+    if (startStep) {
+      let currentStep = startStep;
+      while (currentStep) {
+        stepOrder.set(currentStep.id, stepNumber++);
+        currentStep = steps.find(step => step.id === currentStep?.nextStepId);
+      }
+    }
+    
+    steps.filter(step => step.nextStepId).forEach(step => {
+      const sourceNum = stepOrder.get(step.id);
+      const targetNum = stepOrder.get(step.nextStepId!);
+      
+      edges.push({
+        id: `${step.id}-${step.nextStepId}`,
+        source: step.id,
+        target: step.nextStepId!,
+        type: 'smoothstep',
+        animated: true,
+        style: { stroke: '#6366f1', strokeWidth: 3 },
+        label: sourceNum && targetNum ? `${sourceNum} → ${targetNum}` : '',
+        labelStyle: { 
+          fill: '#6366f1', 
+          fontWeight: 'bold', 
+          fontSize: '12px',
+          background: '#ffffff',
+          padding: '2px 6px',
+          borderRadius: '4px',
+          border: '1px solid #6366f1'
+        },
+        labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 }
+      });
+    });
+    
+    return edges;
+  }, [steps]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -145,9 +197,9 @@ export default function FlowCanvas({
   const onConnect = useCallback((params: Connection) => {
     if (params.source && params.target) {
       onConnectSteps(params.source, params.target);
-      setEdges((eds) => addEdge(params, eds));
+      // Don't add edge here, it will be added when steps update
     }
-  }, [onConnectSteps, setEdges]);
+  }, [onConnectSteps]);
 
   const onNodeDragStop = useCallback((event: any, node: Node) => {
     const updatedSteps = steps.map(step => 

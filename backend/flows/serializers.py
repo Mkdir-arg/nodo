@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import Flow, FlowExecution
+from .models import Flujo, EjecucionFlujo
 
 
-class FlowSerializer(serializers.ModelSerializer):
+class FlujoSerializer(serializers.ModelSerializer):
     steps = serializers.JSONField(source='steps_data')
     
     class Meta:
-        model = Flow
+        model = Flujo
         fields = [
             'id', 'name', 'description', 'steps', 
             'created_at', 'updated_at', 'is_active'
@@ -20,11 +20,11 @@ class FlowSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class FlowExecutionSerializer(serializers.ModelSerializer):
+class EjecucionFlujoSerializer(serializers.ModelSerializer):
     flow_name = serializers.CharField(source='flow.name', read_only=True)
     
     class Meta:
-        model = FlowExecution
+        model = EjecucionFlujo
         fields = [
             'id', 'flow', 'flow_name', 'status', 
             'started_at', 'completed_at', 'error_message', 'execution_data', 'created_by'

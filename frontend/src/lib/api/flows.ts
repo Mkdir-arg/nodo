@@ -8,8 +8,10 @@ export interface FlowsResponse {
 
 export const flowsApi = {
   // Get all flows
-  getFlows: (): Promise<FlowsResponse> => 
-    getJSON<FlowsResponse>('/flows/'),
+  getFlows: async (): Promise<FlowsResponse> => {
+    const flows = await getJSON<Flow[]>('/flows/');
+    return { results: flows, count: flows.length };
+  },
 
   // Get single flow
   getFlow: (id: string): Promise<Flow> => 
