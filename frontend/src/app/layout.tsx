@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 antialiased">
+      <body className="antialiased">
         <Providers>
           <ToastProvider>
             {/* MainLayout se monta UNA sola vez acá */}

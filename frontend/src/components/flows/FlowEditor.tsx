@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { FLOWS_QUERY_KEY } from '@/lib/hooks/useFlowsMin';
 import { Save, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +31,7 @@ interface FlowEditorProps {
 
 export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { flows, currentFlow, setCurrentFlow, addFlow, updateFlow, addStep, updateStep, deleteStep } = useFlowStore();
   
   const [editingStep, setEditingStep] = useState<FlowStep | null>(null);
@@ -108,6 +111,10 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
           steps: currentFlow.steps,
         });
       }
+      
+      // Invalidate flows query to update the sidebar menu
+      queryClient.invalidateQueries({ queryKey: FLOWS_QUERY_KEY });
+      
       // Navigate back to flows list
       router.push('/flujos');
     } catch (error) {
@@ -265,54 +272,102 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={isNew ? 'Nuevo Flujo' : 'Editar Flujo'}
-        subtitle={isNew ? 'Crea un nuevo flujo de trabajo automatizado' : 'Modifica tu flujo existente'}
-        onBack={handleCancel}
-        actions={
-          <>
+      {/* Modern Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 dark:from-blue-700 dark:via-purple-700 dark:to-indigo-800 rounded-2xl p-8 text-white shadow-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                {isNew ? '🚀 Crear Nuevo Flujo' : '✏️ Editar Flujo'}
+              </h1>
+              <p className="text-blue-100 text-lg">
+                {isNew 
+                  ? 'Diseña un flujo de trabajo automatizado paso a paso' 
+                  : 'Modifica y optimiza tu flujo existente'
+                }
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleCancel}
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              Cancelar
+            </Button>
             {currentFlow && !isNew && (
-              <>
-                <Button 
-                  onClick={handleStartFlow}
-                  variant="outline"
-                  className={designTokens.button.success}
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Iniciar Flujo
-                </Button>
-                <ExecuteFlowButton flow={currentFlow} />
-              </>
+              <Button 
+                onClick={handleStartFlow}
+                className="bg-green-500 hover:bg-green-600 text-white border-0"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Ejecutar
+              </Button>
             )}
-            <Button onClick={handleSave} className={designTokens.button.primary}>
+            <Button 
+              onClick={handleSave} 
+              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+            >
               <Save className="h-4 w-4 mr-2" />
               Guardar Flujo
             </Button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       {/* Templates for new flows */}
       {isNew && (
-        <Card className="p-4">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="font-semibold">Plantillas</h2>
+        <Card className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800 shadow-lg dark:shadow-gray-900/20">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">🛠️ Plantillas Predefinidas</h2>
+                <p className="text-gray-600 text-sm">Comienza rápido con flujos preconfigurados</p>
+              </div>
+            </div>
             <Button 
               variant="outline" 
-              size="sm"
               onClick={() => setShowTemplates(!showTemplates)}
+              className="bg-white/80 border-amber-300 text-amber-700 hover:bg-amber-100"
             >
-              {showTemplates ? 'Ocultar' : 'Ver'} Plantillas
+              {showTemplates ? '🔼 Ocultar' : '🔽 Ver'} Plantillas
             </Button>
           </div>
           
           {showTemplates && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
               {FLOW_TEMPLATES.map((template, index) => (
-                <div key={index} className="p-3 border rounded cursor-pointer hover:bg-gray-50" onClick={() => handleUseTemplate(template)}>
-                  <h4 className="font-medium text-sm">{template.name}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{template.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">{template.steps.length} pasos</p>
+                <div 
+                  key={index} 
+                  className="group p-4 bg-white dark:bg-gray-800 border-2 border-amber-200 dark:border-amber-700 rounded-xl cursor-pointer hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-md transition-all duration-200 transform hover:-translate-y-1"
+                  onClick={() => handleUseTemplate(template)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                      {template.name}
+                    </h4>
+                    <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-full font-medium">
+                      {template.steps.length} pasos
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{template.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-amber-600 font-medium">✨ Usar plantilla</span>
+                    <svg className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
               ))}
             </div>
@@ -320,28 +375,51 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
         </Card>
       )}
 
-      {/* Flow basic info */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Flow Configuration */}
+      <Card className="p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-0 shadow-lg dark:shadow-gray-900/20">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
           <div>
-            <Label htmlFor="name">Nombre del Flujo</Label>
+            <h2 className="text-xl font-bold text-gray-900">📝 Configuración Básica</h2>
+            <p className="text-gray-600">Define el nombre y descripción de tu flujo</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              🏷️ Nombre del Flujo
+              <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="name"
               value={flowData.name}
               onChange={(e) => setFlowData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ingrese el nombre del flujo"
+              placeholder="Ej: Proceso de Onboarding, Seguimiento de Leads..."
+              className="h-12 text-base border-2 focus:border-blue-500 transition-colors"
               required
             />
+            <p className="text-xs text-gray-500">Elige un nombre descriptivo y único</p>
           </div>
-          <div>
-            <Label htmlFor="description">Descripción (opcional)</Label>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              📝 Descripción
+              <span className="text-gray-400 text-xs">(opcional)</span>
+            </Label>
             <Textarea
               id="description"
               value={flowData.description}
               onChange={(e) => setFlowData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descripción del flujo"
-              rows={3}
+              placeholder="Describe qué hace este flujo y cuándo se ejecuta..."
+              className="min-h-[100px] text-base border-2 focus:border-blue-500 transition-colors resize-none"
+              rows={4}
             />
+            <p className="text-xs text-gray-500">Ayuda a otros usuarios a entender el propósito</p>
           </div>
         </div>
       </Card>

@@ -25,8 +25,8 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
   } else {
     const startNode = startNodes[0];
     // Check if start node has outgoing connections
-    const hasOutgoing = (flow?.steps || []).some(step => step.nextStepId === startNode.id);
-    if (!hasOutgoing) {
+    const hasOutgoing = startNode.nextStepId !== undefined;
+    if (!hasOutgoing && (flow?.steps || []).length > 1) {
       warnings.push('El nodo de inicio debería tener al menos una conexión de salida');
     }
   }
@@ -75,10 +75,7 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
     warnings.push(`${orphanSteps.length} paso(s) desconectado(s): ${orphanSteps.map(s => s.name).join(', ')}`);
   }
 
-  // Check if start node has connections (only if there are other steps)
-  if (startNode && !startNode.nextStepId && (flow?.steps || []).length > 1) {
-    warnings.push('El nodo de inicio no tiene conexiones de salida');
-  }
+
 
   // Check for steps without outgoing connections (potential dead ends)
   const stepsWithoutNext = (flow?.steps || []).filter(step => 

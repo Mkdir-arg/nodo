@@ -12,13 +12,13 @@ export default function NavSidebar() {
   useEffect(() => { refreshPlantillas(); }, [refreshPlantillas]);
 
   return (
-    <aside className="w-64 p-3 space-y-2">
+    <aside className="w-64 p-3 space-y-2 bg-background border-r border-border">
       {/* ... otros items (Dashboard, etc.) ... */}
 
       {/* Item Legajos con caret */}
       <div className="space-y-1">
         <button
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-100 border"
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground"
           onClick={() => setLegajosExpanded(!legajosExpanded)}
         >
           <span className="flex items-center gap-2">📊 <span>Legajos</span></span>
@@ -34,7 +34,7 @@ export default function NavSidebar() {
               <div key={p.id} className="flex items-center justify-between group">
                 <Link
                   href={`/legajos?formId=${p.id}`}
-                  className={`px-2 py-1 rounded hover:bg-gray-100 text-sm ${pathname?.startsWith('/legajos') ? 'font-medium' : ''}`}
+                  className={`px-2 py-1 rounded hover:bg-muted text-sm text-foreground ${pathname?.startsWith('/legajos') ? 'font-medium' : ''}`}
                 >
                   {p.nombre}
                 </Link>
@@ -50,7 +50,7 @@ export default function NavSidebar() {
       </div>
 
       {/* Item Plantillas (catálogo) */}
-      <Link href="/plantillas" className={`block px-3 py-2 rounded-xl hover:bg-gray-100 border ${pathname==='/plantillas'?'bg-gray-50':''}`}>📄 Plantillas</Link>
+      <Link href="/plantillas" className={`block px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground ${pathname==='/plantillas'?'bg-muted':''}`}>📄 Plantillas</Link>
     </aside>
   );
 }

@@ -11,7 +11,7 @@ export function useFlowMonitor(flowSlug: string, enabled: boolean = true) {
     enabled: enabled && !!flowSlug,
     refetchInterval: (data) => {
       // Refetch every 2 seconds if there are running instances
-      const hasRunning = data?.some((instance: any) => 
+      const hasRunning = Array.isArray(data) && data.some((instance: any) => 
         ['pending', 'running'].includes(instance.status)
       );
       return hasRunning ? 2000 : false;

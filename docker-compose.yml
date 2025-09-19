@@ -48,7 +48,7 @@ services:
     networks:
       - nodo-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
       interval: 30s
       timeout: 10s
       retries: 3

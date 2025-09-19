@@ -7,7 +7,9 @@ import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
+import { useFlowsMin } from '@/lib/hooks/useFlowsMin';
 import LegajosMenu from './LegajosMenu';
+import FlowsMenu from './FlowsMenu';
 
 interface SideNavProps {
   open: boolean;
@@ -27,6 +29,7 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const configuracionesItem = NAV_ITEMS.find((i) => i.label === 'Configuraciones');
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const { data } = usePlantillasMin();
+  const { data: flowsData } = useFlowsMin();
 
   const legajoItems = useMemo(() => {
     const base = [{
@@ -42,6 +45,20 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
     }));
     return [...base, ...plantillas];
   }, [data]);
+
+  const flowItems = useMemo(() => {
+    const base = [{
+      id: 'ver',
+      label: 'Ver flujos',
+      href: '/flujos',
+    }];
+    const flows = (flowsData ?? []).map((f: any) => ({
+      id: String(f.id),
+      label: f.name,
+      href: `/flujos/${f.slug || f.id}`,
+    }));
+    return [...base, ...flows];
+  }, [flowsData]);
 
   return (
     <aside
@@ -68,6 +85,8 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
           )}
 
           <LegajosMenu items={legajoItems} />
+
+          <FlowsMenu items={flowItems} />
 
           {configuracionesItem && (
             <div>
