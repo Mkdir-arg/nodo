@@ -6,6 +6,25 @@ const nextConfig = {
     turbo: {},
     optimizePackageImports: ['lucide-react'],
   },
+  // Deshabilitar cache en desarrollo
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
+  // Headers para evitar cache del navegador
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

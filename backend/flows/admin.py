@@ -21,7 +21,7 @@ class EjecucionFlujoAdmin(admin.ModelAdmin):
 
 @admin.register(InstanciaFlujo)
 class InstanciaFlujoAdmin(admin.ModelAdmin):
-    list_display = ['flow', 'legajo_id', 'plantilla_id', 'status', 'started_at', 'completed_at']
+    list_display = ['flow', 'legajo_id', 'status', 'started_at', 'completed_at']
     list_filter = ['status', 'started_at', 'flow']
-    search_fields = ['legajo_id', 'plantilla_id', 'flow__name']
+    search_fields = ['legajo_id', 'flow__name']
     readonly_fields = ['started_at', 'completed_at']

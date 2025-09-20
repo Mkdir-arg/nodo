@@ -7,6 +7,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import { LegajosService } from '@/lib/services/legajos';
 import { PlantillasService } from '@/lib/services/plantillas';
+import { SendToFlowButton } from './SendToFlowButton';
 
 const cols = 'grid grid-cols-[1fr_200px_160px_120px_40px] gap-4 items-center';
 const PAGE_SIZE = 10;
@@ -295,6 +296,7 @@ function Row({
             >
               Ver detalle
             </button>
+            <SendToFlowButton legajoId={data.id} />
           </div>
         </div>
       </div>

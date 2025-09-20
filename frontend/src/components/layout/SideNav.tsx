@@ -47,17 +47,12 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   }, [data]);
 
   const flowItems = useMemo(() => {
-    const base = [{
-      id: 'ver',
-      label: 'Ver flujos',
-      href: '/flujos',
-    }];
     const flows = (flowsData ?? []).map((f: any) => ({
       id: String(f.id),
       label: f.name,
-      href: `/flujos/${f.slug || f.id}`,
+      href: `/flujos/runtime/flow-${f.id}`,
     }));
-    return [...base, ...flows];
+    return flows;
   }, [flowsData]);
 
   return (

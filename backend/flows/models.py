@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 import json
+import uuid
 
 
 def default_execution_data():
@@ -9,6 +11,10 @@ def default_execution_data():
 
 def default_steps_data():
     return []
+
+
+def default_context():
+    return {'variables': {}, 'forms': {}, 'evaluations': {}}
 
 
 class Flujo(models.Model):
@@ -95,21 +101,62 @@ class EjecucionFlujo(models.Model):
         return f"{self.flow.name} - {self.status}"
 
 
+class Step(models.Model):
+    STEP_TYPES = [
+        ('start', 'Start'),
+        ('form', 'Form'),
+        ('evaluation', 'Evaluation'),
+        ('email', 'Email'),
+        ('http', 'HTTP'),
+        ('delay', 'Delay'),
+        ('condition', 'Condition'),
+        ('database', 'Database'),
+        ('transform', 'Transform'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    flow = models.ForeignKey(Flujo, on_delete=models.CASCADE, related_name='flow_steps')
+    step_type = models.CharField(max_length=20, choices=STEP_TYPES)
+    name = models.CharField(max_length=255)
+    config = models.JSONField(default=dict)
+    ui_metadata = models.JSONField(default=dict)
+    order = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['order']
+        
+    def __str__(self):
+        return f"{self.flow.name} - {self.name}"
+
+
+class Transition(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    from_step = models.ForeignKey(Step, on_delete=models.CASCADE, related_name='outgoing_transitions')
+    to_step = models.ForeignKey(Step, on_delete=models.CASCADE, related_name='incoming_transitions')
+    label = models.CharField(max_length=255, blank=True)
+    condition = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"{self.from_step.name} -> {self.to_step.name}"
+
+
 class InstanciaFlujo(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pendiente'),
         ('running', 'Ejecutando'),
+        ('paused', 'Pausada'),
         ('completed', 'Completado'),
         ('failed', 'Fallido'),
         ('cancelled', 'Cancelado'),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     flow = models.ForeignKey(Flujo, on_delete=models.CASCADE, related_name='instances')
-    legajo_id = models.CharField(max_length=255)
-    plantilla_id = models.CharField(max_length=255)
+    legajo_id = models.UUIDField()
+    current_step = models.ForeignKey(Step, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    context_json = models.JSONField(default=default_execution_data)
-    result_json = models.JSONField(default=default_execution_data)
+    context = models.JSONField(default=default_context)
+    resume_at = models.DateTimeField(null=True, blank=True)
     error_message = models.TextField(blank=True, null=True)
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
@@ -120,3 +167,26 @@ class InstanciaFlujo(models.Model):
 
     def __str__(self):
         return f"{self.flow.name} - {self.legajo_id} - {self.status}"
+
+
+class InstanceLog(models.Model):
+    LEVEL_CHOICES = [
+        ('info', 'Info'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    instance = models.ForeignKey(InstanciaFlujo, on_delete=models.CASCADE, related_name='logs')
+    step = models.ForeignKey(Step, on_delete=models.SET_NULL, null=True, blank=True)
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default='info')
+    message = models.TextField()
+    data = models.JSONField(default=dict)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        
+    def __str__(self):
+        return f"{self.instance} - {self.level} - {self.message[:50]}"

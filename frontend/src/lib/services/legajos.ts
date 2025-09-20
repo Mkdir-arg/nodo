@@ -1,7 +1,7 @@
 // frontend/src/services/legajos.ts
 "use client";
 
-import { fetchJSONAuth } from "@/services/request";
+import { getJSON, postJSON } from "@/lib/api";
 
 export type CrearLegajoPayload = {
   plantilla_id: string;              // UUID/ID de la plantilla
@@ -11,10 +11,7 @@ export type CrearLegajoPayload = {
 export const LegajosService = {
   // POST /api/legajos/
   create: (payload: CrearLegajoPayload) =>
-    fetchJSONAuth<any>("legajos/", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    postJSON("/api/legajos/", payload),
 
   // GET /api/legajos/?plantilla_id=...&page=...&page_size=...&search=...
   list: (params: { formId?: string; page?: number; page_size?: number; search?: string } = {}) => {
@@ -24,9 +21,9 @@ export const LegajosService = {
     if (params.page_size) q.set("page_size", String(params.page_size));
     if (params.search) q.set("search", params.search);
     const qs = q.toString();
-    return fetchJSONAuth<any>(`legajos/${qs ? `?${qs}` : ""}`);
+    return getJSON<any>(`/api/legajos/${qs ? `?${qs}` : ""}`);
   },
 
   // GET /api/legajos/:id/
-  get: (id: string) => fetchJSONAuth<any>(`legajos/${id}/`),
+  get: (id: string) => getJSON<any>(`/api/legajos/${id}/`),
 };

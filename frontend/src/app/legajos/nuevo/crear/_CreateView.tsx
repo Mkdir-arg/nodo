@@ -49,8 +49,12 @@ export default function CreateView({ formId }: { formId: string }) {
         if (mutation.isPending) return;
         try {
           await mutation.mutateAsync({ plantilla_id: formId, data: values });
-          await queryClient.invalidateQueries({ queryKey: ["legajos", formId] });
-          router.push(`/legajos/nuevo?formId=${formId}`);
+          // Invalidar todas las queries relacionadas
+          await queryClient.invalidateQueries({ queryKey: ["legajos"] });
+          await queryClient.invalidateQueries({ queryKey: ["plantillas"] });
+          // Mostrar éxito y redirigir
+          alert("Legajo creado exitosamente");
+          router.push(`/legajos`);
         } catch (e) {
           console.error(e);
           const message = e instanceof Error ? e.message : "No se pudo crear el legajo";

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Form Rendering</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { max-width: 600px; margin: 0 auto; }
+        .field { margin-bottom: 16px; }
+        .label { display: block; font-weight: 500; margin-bottom: 4px; }
+        .input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; }
+        .button { background: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+        .button:hover { background: #2563eb; }
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        function FormRenderer({ title, description, fields, onSubmit, processing = false, submitLabel = "Continuar" }) {
+            const handleSubmit = (e) => {
+                e.preventDefault()
+                const form = e.target
+                const formData = new FormData(form)
+                const data = {}
+                
+                for (const [key, value] of formData.entries()) {
+                    if (data[key]) {
+                        if (Array.isArray(data[key])) {
+                            data[key].push(value)
+                        } else {
+                            data[key] = [data[key], value]
+                        }
+                    } else {
+                        data[key] = value
+                    }
+                }
+                
+                onSubmit(data)
+            }
+
+            return (
+                <div className="form-container">
+                    <div style={{ marginBottom: '24px' }}>
+                        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>{title}</h2>
+                        {description && <p style={{ color: '#666' }}>{description}</p>}
+                    </div>
+                    
+                    <form onSubmit={handleSubmit}>
+                        {fields.map((field) => (
+                            <div key={field.name} className="field">
+                                <label className="label">
+                                    {field.label}
+                                    {field.required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}
+                                </label>
+                                
+                                {field.type === 'text' && (
+                                    <input
+                                        type="text"
+                                        name={field.name}
+                                        placeholder={field.placeholder}
+                                        required={field.required}
+                                        className="input"
+                                    />
+                                )}
+                                
+                                {field.type === 'email' && (
+                                    <input
+                                        type="email"
+                                        name={field.name}
+                                        placeholder={field.placeholder}
+                                        required={field.required}
+                                        className="input"
+                                    />
+                                )}
+                                
+                                {field.type === 'tel' && (
+                                    <input
+                                        type="tel"
+                                        name={field.name}
+                                        placeholder={field.placeholder}
+                                        required={field.required}
+                                        className="input"
+                                    />
+                                )}
+                                
+                                {field.type === 'number' && (
+                                    <input
+                                        type="number"
+                                        name={field.name}
+                                        placeholder={field.placeholder}
+                                        required={field.required}
+                                        min="0"
+                                        className="input"
+                                    />
+                                )}
+                                
+                                {field.type === 'checkbox-group' && (
+                                    <div className="checkbox-group">
+                                        {field.options?.map((option) => (
+                                            <div key={option.value} className="checkbox-item">
+                                                <input
+                                                    type="checkbox"
+                                                    name={field.name}
+                                                    value={option.value}
+                                                />
+                                                <span>{option.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="button"
+                            style={{ width: '100%', marginTop: '16px' }}
+                        >
+                            {processing ? 'Procesando...' : submitLabel}
+                        </button>
+                    </form>
+                </div>
+            )
+        }
+
+        function TestApp() {
+            const [step, setStep] = React.useState(0)
+            
+            const steps = [
+                {
+                    title: 'Paso 1: Información del Candidato',
+                    description: 'Complete la información básica del candidato',
+                    fields: [
+                        { name: 'nombre', type: 'text', label: 'Nombre completo', required: true, placeholder: 'Ej: Juan Pérez' },
+                        { name: 'email', type: 'email', label: 'Email', required: true, placeholder: 'juan@ejemplo.com' },
+                        { name: 'telefono', type: 'tel', label: 'Teléfono', placeholder: '+54 11 1234-5678' }
+                    ]
+                },
+                {
+                    title: 'Paso 2: Experiencia Laboral',
+                    description: 'Proporcione detalles sobre su experiencia',
+                    fields: [
+                        { name: 'experiencia', type: 'number', label: 'Años de experiencia', required: true },
+                        { 
+                            name: 'tecnologias', 
+                            type: 'checkbox-group', 
+                            label: 'Tecnologías principales',
+                            options: [
+                                { value: 'javascript', label: 'JavaScript' },
+                                { value: 'python', label: 'Python' },
+                                { value: 'java', label: 'Java' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+            
+            const handleSubmit = (data) => {
+                console.log('Form data:', data)
+                alert('Datos enviados: ' + JSON.stringify(data, null, 2))
+                if (step < steps.length - 1) {
+                    setStep(step + 1)
+                } else {
+                    alert('¡Flujo completado!')
+                }
+            }
+            
+            return (
+                <div>
+                    <h1>Test de Renderizado de Formularios</h1>
+                    <p>Paso {step + 1} de {steps.length}</p>
+                    <FormRenderer
+                        {...steps[step]}
+                        onSubmit={handleSubmit}
+                        submitLabel={step < steps.length - 1 ? 'Siguiente' : 'Finalizar'}
+                    />
+                </div>
+            )
+        }
+
+        ReactDOM.render(<TestApp />, document.getElementById('root'))
+    </script>
+</body>
+</html>

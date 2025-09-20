@@ -8,7 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { sanitizeHtml, sanitizeUrl, validateEmail } from '@/lib/utils/sanitize';
 import StartNodeProperties from './StartNodeProperties';
-import type { FlowStep, ActionType, StartConfig } from '@/lib/flows/types';
+import { FormConfigEditor } from './FormConfigEditor';
+import { EvaluationConfigEditor } from './EvaluationConfigEditor';
+import type { FlowStep, ActionType, StartConfig, FormConfig, FormField, EvaluationConfig, EvaluationQuestion } from '@/lib/flows/types';
 import { ACTION_TYPES } from '@/lib/flows/types';
 
 interface StepFormProps {
@@ -278,6 +280,12 @@ export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] 
             </div>
           </>
         );
+
+      case 'form':
+        return <FormConfigEditor config={formData.config as FormConfig} onChange={updateConfig} />;
+
+      case 'evaluation':
+        return <EvaluationConfigEditor config={formData.config as EvaluationConfig} onChange={updateConfig} />;
 
       case 'transform':
         return (

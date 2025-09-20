@@ -11,7 +11,7 @@ export const conditionSchema = z.object({
 export type Condition = z.infer<typeof conditionSchema>;
 
 export const fieldType = z.enum([
-  "text","number","date","select","multiselect","boolean","textarea","file"
+  "text","email","number","date","select","multiselect","boolean","checkbox","textarea","file"
 ]);
 export type FieldType = z.infer<typeof fieldType>;
 

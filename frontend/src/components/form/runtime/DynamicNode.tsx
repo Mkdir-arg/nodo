@@ -4,6 +4,7 @@ import { evalConditions } from "@/lib/form-builder/visibility";
 import TextField from "./fields/TextField";
 import NumberField from "./fields/NumberField";
 import SelectField from "./fields/SelectField";
+import CheckboxField from "./fields/CheckboxField";
 import DateField from "./fields/DateField";
 import DocumentField from "./fields/DocumentField";
 import SumField from "./fields/SumField";
@@ -123,12 +124,15 @@ export default function DynamicNode({ node, prefix="" }:{node:any, prefix?:strin
   const field = { ...node, key };
   switch (node.type) {
     case "text":
+    case "email":
     case "textarea": return <TextField field={field} />;
     case "number": return <NumberField field={field} />;
     case "select":
     case "dropdown":
     case "multiselect":
     case "select_with_filter": return <SelectField field={field} />;
+    case "checkbox":
+    case "boolean": return <CheckboxField field={field} />;
     case "date": return <DateField field={field} />;
     case "document": return <DocumentField field={field} />;
     case "sum": return <SumField field={field} />;

@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getJSON } from "@/lib/api";
+import { SendToFlowButton } from "@/components/legajos/SendToFlowButton";
 
 type ListResponse = {
   results: Array<Record<string, any>>;
@@ -184,6 +185,7 @@ function Row({
             <button onClick={onEditar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
               Editar
             </button>
+            <SendToFlowButton legajoId={data.id} />
           </div>
         </div>
       </div>

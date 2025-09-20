@@ -1,6 +1,12 @@
 // frontend/src/lib/api/index.ts
 import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
-import { getApiBase } from "@/services/api";
+// Función para obtener la base de la API
+function getApiBase(): string {
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+  }
+  return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+}
 
 /** Construye URL de API */
 function apiUrl(path = ""): string {

@@ -7,7 +7,13 @@ export default function TextField({ field }:{field:any}) {
   return (
     <div className="flex flex-col">
       <label className="mb-1" htmlFor={id}>{field.label}</label>
-      <input id={id} className="border rounded px-2 py-1" {...register(field.key)} placeholder={field.placeholder} />
+      <input 
+        id={id} 
+        type={field.type === 'email' ? 'email' : field.type === 'textarea' ? 'text' : 'text'}
+        className="border rounded px-2 py-1" 
+        {...register(field.key)} 
+        placeholder={field.placeholder} 
+      />
     </div>
   );
 }

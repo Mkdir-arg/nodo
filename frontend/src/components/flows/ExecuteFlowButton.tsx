@@ -15,27 +15,34 @@ export default function ExecuteFlowButton({ flow, onExecutionComplete }: Execute
   const [isExecuting, setIsExecuting] = useState(false);
 
   const handleExecute = async () => {
-    if (flow.steps.length === 0) {
-      alert('El flujo debe tener al menos un paso para ejecutarse');
-      return;
-    }
-
     setIsExecuting(true);
     try {
-      const result = await flowsApi.executeFlow(flow.id);
-      onExecutionComplete?.(result);
+      // Crear instancia real en DB
+      const response = await fetch('http://localhost:8000/api/create-instance/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          flow: flow.id,
+          legajo_id: crypto.randomUUID()
+        })
+      });
       
-      if (result.status === 'completed') {
-        alert('Flujo ejecutado exitosamente');
-      } else if (result.status === 'failed') {
-        alert(`Error en la ejecución: ${result.error_message}`);
+      if (response.ok) {
+        const instance = await response.json();
+        console.log('Instance created in DB:', instance);
+        window.location.href = `/flujos/runtime/${instance.id}`;
+        return;
       }
     } catch (error) {
-      alert('Error al ejecutar el flujo');
-      console.error('Execution error:', error);
-    } finally {
-      setIsExecuting(false);
+      console.error('Failed to create instance:', error);
     }
+    
+    // Fallback a mock
+    const mockInstanceId = `mock-${Date.now()}`;
+    window.location.href = `/flujos/runtime/${mockInstanceId}`;
+    setIsExecuting(false);
   };
 
   return (
