@@ -32,7 +32,18 @@ interface FlowEditorProps {
 export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { flows, currentFlow, setCurrentFlow, addFlow, updateFlow, addStep, updateStep, deleteStep } = useFlowStore();
+  const { flows, currentFlow, setCurrentFlow, addFlow, updateFlow, addStep, updateStep, deleteStep, loadFlows } = useFlowStore();
+  
+  console.log('FlowEditor mounted with flowId:', flowId);
+  console.log('useFlowStore flows:', flows);
+  
+  // Cargar flujos usando el store
+  useEffect(() => {
+    if (!flows || flows.length === 0) {
+      console.log('Flows empty, loading from store...');
+      loadFlows();
+    }
+  }, [flows, loadFlows]);
   
   const [editingStep, setEditingStep] = useState<FlowStep | null>(null);
   const [showStepForm, setShowStepForm] = useState(false);
@@ -49,10 +60,16 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
       setCurrentFlow(null);
       setFlowData({ name: '', description: '' });
     } else if (flowId) {
-      const flow = flows?.find(f => f.id === flowId);
+      console.log('Loading flow with ID:', flowId);
+      console.log('Available flows:', flows);
+      const flow = flows?.find(f => String(f.id) === String(flowId));
+      console.log('Found flow:', flow);
       if (flow) {
         setCurrentFlow(flow);
         setFlowData({ name: flow.name, description: flow.description || '' });
+        console.log('Flow loaded with steps:', flow.steps);
+      } else {
+        console.log('Flow not found, available IDs:', flows?.map(f => f.id));
       }
     }
   }, [flowId, isNew, flows, setCurrentFlow]);

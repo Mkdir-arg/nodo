@@ -12,7 +12,7 @@ import { SkeletonCard } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
 
 type Estado = 'TODAS' | 'ACTIVO' | 'INACTIVO';
-const cols = 'grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center';
+const cols = 'grid grid-cols-5 gap-4 items-center';
 
 export default function PlantillasPage() {
   const router = useRouter();
@@ -126,13 +126,14 @@ export default function PlantillasPage() {
 
       {/* Tabla / Empty / Loader */}
       <div className="rounded-2xl border bg-white overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-gray-50 dark:bg-slate-700 ${cols}`}>
-          <div>Nombre</div>
+        <div className={`px-6 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 ${cols}`}>
+          <div>Plantilla</div>
           <div>Versión</div>
           <div>Actualizado</div>
           <div>Estado</div>
-          <div></div>
+          <div>Acciones</div>
         </div>
+
 
         {isLoading ? (
           <SkeletonRows />
@@ -163,22 +164,22 @@ export default function PlantillasPage() {
 
       {/* Footer paginación */}
       <div className="flex items-center justify-between text-sm">
-        <div className="opacity-70">{isFetching ? 'Actualizando…' : `${total} resultados`}</div>
+        <div className="opacity-70 dark:text-gray-300">{isFetching ? 'Actualizando…' : `${total} resultados`}</div>
         <div className="flex gap-2">
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
+            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
           >
             Anterior
           </button>
-          <div className="px-2 py-1">
+          <div className="px-2 py-1 dark:text-gray-300">
             {page} / {totalPages}
           </div>
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
+            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700"
           >
             Siguiente
           </button>
@@ -221,42 +222,39 @@ function Row({
   const fecha = formatDate(data.updated_at || data.updatedAt || data.updated || data.created_at);
   const estado = String(data.estado || 'ACTIVO').toUpperCase();
   return (
-    <div className={`px-4 py-3 ${cols}`}>
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 grid place-items-center rounded-lg bg-sky-100 dark:bg-sky-900">📄</div>
+    <div className={`px-6 py-5 ${cols}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 grid place-items-center rounded-lg bg-sky-100 dark:bg-sky-900">📄</div>
         <div>
-          <div className="font-medium">{data.nombre}</div>
-          <div className="text-xs opacity-60">{data.descripcion || '—'}</div>
-          <div className="mt-2 flex gap-2">
-            <button onClick={onEditar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
-              Editar
-            </button>
-            <button onClick={onPreview} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
-              Previsualizar
-            </button>
-            <button onClick={onUsar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
-              Usar
-            </button>
-            <button onClick={onDuplicar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
-              Duplicar
-            </button>
-            <button
-              onClick={onEliminar}
-              className="text-xs px-2 py-1 rounded border text-red-600 dark:border-slate-700 dark:hover:bg-slate-700"
-            >
-              Eliminar
-            </button>
-          </div>
+          <div className="font-medium text-base dark:text-white mb-1">{data.nombre}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">{data.descripcion || '—'}</div>
         </div>
       </div>
-      <div className="text-sm tabular-nums">v{data.version ?? 1}</div>
-      <div className="text-sm">{fecha}</div>
+      
+      <div className="text-sm font-medium dark:text-gray-300">v{data.version ?? 1}</div>
+      
+      <div className="text-sm dark:text-gray-300">{fecha}</div>
+      
       <div>
-        <span className={`px-2 py-1 rounded-full text-xs ${estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
           {estado}
         </span>
       </div>
-      <div></div>
+      
+      <div className="flex gap-2">
+        <button onClick={onEditar} className="text-sm px-3 py-1.5 rounded border dark:border-slate-600 dark:hover:bg-slate-700 dark:text-gray-300 hover:bg-gray-50">
+          Editar
+        </button>
+        <button onClick={onPreview} className="text-sm px-3 py-1.5 rounded border dark:border-slate-600 dark:hover:bg-slate-700 dark:text-gray-300 hover:bg-gray-50">
+          Preview
+        </button>
+        <button onClick={onUsar} className="text-sm px-3 py-1.5 rounded border dark:border-slate-600 dark:hover:bg-slate-700 dark:text-gray-300 hover:bg-gray-50">
+          Usar
+        </button>
+        <button onClick={onEliminar} className="text-sm px-3 py-1.5 rounded border text-red-600 dark:border-slate-600 dark:hover:bg-slate-700 dark:text-red-400 hover:bg-red-50">
+          Eliminar
+        </button>
+      </div>
     </div>
   );
 }
@@ -275,8 +273,8 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="px-6 py-12 text-center">
       <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-sky-100">✨</div>
-      <h3 className="text-lg font-semibold mb-1">No hay plantillas</h3>
-      <p className="text-sm opacity-70 mb-4">Crea tu primera plantilla para empezar a cargar legajos.</p>
+      <h3 className="text-lg font-semibold mb-1 dark:text-white">No hay plantillas</h3>
+      <p className="text-sm opacity-70 mb-4 dark:text-gray-300">Crea tu primera plantilla para empezar a cargar legajos.</p>
       <button onClick={onCreate} className="px-4 py-2 rounded-xl bg-sky-600 text-white">
         + Crear plantilla
       </button>
