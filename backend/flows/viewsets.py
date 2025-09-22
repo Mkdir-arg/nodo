@@ -341,22 +341,84 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def current_step(self, request, pk=None):
-        """Obtiene el HTML del paso actual"""
+        """Obtiene los datos del paso actual"""
         instance = self.get_object()
+        
+        print(f"[DEBUG] Instance: {instance.id}")
+        print(f"[DEBUG] Current step: {instance.current_step}")
+        print(f"[DEBUG] Flow: {instance.flow.name}")
+        print(f"[DEBUG] Status: {instance.status}")
+        
+        # Si no tiene current_step, usar el segundo paso del flujo desde steps_data
+        if not instance.current_step:
+            steps_data = instance.flow.steps_data or []
+            if len(steps_data) >= 2:
+                second_step = steps_data[1]
+                instance.status = 'running'
+                instance.save()
+                print(f"[DEBUG] Found second step: {second_step.get('name')} ({second_step.get('type')})")
+                
+                # Devolver datos del segundo paso directamente
+                step_config = second_step.get('config', {})
+                if second_step.get('type') == 'form':
+                    return Response({
+                        'type': 'form',
+                        'title': step_config.get('title', 'Formulario'),
+                        'description': step_config.get('description', 'Complete los campos'),
+                        'fields': step_config.get('fields', [
+                            {'name': 'nombre', 'type': 'text', 'label': 'Nombre', 'required': True},
+                            {'name': 'email', 'type': 'email', 'label': 'Email', 'required': True}
+                        ]),
+                        'transitions': [{'id': 'submit', 'label': 'Enviar', 'to_step_id': 'next'}],
+                        'status': instance.status,
+                        'current_step_id': second_step.get('id')
+                    })
+                elif second_step.get('type') == 'email':
+                    return Response({
+                        'type': 'email',
+                        'title': 'Enviar Email',
+                        'description': f"Enviando email a: {step_config.get('to', 'destinatario')}",
+                        'config': step_config,
+                        'transitions': [{'id': 'send', 'label': 'Enviar Email', 'to_step_id': 'next'}],
+                        'status': instance.status,
+                        'current_step_id': second_step.get('id')
+                    })
+        
+        if instance.current_step:
+            print(f"[DEBUG] Step type: {instance.current_step.step_type}")
+            print(f"[DEBUG] Step name: {instance.current_step.name}")
+            print(f"[DEBUG] Step config: {instance.current_step.config}")
+        
         runtime = FlowRuntime(instance)
         
         try:
-            html = runtime.get_current_step_html()
+            step_data = runtime.get_current_step_html()
             transitions = runtime.get_available_transitions()
             
+            print(f"[DEBUG] Step data type: {type(step_data)}")
+            print(f"[DEBUG] Step data: {step_data}")
+            
+            # Si es un diccionario (formulario), devolverlo directamente
+            if isinstance(step_data, dict):
+                step_data.update({
+                    'transitions': transitions,
+                    'status': instance.status,
+                    'current_step_id': str(instance.current_step.id) if instance.current_step else None
+                })
+                return Response(step_data)
+            
+            # Si es HTML, devolverlo en el formato anterior
             return Response({
-                'html': html,
+                'html': step_data,
                 'transitions': transitions,
                 'status': instance.status,
                 'current_step_id': str(instance.current_step.id) if instance.current_step else None
             })
             
         except Exception as e:
+            print(f"[DEBUG] Error in current_step: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response(
                 {'error': str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
