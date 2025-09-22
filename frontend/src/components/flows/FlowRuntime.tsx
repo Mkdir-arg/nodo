@@ -7,55 +7,7 @@ import { FormRenderer } from './FormRenderer'
 import { StartTable } from './StartTable'
 import { toast } from '@/lib/toast'
 
-// Mock data para testing
-const getMockStepData = (stepId: string) => {
-  const steps: Record<string, any> = {
-    start: {
-      type: 'start',
-      title: 'Seleccionar Legajo',
-      description: 'Seleccione un legajo para iniciar el proceso',
-      config: {
-        tableColumns: [
-          { key: 'id', label: 'ID' },
-          { key: 'created_at', label: 'Creado' },
-          { key: 'text', label: 'Nombre' },
-          { key: 'descripcion', label: 'Apellido' },
-          { key: 'telefono', label: 'Campo' }
-        ]
-      },
-      legajos: [
-        { id: '1', created_at: '2024-01-15', text: 'Juan', descripcion: 'Pérez', telefono: '+54 11 1234-5678', email: 'juan@test.com', estado: 'Activo' },
-        { id: '2', created_at: '2024-01-14', text: 'María', descripcion: 'García', telefono: '+54 11 9876-5432', email: 'maria@test.com', estado: 'Activo' },
-        { id: '3', created_at: '2024-01-13', text: 'Carlos', descripcion: 'López', telefono: '+54 11 5555-1234', email: 'carlos@test.com', estado: 'Pendiente' }
-      ],
-      transitions: [{ id: 'select', label: 'Enviar Email', to_step_id: 'email' }],
-      status: 'running',
-      current_step_id: 'start'
-    },
-    email: {
-      type: 'email',
-      title: 'Enviando Email',
-      description: 'Se está enviando el email al legajo seleccionado',
-      config: {
-        to: '{{legajo.email}}',
-        subject: 'Notificación del Sistema',
-        body: 'Hola {{legajo.nombre}}, este es un email automático del sistema.'
-      },
-      transitions: [{ id: 'complete', label: 'Finalizar', to_step_id: 'completed' }],
-      status: 'running',
-      current_step_id: 'email'
-    },
-    completed: {
-      type: 'completed',
-      title: 'Proceso Completado',
-      description: 'El email ha sido enviado exitosamente',
-      status: 'completed',
-      current_step_id: 'completed'
-    }
-  }
-  
-  return steps[stepId] || steps.start
-}
+
 
 interface FlowRuntimeProps {
   instanceId: string
@@ -96,142 +48,88 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
   
   const loadLegajos = async () => {
     try {
-      // Si es flow-X, cargar todas las instancias de ese flujo
-      if (instanceId.startsWith('flow-')) {
-        const flowId = instanceId.replace('flow-', '')
-        const response = await fetch(`http://localhost:8000/api/flow-instances/?flow=${flowId}`)
-        
-        if (response.ok) {
-          const instances = await response.json()
-          console.log('Instances loaded:', instances)
-          
-          // Convertir instancias a formato de legajos
-          const legajosFromInstances = instances.map((instance: any, index: number) => ({
-            id: instance.legajo_id,
-            nombre: `Legajo ${instance.legajo_id.slice(0, 8)}`,
-            email: `legajo-${instance.legajo_id.slice(0, 8)}@test.com`,
-            telefono: '+54 11 1234-5678',
-            estado: 'Enviado a Flujo',
-            instanceId: instance.id,
-            createdAt: instance.started_at || instance.created_at
-          }))
-          
-          setStepData(prev => prev ? {
-            ...prev,
-            legajos: legajosFromInstances
-          } : null)
-          return
-        }
+      const response = await fetch('http://localhost:8000/api/legajos/')
+      
+      if (!response.ok) {
+        throw new Error('Error cargando legajos')
       }
       
-      // Si tenemos instanceData, mostrar solo el legajo de esa instancia
-      if (instanceData && instanceData.legajo_id && !instanceId.startsWith('flow-')) {
-        const legajoRecord = {
-          id: instanceData.legajo_id,
-          nombre: `Legajo ${instanceData.legajo_id.slice(0, 8)}`,
-          email: `legajo-${instanceData.legajo_id.slice(0, 8)}@test.com`,
-          telefono: '+54 11 1234-5678',
-          estado: 'Seleccionado'
+      const legajosData = await response.json()
+      console.log('Legajos loaded:', legajosData)
+      
+      const legajosFormatted = (legajosData.results || legajosData).map((legajo: any) => {
+        const data = legajo.data || {}
+        return {
+          id: legajo.id,
+          created_at: legajo.created_at,
+          text: data.text || '',
+          descripcion: data.descripcion || '',
+          email: data.email || '',
+          telefono: data.telefono || '',
+          estado: 'Activo'
         }
-        
-        setStepData(prev => prev ? {
-          ...prev,
-          legajos: [legajoRecord]
-        } : null)
-        return
-      }
+      })
+      
+      setStepData(prev => prev ? {
+        ...prev,
+        legajos: legajosFormatted
+      } : null)
       
     } catch (error) {
-      console.log('Error loading legajos:', error)
+      console.error('Error loading legajos:', error)
+      toast.error('Error cargando legajos')
     }
-    
-    // Fallback a legajos mock
-    setStepData(prev => prev ? {
-      ...prev,
-      legajos: [
-        { id: '1', nombre: 'Juan Pérez', email: 'juan@test.com', telefono: '+54 11 1234-5678', estado: 'Activo' },
-        { id: '2', nombre: 'María García', email: 'maria@test.com', telefono: '+54 11 9876-5432', estado: 'Activo' }
-      ]
-    } : null)
   }
 
   const loadCurrentStep = async () => {
     try {
       setLoading(true)
       
-      // Si es una instancia mock o flow, cargar configuración real del flujo
-      if (instanceId.startsWith('mock-') || instanceId.startsWith('flow-')) {
-        const mockInstance = {
-          id: instanceId,
-          flow: instanceId.startsWith('flow-') ? instanceId.replace('flow-', '') : '1',
-          legajo_id: 'e9705ac1-aae6-4ff3-a2c0-d8f92e8b5bff',
-          status: 'pending'
-        }
-        setInstanceData(mockInstance)
+      if (instanceId.startsWith('flow-')) {
+        const flowId = instanceId.replace('flow-', '')
+        const flowResponse = await fetch(`http://localhost:8000/api/flows/${flowId}/`)
         
-        // Intentar cargar configuración real del flujo
-        try {
-          const flowId = mockInstance.flow
-          const flowResponse = await fetch(`http://localhost:8000/api/flows/${flowId}/`)
-          if (flowResponse.ok) {
-            const flowData = await flowResponse.json()
-            console.log('Flow data:', flowData)
-            
-            // Buscar en steps (que viene de steps_data en el serializer)
-            const steps = flowData.steps || []
-            const startStep = steps.find((step: any) => step.type === 'start')
-            
-            if (startStep?.config?.tableColumns) {
-              console.log('Found start step config:', startStep.config)
-              const mockData = getMockStepData('start')
-              mockData.config = startStep.config
-              setStepData(mockData)
-              return
-            }
+        if (!flowResponse.ok) {
+          throw new Error('No se pudo cargar el flujo')
+        }
+        
+        const flowData = await flowResponse.json()
+        console.log('Flow data:', flowData)
+        
+        const steps = flowData.steps || []
+        const startStep = steps.find((step: any) => step.type === 'start')
+        
+        if (startStep) {
+          const stepData = {
+            type: 'start',
+            title: 'Seleccionar Legajo',
+            description: 'Seleccione un legajo para iniciar el proceso',
+            config: startStep.config || {
+              tableColumns: [
+                { key: 'id', label: 'ID' },
+                { key: 'created_at', label: 'Creado' }
+              ]
+            },
+            legajos: [],
+            transitions: [{ id: 'select', label: 'Continuar', to_step_id: 'next' }],
+            status: 'running',
+            current_step_id: 'start'
           }
-        } catch (error) {
-          console.log('No se pudo cargar configuración del flujo, usando mock:', error)
+          
+          setStepData(stepData)
+          return
         }
-        
-        const mockData = getMockStepData('start')
-        setStepData(mockData)
-        return
       }
       
-      // Para instancias reales, simular datos basados en el ID
-      const mockInstance = {
-        id: instanceId,
-        flow: '1',
-        legajo_id: instanceId, // Usar el mismo ID de instancia como legajo_id
-        status: 'pending'
-      }
-      setInstanceData(mockInstance)
-      console.log('Instance data set:', mockInstance)
-      
-      // Para instancias reales del backend
       const response = await fetch(`http://localhost:8000/api/flows/instances/${instanceId}/current_step/`)
       
       if (!response.ok) {
-        // Si falla, usar mock como fallback
-        const mockData = getMockStepData('start')
-        setStepData(mockData)
-        return
+        throw new Error('No se pudo cargar el paso actual')
       }
       
       const data = await response.json()
-      
-      // Si es un nodo de inicio, asegurar que tenga la configuración de columnas
-      if (data.type === 'start' && !data.config?.tableColumns) {
-        data.config = {
-          ...data.config,
-          tableColumns: [
-            { key: 'id', label: 'ID' },
-            { key: 'created_at', label: 'Creado' }
-          ]
-        }
-      }
-      
       setStepData(data)
+      
     } catch (error) {
       console.error('Error:', error)
       toast.error('Error cargando el paso actual')
@@ -243,30 +141,6 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
   const handleInteraction = async (interactionData: Record<string, any> = {}) => {
     try {
       setProcessing(true)
-      
-      // Si es mock, simular progresión
-      if (instanceId.startsWith('mock-')) {
-        const currentStep = stepData?.current_step_id || 'start'
-        let nextStep = 'email'
-        
-        if (currentStep === 'start') nextStep = 'email'
-        else if (currentStep === 'email') {
-          // Completar flujo
-          setTimeout(() => {
-            setStepData(prev => prev ? { ...prev, status: 'completed' } : null)
-            toast.success('¡Email enviado y flujo completado!')
-          }, 2000)
-          return
-        }
-        
-        setTimeout(() => {
-          const nextStepData = getMockStepData(nextStep)
-          setStepData(nextStepData)
-          toast.success(`Legajo seleccionado - Enviando email...`)
-        }, 1000)
-        
-        return
-      }
       
       const response = await fetch(`http://localhost:8000/api/flows/instances/${instanceId}/interact/`, {
         method: 'POST',

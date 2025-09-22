@@ -15,7 +15,7 @@ class LegajoPagination(PageNumberPagination):
 class LegajoViewSet(viewsets.ModelViewSet):
     queryset = Legajo.objects.select_related("plantilla").all()
     serializer_class = LegajoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
     http_method_names = ["get", "post"]
     pagination_class = LegajoPagination
 

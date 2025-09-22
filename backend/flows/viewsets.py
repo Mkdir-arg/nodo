@@ -70,41 +70,49 @@ class FlujoViewSet(viewsets.ModelViewSet):
             return Response({'error': 'No start node configuration found'}, 
                           status=status.HTTP_400_BAD_REQUEST)
         
-        # Mock legajos data - replace with actual Legajo model query
-        mock_legajos = [
-            {
-                'id': f'legajo-{i}',
-                'nombre': f'Legajo {i}',
-                'plantilla_id': 'plantilla-1',
-                'created_at': '2024-01-01T00:00:00Z',
-                'estado': 'activo'
-            }
-            for i in range(1, 51)
-        ]
+        # Get real legajos from database
+        legajos_queryset = Legajo.objects.all()
         
         # Apply filters from start_config
         accepted_plantillas = start_config.get('acceptedPlantillas', [])
         if accepted_plantillas:
-            mock_legajos = [l for l in mock_legajos if l['plantilla_id'] in accepted_plantillas]
+            legajos_queryset = legajos_queryset.filter(plantilla_id__in=accepted_plantillas)
         
         # Apply search filter
         search = request.query_params.get('search', '')
         if search:
-            mock_legajos = [l for l in mock_legajos if search.lower() in l['nombre'].lower()]
+            legajos_queryset = legajos_queryset.filter(
+                data__icontains=search
+            )
         
         # Apply sorting
         sort_config = start_config.get('defaultSort', {'key': 'created_at', 'dir': 'desc'})
-        reverse = sort_config.get('dir') == 'desc'
-        mock_legajos.sort(key=lambda x: x.get(sort_config.get('key', 'id')), reverse=reverse)
+        sort_key = sort_config.get('key', 'created_at')
+        sort_dir = '-' if sort_config.get('dir') == 'desc' else ''
+        legajos_queryset = legajos_queryset.order_by(f'{sort_dir}{sort_key}')
         
         # Pagination
         page_size = start_config.get('pageSize', 25)
         page = int(request.query_params.get('page', 1))
-        paginator = Paginator(mock_legajos, page_size)
+        paginator = Paginator(legajos_queryset, page_size)
         page_obj = paginator.get_page(page)
         
+        # Format legajos data
+        legajos_data = []
+        for legajo in page_obj:
+            data = legajo.data or {}
+            legajos_data.append({
+                'id': str(legajo.id),
+                'created_at': legajo.created_at.isoformat(),
+                'text': data.get('text', ''),
+                'descripcion': data.get('descripcion', ''),
+                'email': data.get('email', ''),
+                'telefono': data.get('telefono', ''),
+                'estado': 'Activo'
+            })
+        
         return Response({
-            'results': list(page_obj),
+            'results': legajos_data,
             'count': paginator.count,
             'page': page,
             'pages': paginator.num_pages,
