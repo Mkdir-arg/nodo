@@ -1,15 +1,18 @@
 interface Legajo {
   id: string
-  nombre: string
-  email: string
-  telefono?: string
-  estado: string
+  [key: string]: any // Permitir propiedades dinámicas
+}
+
+interface TableColumn {
+  key: string
+  label: string
 }
 
 interface StartTableProps {
   title: string
   description?: string
   legajos: Legajo[]
+  columns?: TableColumn[] // Columnas configurables
   onSelect: (legajoId: string) => void
   processing?: boolean
   submitLabel?: string
@@ -21,6 +24,12 @@ export function StartTable({
   title, 
   description, 
   legajos, 
+  columns = [
+    { key: 'nombre', label: 'Nombre' },
+    { key: 'email', label: 'Email' },
+    { key: 'telefono', label: 'Teléfono' },
+    { key: 'estado', label: 'Estado' }
+  ],
   onSelect, 
   processing = false,
   submitLabel = "Continuar"
@@ -49,18 +58,11 @@ export function StartTable({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Seleccionar
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nombre
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Teléfono
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
+              {columns.map((column) => (
+                <th key={column.key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {column.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -82,24 +84,37 @@ export function StartTable({
                     className="text-blue-600 focus:ring-blue-500"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {legajo.nombre}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {legajo.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {legajo.telefono || '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    legajo.estado === 'Activo' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {legajo.estado}
-                  </span>
-                </td>
+                {columns.map((column) => {
+                  const value = legajo[column.key]
+                  const isEstado = column.key === 'estado'
+                  const isDate = column.key === 'created_at' || column.key === 'updated_at'
+                  const isId = column.key === 'id'
+                  
+                  let displayValue = value || '-'
+                  if (isDate && value) {
+                    displayValue = new Date(value).toLocaleDateString()
+                  } else if (isId && value) {
+                    displayValue = value.toString().slice(0, 8) + '...'
+                  }
+                  
+                  return (
+                    <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {isEstado ? (
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          value === 'Activo' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {displayValue}
+                        </span>
+                      ) : (
+                        <span className={column.key === 'text' || column.key === 'nombre' ? 'font-medium text-gray-900' : ''}>
+                          {displayValue}
+                        </span>
+                      )}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>

@@ -14,10 +14,19 @@ const getMockStepData = (stepId: string) => {
       type: 'start',
       title: 'Seleccionar Legajo',
       description: 'Seleccione un legajo para iniciar el proceso',
+      config: {
+        tableColumns: [
+          { key: 'id', label: 'ID' },
+          { key: 'created_at', label: 'Creado' },
+          { key: 'text', label: 'Nombre' },
+          { key: 'descripcion', label: 'Apellido' },
+          { key: 'telefono', label: 'Campo' }
+        ]
+      },
       legajos: [
-        { id: '1', nombre: 'Juan Pérez', email: 'juan@test.com', telefono: '+54 11 1234-5678', estado: 'Activo' },
-        { id: '2', nombre: 'María García', email: 'maria@test.com', telefono: '+54 11 9876-5432', estado: 'Activo' },
-        { id: '3', nombre: 'Carlos López', email: 'carlos@test.com', telefono: '+54 11 5555-1234', estado: 'Pendiente' }
+        { id: '1', created_at: '2024-01-15', text: 'Juan', descripcion: 'Pérez', telefono: '+54 11 1234-5678', email: 'juan@test.com', estado: 'Activo' },
+        { id: '2', created_at: '2024-01-14', text: 'María', descripcion: 'García', telefono: '+54 11 9876-5432', email: 'maria@test.com', estado: 'Activo' },
+        { id: '3', created_at: '2024-01-13', text: 'Carlos', descripcion: 'López', telefono: '+54 11 5555-1234', email: 'carlos@test.com', estado: 'Pendiente' }
       ],
       transitions: [{ id: 'select', label: 'Enviar Email', to_step_id: 'email' }],
       status: 'running',
@@ -150,7 +159,7 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
     try {
       setLoading(true)
       
-      // Si es una instancia mock o flow, usar datos de prueba directamente
+      // Si es una instancia mock o flow, cargar configuración real del flujo
       if (instanceId.startsWith('mock-') || instanceId.startsWith('flow-')) {
         const mockInstance = {
           id: instanceId,
@@ -159,6 +168,30 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
           status: 'pending'
         }
         setInstanceData(mockInstance)
+        
+        // Intentar cargar configuración real del flujo
+        try {
+          const flowId = mockInstance.flow
+          const flowResponse = await fetch(`http://localhost:8000/api/flows/${flowId}/`)
+          if (flowResponse.ok) {
+            const flowData = await flowResponse.json()
+            console.log('Flow data:', flowData)
+            
+            // Buscar en steps (que viene de steps_data en el serializer)
+            const steps = flowData.steps || []
+            const startStep = steps.find((step: any) => step.type === 'start')
+            
+            if (startStep?.config?.tableColumns) {
+              console.log('Found start step config:', startStep.config)
+              const mockData = getMockStepData('start')
+              mockData.config = startStep.config
+              setStepData(mockData)
+              return
+            }
+          }
+        } catch (error) {
+          console.log('No se pudo cargar configuración del flujo, usando mock:', error)
+        }
         
         const mockData = getMockStepData('start')
         setStepData(mockData)
@@ -186,6 +219,18 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
       }
       
       const data = await response.json()
+      
+      // Si es un nodo de inicio, asegurar que tenga la configuración de columnas
+      if (data.type === 'start' && !data.config?.tableColumns) {
+        data.config = {
+          ...data.config,
+          tableColumns: [
+            { key: 'id', label: 'ID' },
+            { key: 'created_at', label: 'Creado' }
+          ]
+        }
+      }
+      
       setStepData(data)
     } catch (error) {
       console.error('Error:', error)
@@ -387,6 +432,7 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
               title={stepData.title || 'Seleccionar Legajo'}
               description={stepData.description}
               legajos={stepData.legajos || []}
+              columns={stepData.config?.tableColumns}
               onSelect={(legajoId) => handleInteraction({ legajo_id: legajoId })}
               processing={processing}
               submitLabel={stepData.transitions[0]?.label || 'Continuar'}
