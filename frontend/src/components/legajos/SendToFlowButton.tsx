@@ -80,11 +80,7 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
       console.log('Using mock instance:', mockInstance);
       return mockInstance;
     },
-    onSuccess: (data: any) => {
-      setShowModal(false);
-      // Redirigir al runtime
-      router.push(`/flujos/runtime/${data.id}`);
-    },
+
     onError: (error) => {
       alert(`Error: ${error.message}`);
     }
@@ -95,7 +91,26 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
       alert('Selecciona un flujo');
       return;
     }
-    createInstanceMutation.mutate({ flowId: selectedFlowId, legajoId });
+    
+    // Cerrar modal inmediatamente
+    setShowModal(false);
+    
+    // Redirigir SIN crear instancia
+    router.replace(`/flujos/runtime/flow-${selectedFlowId}`);
+    
+    // Crear instancia después en background (opcional)
+    setTimeout(() => {
+      fetch('http://localhost:8000/api/create-instance/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          flow: selectedFlowId,
+          legajo_id: legajoId
+        })
+      }).catch(console.error);
+    }, 100);
   };
 
   return (
@@ -139,10 +154,10 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
               </button>
               <button
                 onClick={handleSendToFlow}
-                disabled={!selectedFlowId || createInstanceMutation.isPending}
+                disabled={!selectedFlowId}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
               >
-                {createInstanceMutation.isPending ? 'Enviando...' : 'Enviar'}
+                Enviar
               </button>
             </div>
           </div>
