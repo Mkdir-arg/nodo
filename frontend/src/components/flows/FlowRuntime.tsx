@@ -142,6 +142,47 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
     try {
       setProcessing(true)
       
+      if (instanceId.startsWith('flow-') && interactionData.legajo_id) {
+        const flowId = instanceId.replace('flow-', '')
+        
+        // Primero verificar si ya existe una instancia para este legajo
+        const instancesResponse = await fetch(`http://localhost:8000/api/instances/?flow=${flowId}`)
+        if (instancesResponse.ok) {
+          const instances = await instancesResponse.json()
+          const existingInstance = instances.find((inst: any) => inst.legajo_id === interactionData.legajo_id)
+          
+          if (existingInstance) {
+            // Usar instancia existente
+            window.location.href = `/flujos/runtime/${existingInstance.id}`
+            return
+          }
+        }
+        
+        // Si no existe, crear nueva instancia
+        const createResponse = await fetch(`http://localhost:8000/api/instances/create_from_legajo/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            flow_id: flowId,
+            legajo_id: interactionData.legajo_id
+          })
+        })
+        
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json()
+          throw new Error(errorData.error || 'Error creando instancia')
+        }
+        
+        const newInstance = await createResponse.json()
+        toast.success('Instancia creada exitosamente')
+        
+        // Redirigir a la nueva instancia
+        window.location.href = `/flujos/runtime/${newInstance.id}`
+        return
+      }
+      
       const response = await fetch(`http://localhost:8000/api/flows/instances/${instanceId}/interact/`, {
         method: 'POST',
         headers: {
