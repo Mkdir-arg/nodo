@@ -4,6 +4,7 @@ import '../styles/globals.css';
 import Providers from './providers';
 import MainLayout from '@/components/layout/MainLayout';
 import { ToastProvider } from '@/components/ui/toast';
+import { AuthProvider } from '@/lib/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Nodo',
@@ -15,10 +16,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es" suppressHydrationWarning>
       <body className="antialiased">
         <Providers>
-          <ToastProvider>
-            {/* MainLayout se monta UNA sola vez acá */}
-            <MainLayout>{children}</MainLayout>
-          </ToastProvider>
+          <AuthProvider>
+            <ToastProvider>
+              {/* MainLayout se monta UNA sola vez acá */}
+              <MainLayout>{children}</MainLayout>
+            </ToastProvider>
+          </AuthProvider>
         </Providers>
       </body>
     </html>

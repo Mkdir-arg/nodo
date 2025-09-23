@@ -43,6 +43,10 @@ export function storeTokens(tokens: Tokens) {
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access);
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh);
+    
+    // También almacenar en cookies para el middleware
+    document.cookie = `access_token=${tokens.access}; path=/; max-age=28800`; // 8 horas
+    document.cookie = `refresh_token=${tokens.refresh}; path=/; max-age=604800`; // 7 días
   } catch {
     /* ignore quota errors */
   }
@@ -66,6 +70,10 @@ export function clearStoredTokens() {
   try {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
+    
+    // Limpiar cookies también
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   } catch {
     /* ignore */
   }

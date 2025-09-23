@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,7 +79,7 @@ export default function LoginPage() {
                 Tu correo electrónico *
               </label>
               <input
-                type="email"
+                type="text"
                 id="email"
                 name="email"
                 className="w-full h-12 border border-[#E5E7EB] rounded-xl px-4 text-[15px] leading-[22px] transition-all duration-[120ms] placeholder:text-[#9CA3AF] hover:border-[#D1D5DB] focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#93C5FD]"

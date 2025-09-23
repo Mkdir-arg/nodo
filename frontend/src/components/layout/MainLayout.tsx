@@ -1,13 +1,13 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import TopNavBar from './TopNavBar';
 import SideNav from './SideNav';
 import ControlSidebar from './ControlSidebar';
 import { getStored, setStored } from '@/lib/ui-state';
-import { getTokens, logout, me } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -19,34 +19,16 @@ interface MainLayoutProps {
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+  
   if (pathname.startsWith('/login')) {
     return <>{children}</>;
   }
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
   const [isControlOpen, setIsControlOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  useEffect(() => {
-    const verify = async () => {
-      if (!getTokens()) {
-        router.replace('/login');
-        setCheckingAuth(false);
-        return;
-      }
-      try {
-        await me();
-        setCheckingAuth(false);
-      } catch {
-        logout();
-        router.replace('/login');
-        setCheckingAuth(false);
-      }
-    };
-    verify();
-  }, [router]);
 
   useEffect(() => {
     setIsMini(getStored('sideCollapsed', false));
@@ -63,7 +45,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  if (checkingAuth) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
