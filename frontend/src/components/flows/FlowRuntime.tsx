@@ -60,11 +60,11 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
         return {
           id: legajo.id,
           created_at: legajo.created_at,
-          text: data.text || '',
-          descripcion: data.descripcion || '',
+          apellido: data.texto || data.apellido || '',
+          nombre: data.texto_2 || data.nombre || '',
           email: data.email || '',
           telefono: data.telefono || '',
-          estado: 'Activo'
+          estado: legajo.estado || 'ACTIVO'
         }
       })
       
@@ -109,8 +109,8 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
               tableColumns: startConfig.tableColumns || [
                 { key: 'id', label: 'ID' },
                 { key: 'created_at', label: 'Creado' },
-                { key: 'text', label: 'Texto' },
-                { key: 'email', label: 'Email' }
+                { key: 'apellido', label: 'Apellido' },
+                { key: 'nombre', label: 'Nombre' }
               ]
             },
             legajos: [],
@@ -283,8 +283,8 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
               columns={stepData.config?.tableColumns || [
                 { key: 'id', label: 'ID' },
                 { key: 'created_at', label: 'Creado' },
-                { key: 'text', label: 'Texto' },
-                { key: 'email', label: 'Email' }
+                { key: 'apellido', label: 'Apellido' },
+                { key: 'nombre', label: 'Nombre' }
               ]}
               onSelect={(legajoId) => handleInteraction({ legajo_id: legajoId })}
               processing={processing}

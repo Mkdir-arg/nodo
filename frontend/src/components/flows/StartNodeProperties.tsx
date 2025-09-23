@@ -198,6 +198,15 @@ export default function StartNodeProperties({ config, onSave, onCancel, embedded
           {availableFields.length > 0 && (
             <div className="mb-4">
               <Label className="text-xs text-gray-600 mb-2 block">Campos de la Plantilla Seleccionada:</Label>
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 font-medium mb-1">💡 Cómo configurar:</p>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• <strong>Clave:</strong> nombre del campo en los datos (ej: apellido, nombre)</li>
+                  <li>• <strong>Etiqueta:</strong> título que se mostrará en la tabla (ej: Apellido, Nombre)</li>
+                  <li>• Usa los campos de la plantilla seleccionada o agrega manualmente</li>
+                  <li>• Campos disponibles: id, created_at, apellido, nombre, email, telefono</li>
+                </ul>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {availableFields.map((field) => {
                   const isSelected = tableColumns.some(col => col.key === field.key);
@@ -226,6 +235,21 @@ export default function StartNodeProperties({ config, onSave, onCancel, embedded
               </div>
             </div>
           )}
+          
+          {/* Títulos de columnas */}
+          <div className="flex items-center gap-2 mb-2 px-3">
+            <div className="w-8 sm:w-6"></div> {/* Espacio para controles */}
+            <div className="hidden sm:block w-4"></div> {/* Espacio para grip */}
+            <div className="flex flex-col sm:flex-row gap-2 flex-1">
+              <div className="flex-1 text-center">
+                <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Clave</Label>
+              </div>
+              <div className="flex-1 text-center">
+                <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Etiqueta</Label>
+              </div>
+            </div>
+            <div className="hidden sm:block w-16"></div> {/* Espacio para botón eliminar */}
+          </div>
           
           <div className="space-y-2">
             {tableColumns.map((column, index) => (
@@ -274,13 +298,13 @@ export default function StartNodeProperties({ config, onSave, onCancel, embedded
                 {/* Inputs */}
                 <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
                   <Input
-                    placeholder="Clave (ej: nombre)"
+                    placeholder="Clave (ej: texto)"
                     value={column.key}
                     onChange={(e) => updateColumn(index, 'key', e.target.value)}
                     className="flex-1"
                   />
                   <Input
-                    placeholder="Etiqueta (ej: Nombre)"
+                    placeholder="Etiqueta (ej: Apellido)"
                     value={column.label}
                     onChange={(e) => updateColumn(index, 'label', e.target.value)}
                     className="flex-1"
