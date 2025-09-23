@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Nodo</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" as="style">
+</head>
+<body>
+    <main class="login-container">
+        <section class="illustration-section">
+            <img 
+                src="{% static 'png/people-connecting.png' %}" 
+                alt="Personas conectando un enchufe"
+                class="illustration-image"
+                loading="lazy"
+                decoding="async"
+            >
+        </section>
+        
+        <section class="form-section">
+            <h1 class="login-title">
+                Bienvenido a Nodo,<br>
+                tu Sistema Social
+            </h1>
+            
+            <div class="login-card">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="error-alert" role="alert">
+                            <span class="error-icon">⚠</span>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <form method="post" id="login-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="email" class="form-label">Tu correo electrónico *</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input"
+                            placeholder="Ingresa tu correo electrónico"
+                            required
+                            aria-required="true"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">Tu contraseña *</label>
+                        <div class="password-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input"
+                                placeholder="••••••••"
+                                required
+                                aria-required="true"
+                            >
+                            <button 
+                                type="button" 
+                                id="password-toggle" 
+                                class="password-toggle"
+                                aria-pressed="false"
+                                aria-label="Mostrar contraseña"
+                            >
+                                Mostrar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-wrapper">
+                        <input 
+                            type="checkbox" 
+                            id="remember" 
+                            name="remember" 
+                            class="checkbox"
+                        >
+                        <label for="remember" class="checkbox-label">Recordarme</label>
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        id="login-button" 
+                        class="login-button"
+                        disabled
+                    >
+                        Ingresar
+                    </button>
+                </form>
+            </div>
+            
+            <div class="branding">
+                <div class="brand-name">Nodo</div>
+                <div class="powered-by">Powered by ICore</div>
+            </div>
+        </section>
+    </main>
+    
+    <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>

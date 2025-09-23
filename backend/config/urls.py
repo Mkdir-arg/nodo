@@ -4,10 +4,14 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from users.views import CustomTokenObtainPairView, AuthMeView
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import api_root
+from .auth_views import login_view
 from flows.direct_views import create_instance_direct, get_flow_instances
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    
+    # Auth views
+    path("login/", login_view, name="login"),
 
     # API Root
     path("api/", api_root, name="api_root"),
