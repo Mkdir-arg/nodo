@@ -14,6 +14,7 @@ type MenuItem = {
 
 type Props = {
   items: MenuItem[];
+  flowItems?: MenuItem[];
   title?: string;
 };
 
@@ -22,8 +23,9 @@ function getIcon(name?: keyof typeof Icons) {
   return typeof Ico === "function" ? Ico : Icons.Folder;
 }
 
-export default function LegajosMenu({ items, title = "Legajos" }: Props) {
+export default function LegajosMenu({ items, flowItems, title = "Legajos" }: Props) {
   const safeItems = useMemo(() => (Array.isArray(items) ? items : []), [items]);
+  const safeFlowItems = useMemo(() => (Array.isArray(flowItems) ? flowItems : []), [flowItems]);
 
   return (
     <nav className="space-y-3">
@@ -31,6 +33,20 @@ export default function LegajosMenu({ items, title = "Legajos" }: Props) {
 
       <ul className="flex flex-col gap-1">
         {safeItems.map((it) => {
+          const Ico = getIcon(it.icon);
+          return (
+            <li key={it.id}>
+              <Link
+                href={it.href}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted"
+              >
+                <Ico aria-hidden className="h-4 w-4" />
+                <span className="text-sm">{it.label}</span>
+              </Link>
+            </li>
+          );
+        })}
+        {safeFlowItems.map((it) => {
           const Ico = getIcon(it.icon);
           return (
             <li key={it.id}>

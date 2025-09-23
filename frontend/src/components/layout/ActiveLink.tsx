@@ -16,8 +16,7 @@ interface ActiveLinkProps {
 export default function ActiveLink({ href, children, className, title }: ActiveLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === href;
-  const dirty = useBuilderStore((s) => s.dirty);
-  const setDirty = useBuilderStore((s) => s.setDirty);
+  const { dirty, setDirty } = useBuilderStore((s) => ({ dirty: s.dirty, setDirty: s.setDirty }));
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     if (dirty && !window.confirm('Hay cambios sin guardar. ¿Continuar?')) {

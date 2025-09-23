@@ -22,6 +22,13 @@ export function useFlowsMin() {
         return [];
       }
     },
-    staleTime: 60_000,
+    staleTime: Infinity, // Nunca se considera stale
+    gcTime: Infinity, // Nunca se elimina del cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    refetchIntervalInBackground: false,
+    retry: false, // No reintentar en caso de error
   });
 }

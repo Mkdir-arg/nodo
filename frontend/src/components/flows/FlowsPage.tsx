@@ -12,17 +12,8 @@ export default function FlowsPage() {
 
   useEffect(() => {
     loadFlows();
-  }, [loadFlows]);
-
-  // Force reload when component mounts
-  useEffect(() => {
-    const handleFocus = () => {
-      loadFlows();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [loadFlows]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo cargar una vez al montar, ignorar loadFlows como dependencia
 
   const handleEdit = (flow: Flow) => {
     router.push(`/flujos/editar/${flow.id}`);

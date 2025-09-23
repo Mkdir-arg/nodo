@@ -9,7 +9,6 @@ import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
 import { useFlowsMin } from '@/lib/hooks/useFlowsMin';
 import LegajosMenu from './LegajosMenu';
-import FlowsMenu from './FlowsMenu';
 
 interface SideNavProps {
   open: boolean;
@@ -48,9 +47,10 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
 
   const flowItems = useMemo(() => {
     const flows = (flowsData ?? []).map((f: any) => ({
-      id: String(f.id),
+      id: `flow-${f.id}`,
       label: f.name,
       href: `/flujos/runtime/flow-${f.id}`,
+      icon: 'Workflow' as const,
     }));
     return flows;
   }, [flowsData]);
@@ -79,9 +79,7 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
             </ActiveLink>
           )}
 
-          <LegajosMenu items={legajoItems} />
-
-          <FlowsMenu items={flowItems} />
+          <LegajosMenu items={legajoItems} flowItems={flowItems} />
 
           {configuracionesItem && (
             <div>

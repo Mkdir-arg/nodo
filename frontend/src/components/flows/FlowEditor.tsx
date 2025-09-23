@@ -37,13 +37,12 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
   console.log('FlowEditor mounted with flowId:', flowId);
   console.log('useFlowStore flows:', flows);
   
-  // Cargar flujos usando el store
+  // Cargar flujos una sola vez al montar
   useEffect(() => {
     if (!flows || flows.length === 0) {
-      console.log('Flows empty, loading from store...');
       loadFlows();
     }
-  }, [flows, loadFlows]);
+  }, []); // Sin dependencias para evitar loops
   
   const [editingStep, setEditingStep] = useState<FlowStep | null>(null);
   const [showStepForm, setShowStepForm] = useState(false);

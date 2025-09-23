@@ -23,6 +23,8 @@ interface FlowStore {
   connectSteps: (flowId: string, sourceId: string, targetId: string) => void;
 }
 
+let isLoading = false;
+
 export const useFlowStore = create<FlowStore>((set, get) => ({
   flows: [],
   currentFlow: null,
@@ -30,12 +32,17 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   error: null,
 
   loadFlows: async () => {
+    if (isLoading) return; // Evitar llamadas concurrentes globalmente
+    
+    isLoading = true;
     set({ loading: true, error: null });
     try {
       const response = await flowsApi.getFlows();
       set({ flows: response.results, loading: false });
     } catch (error) {
       set({ error: 'Error loading flows', loading: false });
+    } finally {
+      isLoading = false;
     }
   },
 
