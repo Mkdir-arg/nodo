@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, Trash2, Plus, Download, Copy, Upload, MoreHorizontal } from 'lucide-react';
+import { Edit, Trash2, Plus, Download, Copy, Upload, MoreHorizontal, Workflow } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -41,7 +41,7 @@ export default function FlowList({ flows, onEdit, onDelete, onNew, onDuplicate, 
       {!flows || flows.length === 0 ? (
         <Card className={`${designTokens.card.elevated} p-8 text-center`}>
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Plus className="h-8 w-8 text-white" />
+            <Workflow className="h-8 w-8 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay flujos creados</h3>
           <p className="text-gray-500 mb-4">Crea tu primer flujo de trabajo automatizado</p>
@@ -67,7 +67,7 @@ export default function FlowList({ flows, onEdit, onDelete, onNew, onDuplicate, 
                   )}
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <Workflow className="w-4 h-4 text-blue-500" />
                       {flow.steps?.length || 0} pasos
                     </span>
                     <span>Creado {new Date(flow.createdAt).toLocaleDateString()}</span>
