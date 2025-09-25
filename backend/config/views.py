@@ -37,7 +37,8 @@ def system_settings(request):
         'loginTitle': 'Bienvenido a Nodo,',
         'loginSubtitle': 'tu Sistema Social',
         'loginFooterTitle': 'Nodo',
-        'loginFooterSubtitle': 'Powered by ICore'
+        'loginFooterSubtitle': 'Powered by ICore',
+        'inactivityTimeoutMinutes': '30'
     }
     
     for key, default_value in defaults.items():

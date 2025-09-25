@@ -16,7 +16,8 @@ export default function SystemSettings() {
     loginTitle: "Bienvenido a Nodo,",
     loginSubtitle: "tu Sistema Social",
     loginFooterTitle: "Nodo",
-    loginFooterSubtitle: "Powered by ICore"
+    loginFooterSubtitle: "Powered by ICore",
+    inactivityTimeoutMinutes: "30"
   });
   
   const [systemInfo, setSystemInfo] = useState({
@@ -161,6 +162,30 @@ export default function SystemSettings() {
                 />
                 Notificaciones por email
               </label>
+            </div>
+          </div>
+
+          {/* Configuración de Seguridad */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Seguridad</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tiempo de inactividad (minutos)
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  max="480"
+                  value={settings.inactivityTimeoutMinutes}
+                  onChange={(e) => setSettings({...settings, inactivityTimeoutMinutes: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Los usuarios serán desconectados automáticamente después de este tiempo de inactividad. 
+                  Mínimo: 5 minutos, Máximo: 8 horas (480 minutos)
+                </p>
+              </div>
             </div>
           </div>
 

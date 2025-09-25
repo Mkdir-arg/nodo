@@ -4,7 +4,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from users.views import CustomTokenObtainPairView, AuthMeView
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import api_root, system_settings, update_system_settings, system_info
-from .auth_views import login_view
+from .auth_views import login_view, get_security_config
 from flows.direct_views import create_instance_direct, get_flow_instances
 
 urlpatterns = [
@@ -24,6 +24,7 @@ urlpatterns = [
     re_path(r"^api/token/?$", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     re_path(r"^api/token/refresh/?$", TokenRefreshView.as_view(), name="token_refresh"),
     re_path(r"^api/auth/me/?$", AuthMeView.as_view(), name="auth_me"),
+    path("api/auth/security-config/", get_security_config, name="security_config"),
 
     # Direct endpoints
     path("api/create-instance/", create_instance_direct, name="create-instance-direct"),

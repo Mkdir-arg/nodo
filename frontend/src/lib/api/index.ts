@@ -85,6 +85,27 @@ export async function api(path: string, init: RequestInit = {}) {
   const res = await fetch(target, withAuth({ ...init, method }));
 
   if (res.status === 401) {
+    // Verificar si es error de inactividad o token expirado
+    try {
+      const errorData = await res.clone().json();
+      if (errorData.code === 'INACTIVITY_TIMEOUT') {
+        if (!isServer) {
+          clearStoredTokens?.();
+          window.location.href = "/login";
+        }
+        throw new Error("INACTIVITY_TIMEOUT");
+      }
+      if (errorData.code === 'TOKEN_EXPIRED') {
+        if (!isServer) {
+          clearStoredTokens?.();
+          window.location.href = "/login";
+        }
+        throw new Error("TOKEN_EXPIRED");
+      }
+    } catch (e) {
+      // Si no se puede parsear el JSON, continuar con el manejo normal
+    }
+    
     if (!isServer) {
       clearStoredTokens?.();
       window.location.href = "/login";

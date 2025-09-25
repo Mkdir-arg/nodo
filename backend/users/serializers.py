@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from config.jwt_settings import get_jwt_token_lifetime
 
 User = get_user_model()
 
@@ -97,3 +99,9 @@ class EmailOrUsernameTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         attrs[self.username_field] = getattr(user, user.USERNAME_FIELD)
         return super().validate(attrs)
+    
+    @classmethod
+    def get_token(cls, user):
+        """Genera un token con tiempo de vida dinámico"""
+        # Usar el token estándar por ahora
+        return RefreshToken.for_user(user)

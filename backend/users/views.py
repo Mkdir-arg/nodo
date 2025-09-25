@@ -7,8 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
 
 from .serializers import EmailOrUsernameTokenObtainPairSerializer, UserSerializer, GroupSerializer
+from config.jwt_settings import get_jwt_token_lifetime
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
