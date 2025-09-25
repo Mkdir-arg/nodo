@@ -1,33 +1,13 @@
-FROM python:3.11-slim
-
-# Crear usuario no-root
-RUN groupadd -r django && useradd -r -g django django
+FROM mcr.microsoft.com/devcontainers/python:3.11
 
 WORKDIR /app
-
-# Instalar dependencias del sistema en una sola capa
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     build-essential \
     default-libmysqlclient-dev \
     pkg-config \
     curl \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Copiar solo requirements primero (mejor cache)
 COPY requirements/ /app/requirements/
-
-# Instalar dependencias de Python con cache optimizado
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements/base.txt \
-    && pip cache purge
-
-# Copiar código después (para mejor cache de layers)
+RUN pip install -r requirements/base.txt
 COPY . /app
-
-# Crear directorios necesarios
-RUN mkdir -p /app/staticfiles /app/media \
-    && chown -R django:django /app
-
-USER django
 EXPOSE 8000

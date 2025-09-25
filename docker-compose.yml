@@ -1,42 +1,14 @@
 services:
-  mysql:
-    image: mysql:8.0
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ${DATABASE_NAME:-nodo}
-      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-root}
-      MYSQL_CHARACTER_SET_SERVER: utf8mb4
-      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
-    ports:
-      - "3308:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DATABASE_PASSWORD:-root}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - nodo-network
-
   backend:
     build: 
       context: ./backend
       dockerfile: Dockerfile
     env_file: .env
-    depends_on:
-      mysql:
-        condition: service_healthy
     restart: unless-stopped
     command: >
       sh -c "
-      python wait_for_db.py &&
       python manage.py makemigrations --no-input &&
       python manage.py migrate --no-input &&
-      python manage.py create_superuser &&
-      python manage.py collectstatic --no-input --clear --no-post-process || true &&
       python manage.py runserver 0.0.0.0:8000
       "
     ports:
@@ -45,26 +17,10 @@ services:
       - ./backend:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-    networks:
-      - nodo-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  adminer:
-    image: adminer:4.8.1
-    restart: unless-stopped
     environment:
-      ADMINER_DEFAULT_SERVER: mysql
-      ADMINER_DESIGN: pepa-linha
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-    networks:
-      - nodo-network
+      - DATABASE_HOST=host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     build: 
@@ -83,23 +39,10 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
-    depends_on:
-      - backend
-    networks:
-      - nodo-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - NEXT_PUBLIC_API_BASE=http://localhost:8000/api
 
 volumes:
-  db_data:
   static_volume:
   media_volume:
   frontend_node_modules:
   frontend_next:
-
-networks:
-  nodo-network:
-    driver: bridge

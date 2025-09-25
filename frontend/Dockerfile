@@ -1,22 +1,9 @@
-FROM node:18-alpine
-
-# Crear usuario no-root
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+FROM mcr.microsoft.com/devcontainers/javascript-node:18
 
 WORKDIR /app
-
-# Copiar solo package files primero (mejor cache)
 COPY package*.json ./
-
-# Instalar dependencias
-RUN npm install && npm cache clean --force
-
-# Copiar código fuente después
+RUN npm install
 COPY . .
-
-# Cambiar propietario
-RUN chown -R nextjs:nodejs /app
-# USER nextjs  # Comentado temporalmente para Windows
 
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
