@@ -1,13 +1,14 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import EmailOrUsernameTokenObtainPairSerializer, UserSerializer
+from .serializers import EmailOrUsernameTokenObtainPairSerializer, UserSerializer, GroupSerializer
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -39,3 +40,15 @@ class UserListAPIView(ListAPIView):
     filterset_fields = ["is_active", "is_staff"]
     search_fields = ["username", "first_name", "last_name", "email"]
     ordering_fields = ["id", "date_joined", "last_login"]
+
+
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class GroupViewSet(ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]

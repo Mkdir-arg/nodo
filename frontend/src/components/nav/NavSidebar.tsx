@@ -13,7 +13,8 @@ export default function NavSidebar() {
 
   return (
     <aside className="w-64 p-3 space-y-2 bg-background border-r border-border">
-      {/* ... otros items (Dashboard, etc.) ... */}
+      {/* Dashboard */}
+      <Link href="/dashboard" className={`block px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground ${pathname==='/dashboard'?'bg-muted':''}`}>🏠 Dashboard</Link>
 
       {/* Item Legajos con caret */}
       <div className="space-y-1">
@@ -51,6 +52,9 @@ export default function NavSidebar() {
 
       {/* Item Plantillas (catálogo) */}
       <Link href="/plantillas" className={`block px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground ${pathname==='/plantillas'?'bg-muted':''}`}>📄 Plantillas</Link>
+      
+      {/* Item Configuraciones */}
+      <Link href="/configuraciones" className={`block px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground ${pathname==='/configuraciones'?'bg-muted':''}`}>⚙️ Configuraciones</Link>
     </aside>
   );
 }
