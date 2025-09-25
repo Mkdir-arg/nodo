@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'corsheaders',
+    'config',
     'users',
     'templates_app',
     'plantillas',

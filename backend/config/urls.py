@@ -3,7 +3,7 @@ from django.urls import path, include, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from users.views import CustomTokenObtainPairView, AuthMeView
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import api_root
+from .views import api_root, system_settings, update_system_settings, system_info
 from .auth_views import login_view
 from flows.direct_views import create_instance_direct, get_flow_instances
 
@@ -35,4 +35,9 @@ urlpatterns = [
     path("api/", include("plantillas.urls")),
     path("api/", include("legajos.urls")),
     path("api/", include("flows.urls")),
+    
+    # System settings
+    path("api/system/settings/", system_settings, name="system_settings"),
+    path("api/system/settings/update/", update_system_settings, name="update_system_settings"),
+    path("api/system/info/", system_info, name="system_info"),
 ]

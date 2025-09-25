@@ -9,7 +9,10 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    me().then(setUser).catch(() => {});
+    me().then(setUser).catch((error) => {
+      console.error('Error getting user info:', error);
+      // Si hay error de autenticación, el AuthProvider se encargará de redirigir
+    });
   }, []);
 
   if (!user) return <div className="flex items-center justify-center min-h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;

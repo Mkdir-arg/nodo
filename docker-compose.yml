@@ -1,4 +1,31 @@
 services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nodo_db
+      MYSQL_USER: nodo_user
+      MYSQL_PASSWORD: nodo_password
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./dbdata:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   backend:
     build: 
       context: ./backend
@@ -9,6 +36,7 @@ services:
       sh -c "
       python manage.py makemigrations --no-input &&
       python manage.py migrate --no-input &&
+      echo 'Starting Django server...' &&
       python manage.py runserver 0.0.0.0:8000
       "
     ports:
@@ -17,10 +45,11 @@ services:
       - ./backend:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+    depends_on:
+      mysql:
+        condition: service_healthy
     environment:
-      - DATABASE_HOST=host.docker.internal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - DATABASE_HOST=mysql
 
   frontend:
     build: 

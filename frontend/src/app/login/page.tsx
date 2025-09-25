@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/auth";
+import { login, getTokens } from "@/lib/auth";
+import { getLoginSettings, LoginSettings } from "@/lib/loginSettings";
 import Image from "next/image";
 
 export default function LoginPage() {
@@ -11,6 +12,23 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [loginSettings, setLoginSettings] = useState<LoginSettings>({
+    loginImage: '/png/people-connecting.png',
+    loginTitle: 'Bienvenido a Nodo,',
+    loginSubtitle: 'tu Sistema Social',
+    loginFooterTitle: 'Nodo',
+    loginFooterSubtitle: 'Powered by ICore'
+  });
+
+  useEffect(() => {
+    getLoginSettings().then(setLoginSettings);
+    
+    // Si ya hay tokens válidos, redirigir al dashboard
+    const tokens = getTokens();
+    if (tokens) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,8 +67,8 @@ export default function LoginPage() {
           </svg>
         </div>
         <Image
-          src="/png/people-connecting.png"
-          alt="Personas conectando un enchufe"
+          src={loginSettings.loginImage}
+          alt="Imagen de login"
           width={700}
           height={500}
           className="max-w-full h-auto object-contain z-10 max-w-[90vw] lg:max-w-[700px]"
@@ -61,8 +79,8 @@ export default function LoginPage() {
       {/* Sección del formulario */}
       <section className="flex flex-col items-center justify-center p-8 lg:p-8 order-1 lg:order-2">
         <h1 className="text-[32px] lg:text-[40px] leading-[40px] lg:leading-[48px] font-bold text-[#2B2F38] mb-6 text-left w-full max-w-[420px]">
-          Bienvenido a Nodo,<br />
-          tu Sistema Social
+          {loginSettings.loginTitle}<br />
+          {loginSettings.loginSubtitle}
         </h1>
         
         <div className="bg-white rounded-2xl lg:rounded-2xl p-7 lg:p-8 shadow-[0_10px_30px_rgba(17,24,39,0.07)] w-full max-w-[420px] animate-in fade-in duration-200">
@@ -138,8 +156,8 @@ export default function LoginPage() {
         </div>
         
         <div className="mt-6 text-right w-full max-w-[420px]">
-          <div className="text-base font-bold text-[#2563EB] mb-1">Nodo</div>
-          <div className="text-xs leading-4 font-medium text-[#6B7280] opacity-70">Powered by ICore</div>
+          <div className="text-base font-bold text-[#2563EB] mb-1">{loginSettings.loginFooterTitle}</div>
+          <div className="text-xs leading-4 font-medium text-[#6B7280] opacity-70">{loginSettings.loginFooterSubtitle}</div>
         </div>
       </section>
     </main>

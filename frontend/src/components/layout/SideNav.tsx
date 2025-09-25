@@ -9,6 +9,8 @@ import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
 import { useFlowsMin } from '@/lib/hooks/useFlowsMin';
 import LegajosMenu from './LegajosMenu';
+import { useAuth } from '@/lib/AuthContext';
+import { canManageUsers, canEditTemplates } from '@/lib/permissions';
 
 interface SideNavProps {
   open: boolean;
@@ -24,6 +26,7 @@ function Safe({ Comp, className, size, 'aria-hidden': ariaHidden }: { Comp: any;
 }
 
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
+  const { user } = useAuth();
   const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
   const configuracionesItem = NAV_ITEMS.find((i) => i.label === 'Configuraciones');
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
@@ -103,16 +106,22 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
               </button>
               {!mini && isConfigExpanded && configuracionesItem.submenu && (
                 <div className="ml-6 space-y-1 mt-1">
-                  {configuracionesItem.submenu.map((item) => (
-                    <ActiveLink
-                      key={item.href}
-                      href={item.href}
-                      className="text-sm flex items-center gap-2"
-                    >
-                      {item.icon && <Safe Comp={item.icon} className="h-4 w-4" aria-hidden />}
-                      {item.label}
-                    </ActiveLink>
-                  ))}
+                  {configuracionesItem.submenu.map((item) => {
+                    // Filtrar por permisos
+                    if (item.href === '/configuraciones' && !canManageUsers(user)) return null;
+                    if (item.href === '/plantillas' && !canEditTemplates(user)) return null;
+                    
+                    return (
+                      <ActiveLink
+                        key={item.href}
+                        href={item.href}
+                        className="text-sm flex items-center gap-2"
+                      >
+                        {item.icon && <Safe Comp={item.icon} className="h-4 w-4" aria-hidden />}
+                        {item.label}
+                      </ActiveLink>
+                    );
+                  })}
                 </div>
               )}
             </div>
