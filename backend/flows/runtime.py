@@ -177,6 +177,8 @@ class FlowRuntime:
         
         current_step_data = steps_data[current_step_index]
         step_type = current_step_data.get('type')
+        steps_total = len(steps_data)
+        display_index = current_step_index + 1
         
         print(f"[DEBUG] current_step_data: {current_step_data.get('name')} ({step_type})")
         
@@ -186,7 +188,10 @@ class FlowRuntime:
                 'title': current_step_data.get('config', {}).get('title', 'Formulario'),
                 'description': current_step_data.get('config', {}).get('description', ''),
                 'fields': current_step_data.get('config', {}).get('fields', []),
-                'current_step_id': current_step_data.get('id')
+                'current_step_id': current_step_data.get('id'),
+                'node_name': current_step_data.get('name'),
+                'step_index': display_index,
+                'steps_total': steps_total
             }
         elif step_type == 'evaluation':
             return {
@@ -195,7 +200,10 @@ class FlowRuntime:
                 'description': current_step_data.get('config', {}).get('description', ''),
                 'questions': current_step_data.get('config', {}).get('questions', []),
                 'scoring_ranges': current_step_data.get('config', {}).get('scoring_ranges', []),
-                'current_step_id': current_step_data.get('id')
+                'current_step_id': current_step_data.get('id'),
+                'node_name': current_step_data.get('name'),
+                'step_index': display_index,
+                'steps_total': steps_total
             }
         else:
             return {
@@ -203,7 +211,10 @@ class FlowRuntime:
                 'title': current_step_data.get('name', 'Paso Actual'),
                 'description': current_step_data.get('config', {}).get('description', ''),
                 'html': f'<p>Nodo de tipo: {step_type}</p>',
-                'current_step_id': current_step_data.get('id')
+                'current_step_id': current_step_data.get('id'),
+                'node_name': current_step_data.get('name'),
+                'step_index': display_index,
+                'steps_total': steps_total
             }
     
     def get_available_transitions(self):

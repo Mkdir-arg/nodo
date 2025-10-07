@@ -54,6 +54,18 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
       label: f.name,
       href: `/flujos/runtime/flow-${f.id}`,
       icon: 'Workflow' as const,
+      steps: Array.isArray(f.steps)
+        ? f.steps.map((step: any, index: number) => ({
+            id: step.id ?? `${f.id}-${index}`,
+            name: step.name,
+            type: step.type,
+            title:
+              (step.config && (step.config.title || step.config.name)) ||
+              step.name ||
+              step.type,
+            order: index,
+          }))
+        : [],
     }));
     return flows;
   }, [flowsData]);
@@ -82,7 +94,7 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
             </ActiveLink>
           )}
 
-          <LegajosMenu items={legajoItems} flowItems={flowItems} />
+          <LegajosMenu items={legajoItems} flowItems={flowItems} compact={mini} />
 
           {configuracionesItem && (
             <div>

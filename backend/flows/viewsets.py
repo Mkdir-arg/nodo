@@ -372,9 +372,61 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
         try:
             step_data = runtime.get_current_step_html()
             transitions = runtime.get_available_transitions()
+
+            flow_name = instance.flow.name
+            node_name = step_data.get('node_name') if isinstance(step_data, dict) else None
+            step_index = step_data.get('step_index') if isinstance(step_data, dict) else None
+            steps_total = step_data.get('steps_total') if isinstance(step_data, dict) else None
+
+            if isinstance(step_index, str):
+                try:
+                    step_index = int(step_index)
+                except ValueError:
+                    step_index = None
+
+            if isinstance(steps_total, str):
+                try:
+                    steps_total = int(steps_total)
+                except ValueError:
+                    steps_total = None
+
+            if instance.current_step:
+                ordered_step_ids = list(instance.flow.flow_steps.order_by('order').values_list('id', flat=True))
+                if node_name is None:
+                    node_name = instance.current_step.name
+                if steps_total is None:
+                    steps_total = len(ordered_step_ids)
+                if instance.current_step.id in ordered_step_ids:
+                    step_index = ordered_step_ids.index(instance.current_step.id) + 1
+            else:
+                steps_data = instance.flow.steps_data if isinstance(instance.flow.steps_data, list) else []
+                if steps_total is None:
+                    steps_total = len(steps_data)
+                if step_index is None:
+                    current_idx = instance.context.get('current_step_index')
+                    if current_idx is not None:
+                        step_index = current_idx + 1
+                if node_name is None and steps_data:
+                    idx = (step_index - 1) if step_index else None
+                    if idx is not None and 0 <= idx < len(steps_data):
+                        node_name = steps_data[idx].get('name')
+
+            metadata = {
+                'flow_name': flow_name,
+                'node_name': node_name,
+                'step_index': step_index,
+                'steps_total': steps_total,
+                'step_title': step_data.get('title') if isinstance(step_data, dict) else None
+            }
             
             print(f"[DEBUG] Step data type: {type(step_data)}")
             print(f"[DEBUG] Step data: {step_data}")
+            
+            # Asegurar que step_title tenga valor
+            if metadata['step_title'] is None and isinstance(step_data, dict):
+                metadata['step_title'] = step_data.get('title')
+            if metadata['step_title'] is None and metadata['node_name']:
+                metadata['step_title'] = metadata['node_name']
             
             # Si es un diccionario (formulario), devolverlo directamente
             if isinstance(step_data, dict):
@@ -385,15 +437,27 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
                 # Solo sobrescribimos current_step_id si la instancia usa el formato nuevo
                 if instance.current_step:
                     step_data['current_step_id'] = str(instance.current_step.id)
+                
+                step_data['flow_name'] = metadata['flow_name']
+                if metadata['node_name']:
+                    step_data['node_name'] = metadata['node_name']
+                if metadata['step_index'] is not None:
+                    step_data['step_index'] = metadata['step_index']
+                if metadata['steps_total'] is not None:
+                    step_data['steps_total'] = metadata['steps_total']
+                if metadata['step_title']:
+                    step_data['step_title'] = metadata['step_title']
                     
                 return Response(step_data)
             
             # Si es HTML, devolverlo en el formato anterior
+            metadata_payload = {k: v for k, v in metadata.items() if v is not None}
             return Response({
                 'html': step_data,
                 'transitions': transitions,
                 'status': instance.status,
-                'current_step_id': str(instance.current_step.id) if instance.current_step else None
+                'current_step_id': str(instance.current_step.id) if instance.current_step else None,
+                **metadata_payload
             })
             
         except Exception as e:

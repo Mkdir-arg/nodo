@@ -10,6 +10,16 @@ import { toast } from '@/lib/toast'
 
 interface FlowRuntimeProps {
   instanceId: string
+  onMetadataChange?: (metadata: FlowMetadata) => void
+}
+
+interface FlowMetadata {
+  flowName?: string
+  stepTitle?: string
+  nodeName?: string
+  stepIndex?: number
+  stepsTotal?: number
+  status?: string
 }
 
 interface StepData {
@@ -23,6 +33,11 @@ interface StepData {
   html?: string
   questions?: any[]
   scoring_ranges?: any[]
+  flow_name?: string
+  node_name?: string
+  step_index?: number
+  steps_total?: number
+  step_title?: string
   transitions: Array<{
     id: string
     label: string
@@ -32,7 +47,7 @@ interface StepData {
   current_step_id: string | null
 }
 
-export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
+export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) {
   const [stepData, setStepData] = useState<StepData | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
@@ -113,10 +128,23 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
           legajos: [],
           transitions: [{ id: 'select', label: 'Continuar', to_step_id: 'next' }],
           status: 'running',
-          current_step_id: 'start'
+          current_step_id: 'start',
+          flow_name: flowData.name || 'Flujo',
+          node_name: 'Inicio',
+          step_index: 1,
+          steps_total: Array.isArray(flowData.steps) ? flowData.steps.length : undefined,
+          step_title: flowData.name || 'Seleccionar Legajo'
         }
         
         setStepData(stepData)
+        onMetadataChange?.({
+          flowName: stepData.flow_name || stepData.title,
+          stepTitle: stepData.step_title || stepData.title,
+          nodeName: stepData.node_name,
+          stepIndex: stepData.step_index,
+          stepsTotal: stepData.steps_total,
+          status: stepData.status
+        })
         return
       }
       
@@ -132,6 +160,14 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
       const data = await response.json()
       console.log('Current step data:', data)
       setStepData(data)
+      onMetadataChange?.({
+        flowName: data.flow_name || data.title,
+        stepTitle: data.step_title || data.title,
+        nodeName: data.node_name,
+        stepIndex: data.step_index,
+        stepsTotal: data.steps_total,
+        status: data.status
+      })
       
     } catch (error) {
       console.error('Error:', error)
@@ -257,7 +293,7 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Ejecución de Flujo</CardTitle>
+            <CardTitle>{stepData.flow_name || 'Ejecución de Flujo'}</CardTitle>
             <span className={`px-2 py-1 text-xs font-medium rounded-full ${
               stepData.status === 'running' ? 'bg-blue-100 text-blue-800' :
               stepData.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -267,6 +303,13 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
                stepData.status === 'completed' ? 'Completado' : 'Pendiente'}
             </span>
           </div>
+          {(stepData.step_title || stepData.title || stepData.node_name) && (
+            <p className="mt-2 text-sm text-gray-600">
+              {stepData.step_title || stepData.title || stepData.node_name}
+              {stepData.node_name && stepData.node_name !== (stepData.step_title || stepData.title) ? ` • ${stepData.node_name}` : ''}
+              {stepData.step_index && stepData.steps_total ? ` • Paso ${stepData.step_index}${stepData.steps_total ? ` de ${stepData.steps_total}` : ''}` : ''}
+            </p>
+          )}
         </CardHeader>
       </Card>
 

@@ -14,6 +14,7 @@ export function useFlowsMin() {
           name: f.name,
           slug: f.slug,
           description: f.description,
+          steps: Array.isArray(f.steps) ? f.steps : [],
         }));
       } catch (e) {
         if (process.env.NODE_ENV !== 'production') {
