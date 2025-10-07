@@ -69,6 +69,7 @@ services:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
       - NEXT_PUBLIC_API_BASE=http://localhost:8000/api
+      - API_BASE_INTERNAL=http://backend:8000/api
 
 volumes:
   static_volume:

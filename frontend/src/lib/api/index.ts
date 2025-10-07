@@ -3,9 +3,11 @@ import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
 // Función para obtener la base de la API
 function getApiBase(): string {
   if (typeof window !== 'undefined') {
+    // Cliente: usar localhost para acceso desde navegador
     return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
   }
-  return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+  // Servidor (SSR): usar URL interna de Docker si está disponible
+  return process.env.API_BASE_INTERNAL || process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
 }
 
 /** Construye URL de API */

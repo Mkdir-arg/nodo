@@ -3,7 +3,7 @@ from .models import Flujo, EjecucionFlujo, InstanciaFlujo, Step, Transition, Ins
 
 
 class FlujoSerializer(serializers.ModelSerializer):
-    steps = serializers.JSONField(source='steps_data')
+    steps = serializers.SerializerMethodField()
     
     class Meta:
         model = Flujo
@@ -12,6 +12,22 @@ class FlujoSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'is_active'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_steps(self, obj):
+        # Primero intentar obtener steps de la relación Step
+        flow_steps = obj.flow_steps.all().order_by('order')
+        if flow_steps.exists():
+            return [{
+                'id': str(step.id),
+                'name': step.name,
+                'type': step.step_type,
+                'config': step.config,
+                'position': {'x': 0, 'y': step.order * 100},
+                'nextStepId': None  # Se puede mejorar con las transiciones
+            } for step in flow_steps]
+        
+        # Si no hay Steps relacionados, usar steps_data
+        return obj.steps_data if obj.steps_data else []
 
     def create(self, validated_data):
         request = self.context.get('request')

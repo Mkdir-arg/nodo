@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormRenderer } from './FormRenderer'
 import { StartTable } from './StartTable'
+import { EvaluationRenderer } from './renderers/EvaluationRenderer'
 import { toast } from '@/lib/toast'
 
 interface FlowRuntimeProps {
@@ -20,6 +21,8 @@ interface StepData {
   content?: any
   config?: any
   html?: string
+  questions?: any[]
+  scoring_ranges?: any[]
   transitions: Array<{
     id: string
     label: string
@@ -94,36 +97,30 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
         const flowData = await flowResponse.json()
         console.log('Flow data:', flowData)
         
-        const steps = flowData.steps || []
-        const startStep = steps.find((step: any) => step.type === 'start')
-        
-        if (startStep) {
-          // Obtener configuración del nodo start desde el flujo
-          const startConfig = flowData.get_start_node_config || startStep.config || {}
-          
-          const stepData = {
-            type: 'start',
-            title: startConfig.title || 'Seleccionar Legajo',
-            description: startConfig.description || 'Seleccione un legajo para iniciar el proceso',
-            config: {
-              tableColumns: startConfig.tableColumns || [
-                { key: 'id', label: 'ID' },
-                { key: 'created_at', label: 'Creado' },
-                { key: 'apellido', label: 'Apellido' },
-                { key: 'nombre', label: 'Nombre' }
-              ]
-            },
-            legajos: [],
-            transitions: [{ id: 'select', label: 'Continuar', to_step_id: 'next' }],
-            status: 'running',
-            current_step_id: 'start'
-          }
-          
-          setStepData(stepData)
-          return
+        // Para flujos, siempre mostrar el nodo start
+        const stepData = {
+          type: 'start',
+          title: flowData.name || 'Seleccionar Legajo',
+          description: flowData.description || 'Seleccione un legajo para iniciar el proceso',
+          config: {
+            tableColumns: [
+              { key: 'id', label: 'ID' },
+              { key: 'created_at', label: 'Creado' },
+              { key: 'apellido', label: 'Apellido' },
+              { key: 'nombre', label: 'Nombre' }
+            ]
+          },
+          legajos: [],
+          transitions: [{ id: 'select', label: 'Continuar', to_step_id: 'next' }],
+          status: 'running',
+          current_step_id: 'start'
         }
+        
+        setStepData(stepData)
+        return
       }
       
+      // Solo para instancias reales (no flow-X)
       const response = await fetch(`http://localhost:8000/api/instances/${instanceId}/current_step/`)
       console.log('Current step response status:', response.status)
       
@@ -312,6 +309,17 @@ export function FlowRuntime({ instanceId }: FlowRuntimeProps) {
                 submitLabel="Guardar y Continuar"
               />
             </div>
+          )}
+          
+          {stepData.type === 'evaluation' && (
+            <EvaluationRenderer
+              title={stepData.title || 'Evaluación'}
+              description={stepData.description}
+              questions={stepData.questions || []}
+              scoring_ranges={stepData.scoring_ranges || []}
+              onSubmit={handleInteraction}
+              processing={processing}
+            />
           )}
           
           {stepData.html && (

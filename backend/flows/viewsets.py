@@ -349,40 +349,18 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
         print(f"[DEBUG] Flow: {instance.flow.name}")
         print(f"[DEBUG] Status: {instance.status}")
         
-        # Si no tiene current_step, usar el segundo paso del flujo desde steps_data
+        # Si no tiene current_step, preparar contexto para flujos legacy (steps_data)
         if not instance.current_step:
             steps_data = instance.flow.steps_data or []
-            if len(steps_data) >= 2:
-                second_step = steps_data[1]
+            if isinstance(steps_data, list) and steps_data:
+                current_index = instance.context.get('current_step_index')
+                if current_index is None:
+                    # Iniciar en el segundo paso (índice 1) si existe, caso contrario en el primero
+                    instance.context['current_step_index'] = 1 if len(steps_data) > 1 else 0
+                    instance.save(update_fields=['context'])
+            if instance.status == 'pending':
                 instance.status = 'running'
-                instance.save()
-                print(f"[DEBUG] Found second step: {second_step.get('name')} ({second_step.get('type')})")
-                
-                # Devolver datos del segundo paso directamente
-                step_config = second_step.get('config', {})
-                if second_step.get('type') == 'form':
-                    return Response({
-                        'type': 'form',
-                        'title': step_config.get('title', 'Formulario'),
-                        'description': step_config.get('description', 'Complete los campos'),
-                        'fields': step_config.get('fields', [
-                            {'name': 'nombre', 'type': 'text', 'label': 'Nombre', 'required': True},
-                            {'name': 'email', 'type': 'email', 'label': 'Email', 'required': True}
-                        ]),
-                        'transitions': [{'id': 'submit', 'label': 'Enviar', 'to_step_id': 'next'}],
-                        'status': instance.status,
-                        'current_step_id': second_step.get('id')
-                    })
-                elif second_step.get('type') == 'email':
-                    return Response({
-                        'type': 'email',
-                        'title': 'Enviar Email',
-                        'description': f"Enviando email a: {step_config.get('to', 'destinatario')}",
-                        'config': step_config,
-                        'transitions': [{'id': 'send', 'label': 'Enviar Email', 'to_step_id': 'next'}],
-                        'status': instance.status,
-                        'current_step_id': second_step.get('id')
-                    })
+                instance.save(update_fields=['status'])
         
         if instance.current_step:
             print(f"[DEBUG] Step type: {instance.current_step.step_type}")
@@ -400,11 +378,14 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
             
             # Si es un diccionario (formulario), devolverlo directamente
             if isinstance(step_data, dict):
-                step_data.update({
-                    'transitions': transitions,
-                    'status': instance.status,
-                    'current_step_id': str(instance.current_step.id) if instance.current_step else None
-                })
+                # Siempre adjuntamos transiciones y estado actual
+                step_data['transitions'] = transitions
+                step_data['status'] = instance.status
+                
+                # Solo sobrescribimos current_step_id si la instancia usa el formato nuevo
+                if instance.current_step:
+                    step_data['current_step_id'] = str(instance.current_step.id)
+                    
                 return Response(step_data)
             
             # Si es HTML, devolverlo en el formato anterior
