@@ -14,36 +14,39 @@ interface MainLayoutProps {
 }
 
 /**
- * NOTA: Este componente NO debe importarse en las páginas.
+ * NOTA: Este componente NO debe importarse en las paginas.
  * Se monta una sola vez desde app/layout.tsx.
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (pathname.startsWith('/login')) {
-    return <>{children}</>;
-  }
-  
+  const { isLoading } = useAuth();
+  const isLoginRoute = pathname.startsWith('/login');
+
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
   const [isControlOpen, setIsControlOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
+    if (isLoginRoute) return;
     setIsMini(getStored('sideCollapsed', false));
-    // Evito genérico en TSX para que no rompa el parser
     setTheme(getStored('theme', 'light') as 'light' | 'dark');
-  }, []);
+  }, [isLoginRoute]);
 
   useEffect(() => {
+    if (isLoginRoute) return;
     setStored('sideCollapsed', isMini);
-  }, [isMini]);
+  }, [isMini, isLoginRoute]);
 
   useEffect(() => {
+    if (isLoginRoute) return;
     setStored('theme', theme);
     document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
+  }, [theme, isLoginRoute]);
+
+  if (isLoginRoute) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
@@ -55,7 +58,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="flex min-h-screen">
-      {/* Backdrop del SideNav (solo mobile) */}
       <div
         className={clsx(
           'fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 md:hidden',
@@ -63,7 +65,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
         )}
         onClick={() => setIsSideOpen(false)}
       />
-      {/* Backdrop del ControlSidebar */}
       <div
         className={clsx(
           'fixed inset-0 z-40 bg-black/50 transition-opacity duration-200',
@@ -72,19 +73,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
         onClick={() => setIsControlOpen(false)}
       />
 
-      <SideNav open={isSideOpen} mini={isMini} onToggleMini={() => setIsMini((m) => !m)} />
+      <SideNav open={isSideOpen} mini={isMini} onToggleMini={() => setIsMini((value) => !value)} />
 
       <div className="flex min-h-screen flex-1 flex-col transition-all duration-200">
         <TopNavBar
-          onToggleSideNav={() => setIsSideOpen((o) => !o)}
+          onToggleSideNav={() => setIsSideOpen((value) => !value)}
           onToggleControl={() => setIsControlOpen(true)}
-          onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          onToggleTheme={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
           theme={theme}
         />
 
         <main className="flex-1">
-          {/* 🔸 Las páginas deben renderizar SOLO su contenido.
-              No importes TopNavBar / SideNav / ControlSidebar en las páginas. */}
           <div className="mx-auto max-w-screen-2xl p-4 md:p-6">{children}</div>
         </main>
       </div>
@@ -94,8 +93,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
         onClose={() => setIsControlOpen(false)}
         mini={isMini}
         theme={theme}
-        onToggleMini={() => setIsMini((m) => !m)}
-        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        onToggleMini={() => setIsMini((value) => !value)}
+        onToggleTheme={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
       />
     </div>
   );

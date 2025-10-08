@@ -77,6 +77,15 @@ export async function fetchPlantillas() {
   }
 }
 
+export const plantillasKeys = {
+  all: ['plantillas'] as const,
+  lists: () => [...plantillasKeys.all, 'list'] as const,
+  list: (filters: string) => [...plantillasKeys.lists(), { filters }] as const,
+  details: () => [...plantillasKeys.all, 'detail'] as const,
+  detail: (id: string) => [...plantillasKeys.details(), id] as const,
+  layout: (id: string) => ['plantilla-layout', id] as const,
+};
+
 export async function fetchPlantillaFields(plantillaId: string) {
   try {
     // Obtener la plantilla completa para acceder al schema

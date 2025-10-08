@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { getJSON, postJSON } from "@/lib/api";
 
 export default function SystemSettings() {
@@ -255,13 +256,18 @@ export default function SystemSettings() {
                 </label>
                 <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
                   <div className="text-center mb-4">
-                    <img
-                      src={imagePreview}
+                    <Image
+                      src={imagePreview || "/png/people-connecting.png"}
                       alt="Preview"
+                      width={256}
+                      height={128}
                       className="max-w-full h-32 object-contain mx-auto rounded"
-                      onError={(e) => {
-                        e.currentTarget.src = '/png/people-connecting.png';
+                      onError={() => {
+                        if (imagePreview !== "/png/people-connecting.png") {
+                          setImagePreview("/png/people-connecting.png");
+                        }
                       }}
+                      unoptimized
                     />
                   </div>
                   <div className="text-sm">

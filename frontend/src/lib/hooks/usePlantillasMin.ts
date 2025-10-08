@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { PlantillasService } from '@/lib/services/plantillas';
+import { buildQueryOptions } from '@/lib/queryDefaults';
 
 export const PLANTILLAS_QUERY_KEY = ['plantillas', 'list', 'min'] as const;
 
@@ -23,10 +24,11 @@ export function usePlantillasMin() {
         return [];
       }
     },
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    ...buildQueryOptions({
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    }),
   });
 }

@@ -223,7 +223,7 @@ export function FormConfigEditor({ config, onChange }: FormConfigEditorProps) {
 
         {fields.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No hay campos configurados. Haga clic en "Agregar Campo" para comenzar.
+            No hay campos configurados. Haga clic en &quot;Agregar Campo&quot; para comenzar.
           </div>
         )}
       </div>

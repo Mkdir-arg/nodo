@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getJSON } from "@/lib/api";
 import { SendToFlowButton } from "@/components/legajos/SendToFlowButton";
+import { buildQueryOptions } from "@/lib/queryDefaults";
 
 type ListResponse = {
   results: Array<Record<string, any>>;
@@ -75,6 +76,10 @@ export default function ListView({ formId }: { formId: string }) {
   const { data, error, isLoading, isFetching } = useQuery({
     queryKey: ["legajos", formId, page, search],
     queryFn: () => fetchLegajos({ formId, page, search }),
+    ...buildQueryOptions({
+      staleTime: 20 * 1000,
+      refetchOnWindowFocus: true,
+    }),
   });
 
   const rows = useMemo(() => data?.results ?? [], [data?.results]);

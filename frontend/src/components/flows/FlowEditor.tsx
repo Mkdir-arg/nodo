@@ -42,7 +42,7 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
     if (!flows || flows.length === 0) {
       loadFlows();
     }
-  }, []); // Sin dependencias para evitar loops
+  }, [flows, loadFlows]);
   
   const [editingStep, setEditingStep] = useState<FlowStep | null>(null);
   const [showStepForm, setShowStepForm] = useState(false);

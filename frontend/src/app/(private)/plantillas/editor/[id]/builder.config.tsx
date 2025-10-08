@@ -5,62 +5,54 @@ import { SelectField } from "@/lib/forms/runtime/fields/SelectField";
 import { CheckboxField } from "@/lib/forms/runtime/fields/CheckboxField";
 import { DateField } from "@/lib/forms/runtime/fields/DateField";
 
+type FieldBase = {
+  name: string;
+  label?: string;
+  description?: string;
+  required?: boolean;
+};
+
 export type Props = {
   TextField: {
-    field: {
+    field: FieldBase & {
       type: "text" | "textarea";
-      name: string;
-      label?: string;
       placeholder?: string;
-      required?: boolean;
-      description?: string;
     };
   };
   NumberField: {
-    field: {
+    field: FieldBase & {
       type: "number";
-      name: string;
-      label?: string;
       placeholder?: string;
-      required?: boolean;
-      description?: string;
       min?: number;
       max?: number;
       step?: number;
     };
   };
   SelectField: {
-    field: {
+    field: FieldBase & {
       type: "select";
-      name: string;
-      label?: string;
       placeholder?: string;
-      required?: boolean;
-      description?: string;
       options: Array<{ label: string; value: string }>;
     };
   };
   CheckboxField: {
-    field: {
+    field: FieldBase & {
       type: "checkbox";
-      name: string;
-      label?: string;
-      required?: boolean;
-      description?: string;
     };
   };
   DateField: {
-    field: {
+    field: FieldBase & {
       type: "date";
-      name: string;
-      label?: string;
-      required?: boolean;
-      description?: string;
       minDate?: string;
       maxDate?: string;
     };
   };
 };
+
+const yesNoOptions: Array<{ label: string; value: boolean }> = [
+  { label: "Si", value: true },
+  { label: "No", value: false },
+];
 
 export const config: Config<Props> = {
   components: {
@@ -73,16 +65,13 @@ export const config: Config<Props> = {
               type: "select",
               options: [
                 { label: "Texto", value: "text" },
-                { label: "Área de texto", value: "textarea" },
+                { label: "Area de texto", value: "textarea" },
               ],
             },
             name: { type: "text" },
             label: { type: "text" },
             placeholder: { type: "text" },
-            required: { type: "radio", options: [
-              { label: "Sí", value: true },
-              { label: "No", value: false },
-            ]},
+            required: { type: "radio", options: yesNoOptions },
             description: { type: "textarea" },
           },
         },
@@ -105,10 +94,7 @@ export const config: Config<Props> = {
             name: { type: "text" },
             label: { type: "text" },
             placeholder: { type: "text" },
-            required: { type: "radio", options: [
-              { label: "Sí", value: true },
-              { label: "No", value: false },
-            ]},
+            required: { type: "radio", options: yesNoOptions },
             description: { type: "textarea" },
             min: { type: "number" },
             max: { type: "number" },
@@ -120,7 +106,7 @@ export const config: Config<Props> = {
         field: {
           type: "number",
           name: "numero",
-          label: "Campo numérico",
+          label: "Campo numerico",
           required: false,
         },
       },
@@ -134,10 +120,7 @@ export const config: Config<Props> = {
             name: { type: "text" },
             label: { type: "text" },
             placeholder: { type: "text" },
-            required: { type: "radio", options: [
-              { label: "Sí", value: true },
-              { label: "No", value: false },
-            ]},
+            required: { type: "radio", options: yesNoOptions },
             description: { type: "textarea" },
             options: {
               type: "array",
@@ -153,11 +136,11 @@ export const config: Config<Props> = {
         field: {
           type: "select",
           name: "seleccion",
-          label: "Campo de selección",
+          label: "Campo de seleccion",
           required: false,
           options: [
-            { label: "Opción 1", value: "opt1" },
-            { label: "Opción 2", value: "opt2" },
+            { label: "Opcion 1", value: "opt1" },
+            { label: "Opcion 2", value: "opt2" },
           ],
         },
       },
@@ -170,10 +153,7 @@ export const config: Config<Props> = {
           objectFields: {
             name: { type: "text" },
             label: { type: "text" },
-            required: { type: "radio", options: [
-              { label: "Sí", value: true },
-              { label: "No", value: false },
-            ]},
+            required: { type: "radio", options: yesNoOptions },
             description: { type: "textarea" },
           },
         },
@@ -195,10 +175,7 @@ export const config: Config<Props> = {
           objectFields: {
             name: { type: "text" },
             label: { type: "text" },
-            required: { type: "radio", options: [
-              { label: "Sí", value: true },
-              { label: "No", value: false },
-            ]},
+            required: { type: "radio", options: yesNoOptions },
             description: { type: "textarea" },
             minDate: { type: "text" },
             maxDate: { type: "text" },

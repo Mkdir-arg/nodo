@@ -334,47 +334,47 @@ function resolveFieldNode(
 
   const label =
     coerceString(rawField.label) ??
-    coerceString((node as Record<string, unknown>).label) ??
+    coerceString((node as unknown as Record<string, unknown>).label) ??
     "Campo sin título";
 
   const name =
     coerceString(node.fieldKey) ??
     coerceString(rawField.key) ??
     coerceString(rawField.name) ??
-    coerceString((node as Record<string, unknown>).name) ??
+    coerceString((node as unknown as Record<string, unknown>).name) ??
     (typeof node.id === "string" ? node.id : "");
 
   const description =
     coerceString(rawField.description) ??
-    coerceString((node as Record<string, unknown>).description);
+    coerceString((node as unknown as Record<string, unknown>).description);
 
   const placeholder =
     coerceString(rawField.placeholder) ??
-    coerceString((node as Record<string, unknown>).placeholder);
+    coerceString((node as unknown as Record<string, unknown>).placeholder);
 
   const required =
     coerceBoolean(rawField.required) ??
-    coerceBoolean((node as Record<string, unknown>).required) ??
+    coerceBoolean((node as unknown as Record<string, unknown>).required) ??
     false;
 
   const options = normalizeOptions(
-    rawField.options ?? (node as Record<string, unknown>).options,
+    rawField.options ?? (node as unknown as Record<string, unknown>).options,
   );
 
-  const min = coerceNumber(rawField.min ?? (node as Record<string, unknown>).min);
-  const max = coerceNumber(rawField.max ?? (node as Record<string, unknown>).max);
+  const min = coerceNumber(rawField.min ?? (node as unknown as Record<string, unknown>).min);
+  const max = coerceNumber(rawField.max ?? (node as unknown as Record<string, unknown>).max);
   const step = coerceNumber(
-    rawField.step ?? (node as Record<string, unknown>).step,
+    rawField.step ?? (node as unknown as Record<string, unknown>).step,
   );
   const minDate =
-    coerceString(rawField.minDate ?? (node as Record<string, unknown>).minDate);
+    coerceString(rawField.minDate ?? (node as unknown as Record<string, unknown>).minDate);
   const maxDate =
-    coerceString(rawField.maxDate ?? (node as Record<string, unknown>).maxDate);
+    coerceString(rawField.maxDate ?? (node as unknown as Record<string, unknown>).maxDate);
   const accept = normalizeAccept(
-    rawField.accept ?? (node as Record<string, unknown>).accept,
+    rawField.accept ?? (node as unknown as Record<string, unknown>).accept,
   );
   const maxSizeMB = coerceNumber(
-    rawField.maxSizeMB ?? (node as Record<string, unknown>).maxSizeMB,
+    rawField.maxSizeMB ?? (node as unknown as Record<string, unknown>).maxSizeMB,
   );
 
   const id =
@@ -529,11 +529,7 @@ export function layoutToCanvasNodes(layout?: FormLayout | null): CanvasNode[] {
   const result: CanvasNode[] = [];
 
   const visitNode = (
-    node:
-      | LayoutSectionNode
-      | LayoutRowNode
-      | LayoutColumnNode
-      | LayoutFieldNode,
+    node: any,
     context: { rowIndex: number; columnStart: number; columnSpan: number },
   ) => {
     if (!node) return;

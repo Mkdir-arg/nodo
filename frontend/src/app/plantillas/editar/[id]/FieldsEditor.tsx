@@ -220,7 +220,7 @@ export function FieldsEditor({ fields, onChange }: FieldsEditorProps) {
 
       {localFields.length === 0 && (
         <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-          No hay campos configurados. Haga clic en "Agregar Campo" para comenzar.
+          No hay campos configurados. Haga clic en &quot;Agregar Campo&quot; para comenzar.
         </div>
       )}
     </div>

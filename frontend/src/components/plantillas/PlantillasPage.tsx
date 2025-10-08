@@ -10,6 +10,7 @@ import { HoverCard } from '@/components/ui/hover-card';
 import { FloatingButton } from '@/components/ui/floating-button';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
+import { buildQueryOptions } from '@/lib/queryDefaults';
 
 type Estado = 'TODAS' | 'ACTIVO' | 'INACTIVO';
 const cols = 'grid grid-cols-5 gap-4 items-center';
@@ -40,6 +41,10 @@ export default function PlantillasPage() {
         page,
         page_size: 10,
       }),
+    ...buildQueryOptions({
+      staleTime: 45 * 1000,
+      refetchOnWindowFocus: true,
+    }),
   });
 
   const { showToast } = useToast();

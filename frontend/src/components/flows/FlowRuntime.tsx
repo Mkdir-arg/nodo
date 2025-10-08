@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormRenderer } from './FormRenderer'
@@ -52,17 +52,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [formData, setFormData] = useState<Record<string, any>>({})
-  const [instanceData, setInstanceData] = useState<any>(null)
-
-  useEffect(() => {
-    loadCurrentStep()
-  }, [instanceId])
-  
-  useEffect(() => {
-    loadLegajos()
-  }, [instanceData])
-  
-  const loadLegajos = async () => {
+  const loadLegajos = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8000/api/legajos/')
       
@@ -95,9 +85,9 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
       console.error('Error loading legajos:', error)
       toast.error('Error cargando legajos')
     }
-  }
+  }, [])
 
-  const loadCurrentStep = async () => {
+  const loadCurrentStep = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -173,9 +163,14 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
       console.error('Error:', error)
       toast.error('Error cargando el paso actual')
     } finally {
+      await loadLegajos()
       setLoading(false)
     }
-  }
+  }, [instanceId, onMetadataChange, loadLegajos])
+
+  useEffect(() => {
+    loadCurrentStep()
+  }, [loadCurrentStep])
 
   const handleInteraction = async (interactionData: Record<string, any> = {}) => {
     try {

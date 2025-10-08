@@ -16,9 +16,9 @@ const DEFAULT_LOGIN_SETTINGS: LoginSettings = {
   loginFooterSubtitle: 'Powered by ICore',
 };
 
-export async function getLoginSettings(): Promise<LoginSettings> {
+export async function getLoginSettings(init?: RequestInit): Promise<LoginSettings> {
   try {
-    const settings = await getJSON<any>('/system/settings/');
+    const settings = await getJSON<any>('/system/settings/', init);
     return {
       loginImage: settings?.loginImage || DEFAULT_LOGIN_SETTINGS.loginImage,
       loginTitle: settings?.loginTitle || DEFAULT_LOGIN_SETTINGS.loginTitle,

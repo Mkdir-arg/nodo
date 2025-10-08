@@ -228,7 +228,7 @@ export function EvaluationConfigEditor({ config, onChange }: EvaluationConfigEdi
 
         {questions.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No hay preguntas configuradas. Haga clic en "Agregar Pregunta" para comenzar.
+            No hay preguntas configuradas. Haga clic en &quot;Agregar Pregunta&quot; para comenzar.
           </div>
         )}
       </div>

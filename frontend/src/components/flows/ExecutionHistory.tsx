@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { flowsApi } from '@/lib/api/flows';
@@ -21,11 +21,8 @@ export default function ExecutionHistory({ flowId }: ExecutionHistoryProps) {
   const [executions, setExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadExecutions();
-  }, [flowId]);
-
-  const loadExecutions = async () => {
+  const loadExecutions = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await flowsApi.getFlowExecutions(flowId);
       setExecutions(response);
@@ -34,7 +31,11 @@ export default function ExecutionHistory({ flowId }: ExecutionHistoryProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [flowId]);
+
+  useEffect(() => {
+    loadExecutions();
+  }, [loadExecutions]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

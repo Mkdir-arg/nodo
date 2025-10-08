@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { flowsApi } from '@/lib/api/flows';
+import { buildQueryOptions } from '@/lib/queryDefaults';
 
 export const FLOWS_QUERY_KEY = ['flows', 'list', 'min'] as const;
 
@@ -23,13 +24,14 @@ export function useFlowsMin() {
         return [];
       }
     },
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    ...buildQueryOptions({
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 0,
+    }),
     refetchInterval: false,
     refetchIntervalInBackground: false,
-    retry: false, // No reintentar en caso de error
   });
 }

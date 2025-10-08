@@ -3,19 +3,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 import { ToastProvider } from '@/components/ui/toast-provider';
+import { defaultQueryClientOptions } from '@/lib/queryDefaults';
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: true,
-        refetchOnMount: true,
-        refetchOnReconnect: true,
-        retry: false,
-        staleTime: 0,
-        gcTime: 0,
-      },
-    },
+    defaultOptions: defaultQueryClientOptions,
   }));
   return (
     <QueryClientProvider client={queryClient}>

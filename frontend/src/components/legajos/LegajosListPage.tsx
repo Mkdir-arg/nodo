@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import { LegajosService } from '@/lib/services/legajos';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { SendToFlowButton } from './SendToFlowButton';
+import { buildQueryOptions } from '@/lib/queryDefaults';
 
 const cols = 'grid grid-cols-[1fr_200px_160px_120px_40px] gap-4 items-center';
 const PAGE_SIZE = 10;
@@ -101,6 +102,10 @@ export default function LegajosListPage() {
         results: rawResults.map(normalizeRow),
       } satisfies LegajosListResponse;
     },
+    ...buildQueryOptions({
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+    }),
   });
 
   const { data: plantillas = [] } = useQuery<PlantillaOption[]>({
@@ -113,7 +118,12 @@ export default function LegajosListPage() {
         nombre: item?.nombre ?? 'Sin nombre',
       }));
     },
-    staleTime: 0,
+    ...buildQueryOptions({
+      staleTime: 5 * 60 * 1000,
+      gcTime: 15 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    }),
   });
 
   const plantillaMap = useMemo(() => {

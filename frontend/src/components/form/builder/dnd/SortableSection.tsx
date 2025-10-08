@@ -29,7 +29,7 @@ export default function SortableSection({
 
   const { selected, setSelected, updateSection, duplicateSection, removeSection } = useBuilderStore();
   const isSel = selected?.type === 'section' && selected.id === id;
-  const nodes = section.nodes || section.children || [];
+  const nodes = useMemo(() => section.nodes || section.children || [], [section.nodes, section.children]);
   const fieldIds = useMemo(() => nodes.map((n: any) => n.id), [nodes]);
   const layoutMode = section.layout_mode === 'grid' ? 'grid' : 'flow';
 

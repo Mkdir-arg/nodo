@@ -19,7 +19,11 @@ type Props = {
 };
 
 export default function SectionGridView({ section, ctx, renderField, renderUi }: Props) {
-  const nodes = section?.nodes || section?.children || [];
+  const nodes = useMemo(() => {
+    if (Array.isArray(section?.nodes)) return section.nodes;
+    if (Array.isArray(section?.children)) return section.children;
+    return [];
+  }, [section?.nodes, section?.children]);
   const layout = useMemo<Layout[]>(() => {
     return nodes.map((n: any) => ({
       i: n.layout?.i ?? n.id,
