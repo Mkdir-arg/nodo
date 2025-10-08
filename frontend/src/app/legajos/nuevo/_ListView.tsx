@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getJSON } from "@/lib/api";
@@ -75,7 +75,6 @@ export default function ListView({ formId }: { formId: string }) {
   const { data, error, isLoading, isFetching } = useQuery({
     queryKey: ["legajos", formId, page, search],
     queryFn: () => fetchLegajos({ formId, page, search }),
-    placeholderData: keepPreviousData,
   });
 
   const rows = useMemo(() => data?.results ?? [], [data?.results]);

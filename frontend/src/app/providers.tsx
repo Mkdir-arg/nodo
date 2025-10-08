@@ -8,11 +8,12 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
+        refetchOnReconnect: true,
         retry: false,
-        staleTime: 5 * 60 * 1000, // 5 minutos
+        staleTime: 0,
+        gcTime: 0,
       },
     },
   }));

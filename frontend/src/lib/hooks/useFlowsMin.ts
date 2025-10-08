@@ -23,11 +23,11 @@ export function useFlowsMin() {
         return [];
       }
     },
-    staleTime: Infinity, // Nunca se considera stale
-    gcTime: Infinity, // Nunca se elimina del cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     refetchInterval: false,
     refetchIntervalInBackground: false,
     retry: false, // No reintentar en caso de error

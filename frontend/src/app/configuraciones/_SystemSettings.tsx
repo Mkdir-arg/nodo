@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { getJSON, postJSON } from "@/lib/api";
-import { clearLoginSettingsCache } from "@/lib/loginSettings";
 
 export default function SystemSettings() {
   const [settings, setSettings] = useState({
@@ -77,7 +76,6 @@ export default function SystemSettings() {
     
     try {
       await postJSON('/system/settings/update/', settings);
-      clearLoginSettingsCache(); // Limpiar cache para que se recarguen
       alert('Configuraciones guardadas exitosamente');
     } catch (error) {
       console.error('Error saving settings:', error);
