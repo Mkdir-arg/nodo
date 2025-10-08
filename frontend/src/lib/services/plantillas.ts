@@ -22,8 +22,71 @@ const normalizeList = (res: any) => {
   return { count: res?.count ?? 0, results: res?.results ?? [] };
 };
 
-const getWithFallback = <T = any>(a: string, b: string) =>
-  getJSON<T>(a).catch(() => getJSON<T>(b));
+type EndpointPreference = 'plantillas' | 'formularios';
+
+let preferredEndpoint: EndpointPreference | null = null;
+const FALLBACK_ENDPOINT: EndpointPreference = 'formularios';
+
+const endpointMap: Record<EndpointPreference, string> = {
+  plantillas: '/api/plantillas/',
+  formularios: '/api/formularios/',
+};
+
+const memoizedGet = new Map<string, Promise<any>>();
+const memoizedExists = new Map<string, Promise<any>>();
+
+const resolveUrl = (base: string, suffix = '') => {
+  if (!suffix) return base;
+  if (base.endsWith('/') && suffix.startsWith('/')) {
+    return `${base}${suffix.slice(1)}`;
+  }
+  if (!base.endsWith('/') && !suffix.startsWith('/')) {
+    return `${base}/${suffix}`;
+  }
+  return `${base}${suffix}`;
+};
+
+async function requestWithPreference<T>(path: string) {
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+
+  const fetchFrom = async (endpoint: EndpointPreference): Promise<T> => {
+    const url = resolveUrl(endpointMap[endpoint], normalizedPath);
+    return getJSON<T>(url);
+  };
+
+  if (preferredEndpoint) {
+    try {
+      return await fetchFrom(preferredEndpoint);
+    } catch (error) {
+      preferredEndpoint = null;
+      memoizedGet.clear();
+      throw error;
+    }
+  }
+
+  const attempts: EndpointPreference[] = ['plantillas', 'formularios'];
+  const errors: unknown[] = [];
+
+  for (const candidate of attempts) {
+    try {
+      const result = await fetchFrom(candidate);
+      preferredEndpoint = candidate;
+      return result;
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+
+  preferredEndpoint = FALLBACK_ENDPOINT;
+  throw errors[errors.length - 1];
+}
+
+const getWithFallback = <T = any>(path: string) => {
+  if (!memoizedGet.has(path)) {
+    memoizedGet.set(path, requestWithPreference<T>(path));
+  }
+  return memoizedGet.get(path) as Promise<T>;
+};
 
 export const PlantillasService = {
   fetchPlantillas: async (p: FetchPlantillasParams = {}) => {
@@ -33,23 +96,32 @@ export const PlantillasService = {
       page: p.page,
       page_size: p.page_size,
     });
-    const res = await getWithFallback(`/api/plantillas/${qs}`, `/api/formularios/${qs}`);
+    const res = await getWithFallback(`/api/plantillas/${qs}`);
     return normalizeList(res);
   },
 
   fetchPlantilla: (id: string) =>
-    getWithFallback(`/api/plantillas/${id}/`, `/api/formularios/${id}/`),
+    getWithFallback(`/api/plantillas/${id}/`),
 
   existsNombre: async (nombre: string, excludeId?: string) => {
     const qs = qsOf({ nombre: nombre?.trim(), exclude_id: excludeId });
     type ExistsResponse = { exists?: boolean };
-    try {
-      const r = await getJSON<ExistsResponse>(`/api/plantillas/exists/${qs}`);
-      return Boolean(r?.exists);
-    } catch {
-      const r = await getJSON<ExistsResponse>(`/api/formularios/exists/${qs}`);
-      return Boolean(r?.exists);
+    const key = `/api/plantillas/exists/${qs}`;
+    if (!memoizedExists.has(key)) {
+      memoizedExists.set(
+        key,
+        (async () => {
+          try {
+            const r = await requestWithPreference<ExistsResponse>(`/api/plantillas/exists/${qs}`);
+            return Boolean(r?.exists);
+          } catch {
+            const fallback = await requestWithPreference<ExistsResponse>(`/api/formularios/exists/${qs}`);
+            return Boolean(fallback?.exists);
+          }
+        })(),
+      );
     }
+    return memoizedExists.get(key) as Promise<boolean>;
   },
 
   savePlantilla: (payload: any) =>

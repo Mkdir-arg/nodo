@@ -12,6 +12,16 @@ from django.contrib.auth.models import User
 from flows.models import Flujo, Step, Transition
 
 def create_test_data():
+    # Crear usuario admin
+    admin_user, created = User.objects.get_or_create(
+        username='admin',
+        defaults={'email': 'admin@example.com', 'is_staff': True, 'is_superuser': True}
+    )
+    if created:
+        admin_user.set_password('admin123')
+        admin_user.save()
+        print(f"Usuario admin creado: {admin_user.username}")
+    
     # Crear usuario por defecto
     user, created = User.objects.get_or_create(
         username='default',
@@ -20,14 +30,17 @@ def create_test_data():
     if created:
         user.set_password('default123')
         user.save()
-        print(f"Usuario creado: {user.username}")
+        print(f"Usuario default creado: {user.username}")
+    
+    # Usar admin como creador del flujo
+    user = admin_user
     
     # Crear flujo de prueba
     flow, created = Flujo.objects.get_or_create(
         name='Flujo de Evaluación',
         defaults={
             'description': 'Flujo de prueba para evaluación de candidatos',
-            'created_by': user,
+            'created_by': admin_user,
             'steps_data': []
         }
     )

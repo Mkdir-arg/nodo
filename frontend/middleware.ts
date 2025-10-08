@@ -3,9 +3,9 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   // Rutas que requieren autenticación
-  const protectedPaths = ['/dashboard', '/legajos', '/plantillas', '/flujos']
+  const protectedPaths = ['/', '/dashboard', '/legajos', '/plantillas', '/flujos']
   const isProtectedPath = protectedPaths.some(path => 
-    request.nextUrl.pathname.startsWith(path)
+    request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
   )
 
   if (isProtectedPath) {
@@ -22,5 +22,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/legajos/:path*', '/plantillas/:path*', '/flujos/:path*']
+  matcher: ['/', '/dashboard/:path*', '/legajos/:path*', '/plantillas/:path*', '/flujos/:path*']
 }

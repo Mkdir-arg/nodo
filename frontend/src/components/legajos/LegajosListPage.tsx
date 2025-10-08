@@ -95,17 +95,19 @@ export default function LegajosListPage() {
         ? res.count
         : Number.parseInt(res?.count ?? '', 10);
 
-      return {
+      const result = {
         count: Number.isFinite(parsedCount) ? parsedCount : rawResults.length,
         next: typeof res?.next === 'string' ? res.next : null,
         previous: typeof res?.previous === 'string' ? res.previous : null,
         results: rawResults.map(normalizeRow),
       } satisfies LegajosListResponse;
+      return result;
     },
     ...buildQueryOptions({
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
     }),
+    placeholderData: (previousData) => previousData ?? undefined,
   });
 
   const { data: plantillas = [] } = useQuery<PlantillaOption[]>({
@@ -124,7 +126,7 @@ export default function LegajosListPage() {
       refetchOnWindowFocus: true,
       refetchOnMount: true,
     }),
-  });
+  }, { placeholderData: (prev) => prev }),
 
   const plantillaMap = useMemo(() => {
     const map = new Map<string, string>();

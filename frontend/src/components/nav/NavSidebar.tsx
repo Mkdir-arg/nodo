@@ -7,7 +7,7 @@ import { useNavStore } from '@/lib/store/useNavStore';
 export default function NavSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { legajosExpanded, setLegajosExpanded, plantillas, refreshPlantillas } = useNavStore();
+  const { legajosExpanded, setLegajosExpanded, configExpanded, setConfigExpanded, plantillas, refreshPlantillas } = useNavStore();
 
   useEffect(() => { refreshPlantillas(); }, [refreshPlantillas]);
 
@@ -50,11 +50,39 @@ export default function NavSidebar() {
         )}
       </div>
 
-      {/* Item Plantillas (catálogo) */}
-      <Link href="/plantillas" className={`block px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground ${pathname==='/plantillas'?'bg-muted':''}`}>📄 Plantillas</Link>
-      
-      {/* Item Configuraciones */}
-      <Link href="/configuraciones" className={`block px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground ${pathname==='/configuraciones'?'bg-muted':''}`}>⚙️ Configuraciones</Link>
+      {/* Item Configuraciones con submenú */}
+      <div className="space-y-1">
+        <button
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-muted border border-border text-foreground"
+          onClick={() => setConfigExpanded(!configExpanded)}
+        >
+          <span className="flex items-center gap-2">⚙️ <span>Configuraciones</span></span>
+          <span className={`transition-transform ${configExpanded ? 'rotate-90' : ''}`}>›</span>
+        </button>
+
+        {configExpanded && (
+          <div className="ml-4 pl-2 border-l space-y-1">
+            <Link
+              href="/plantillas"
+              className={`block px-2 py-1 rounded hover:bg-muted text-sm text-foreground ${pathname==='/plantillas'?'font-medium':''}`}
+            >
+              📄 Plantillas
+            </Link>
+            <Link
+              href="/flujos"
+              className={`block px-2 py-1 rounded hover:bg-muted text-sm text-foreground ${pathname==='/flujos'?'font-medium':''}`}
+            >
+              🔄 Flujos
+            </Link>
+            <Link
+              href="/configuraciones"
+              className={`block px-2 py-1 rounded hover:bg-muted text-sm text-foreground ${pathname==='/configuraciones'?'font-medium':''}`}
+            >
+              🛠️ Sistema
+            </Link>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }

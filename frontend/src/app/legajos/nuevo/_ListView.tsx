@@ -80,6 +80,7 @@ export default function ListView({ formId }: { formId: string }) {
       staleTime: 20 * 1000,
       refetchOnWindowFocus: true,
     }),
+    placeholderData: (prev) => prev,
   });
 
   const rows = useMemo(() => data?.results ?? [], [data?.results]);

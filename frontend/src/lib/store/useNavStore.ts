@@ -3,15 +3,19 @@ import { PlantillasService } from '@/lib/services/plantillas';
 
 type NavState = {
   legajosExpanded: boolean;
+  configExpanded: boolean;
   plantillas: { id: string; nombre: string }[];
   refreshPlantillas: () => Promise<void>;
   setLegajosExpanded: (v: boolean) => void;
+  setConfigExpanded: (v: boolean) => void;
 };
 
 export const useNavStore = create<NavState>((set, get) => ({
   legajosExpanded: false,
+  configExpanded: false,
   plantillas: [],
   setLegajosExpanded: (v) => set({ legajosExpanded: v }),
+  setConfigExpanded: (v) => set({ configExpanded: v }),
   refreshPlantillas: async () => {
     try {
       const r = await PlantillasService.fetchPlantillas({ estado: "ACTIVO", page_size: 1000 });
