@@ -16,6 +16,7 @@ from config.jwt_settings import get_jwt_token_lifetime
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = EmailOrUsernameTokenObtainPairSerializer
+    throttle_classes = ()
 
 
 class AuthMeView(APIView):

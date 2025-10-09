@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormRenderer } from './FormRenderer'
@@ -52,6 +52,11 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [formData, setFormData] = useState<Record<string, any>>({})
+  const metadataRef = useRef(onMetadataChange)
+
+  useEffect(() => {
+    metadataRef.current = onMetadataChange
+  }, [onMetadataChange])
   const loadLegajos = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8000/api/legajos/')
@@ -127,7 +132,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
         }
         
         setStepData(stepData)
-        onMetadataChange?.({
+        metadataRef.current?.({
           flowName: stepData.flow_name || stepData.title,
           stepTitle: stepData.step_title || stepData.title,
           nodeName: stepData.node_name,
@@ -150,7 +155,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
       const data = await response.json()
       console.log('Current step data:', data)
       setStepData(data)
-      onMetadataChange?.({
+      metadataRef.current?.({
         flowName: data.flow_name || data.title,
         stepTitle: data.step_title || data.title,
         nodeName: data.node_name,
@@ -166,7 +171,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
       await loadLegajos()
       setLoading(false)
     }
-  }, [instanceId, onMetadataChange, loadLegajos])
+  }, [instanceId, loadLegajos])
 
   useEffect(() => {
     loadCurrentStep()

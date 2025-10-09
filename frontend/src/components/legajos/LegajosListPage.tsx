@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import { LegajosService } from '@/lib/services/legajos';
-import { PlantillasService } from '@/lib/services/plantillas';
+import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
 import { SendToFlowButton } from './SendToFlowButton';
 import { buildQueryOptions } from '@/lib/queryDefaults';
 
@@ -110,23 +110,14 @@ export default function LegajosListPage() {
     placeholderData: (previousData) => previousData ?? undefined,
   });
 
-  const { data: plantillas = [] } = useQuery<PlantillaOption[]>({
-    queryKey: ['plantillas', 'legajos-options'],
-    queryFn: async () => {
-      const res: any = await PlantillasService.fetchPlantillas({ page_size: 200 });
-      const raw = Array.isArray(res?.results) ? res.results : Array.isArray(res) ? res : [];
-      return raw.map((item: any) => ({
-        id: String(item?.id ?? ''),
-        nombre: item?.nombre ?? 'Sin nombre',
-      }));
-    },
-    ...buildQueryOptions({
-      staleTime: 5 * 60 * 1000,
-      gcTime: 15 * 60 * 1000,
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
-    }),
-  }, { placeholderData: (prev) => prev }),
+  const { data: plantillasMin = [] } = usePlantillasMin();
+  const plantillas: PlantillaOption[] = useMemo(() => {
+    if (!Array.isArray(plantillasMin)) return [];
+    return plantillasMin.map((item: any) => ({
+      id: String(item?.id ?? ''),
+      nombre: item?.nombre ?? 'Sin nombre',
+    }));
+  }, [plantillasMin]);
 
   const plantillaMap = useMemo(() => {
     const map = new Map<string, string>();

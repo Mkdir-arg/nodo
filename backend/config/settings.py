@@ -108,7 +108,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Nota: establecer ``CORS_ALLOW_ALL_ORIGINS = True`` solo como diagnóstico
+# Nota: establecer ``CORS_ALLOW_ALL_ORIGINS = True`` solo como diagnostico
 # temporal durante el desarrollo. No se recomienda mantenerlo activo.
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -135,8 +135,8 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "100/hour",
-        "user": "1000/hour",
+        "anon": "1000/minute",
+        "user": "5000/minute",
     },
 }
 

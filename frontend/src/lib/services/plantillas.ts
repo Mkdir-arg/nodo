@@ -46,12 +46,18 @@ const resolveUrl = (base: string, suffix = '') => {
   return `${base}${suffix}`;
 };
 
+const baseSegmentMatcher = /\/api\/(plantillas|formularios)(?=\/|\?|$)/;
+
 async function requestWithPreference<T>(path: string) {
-  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const suffix = normalizedPath.replace(/^\//, '');
 
   const fetchFrom = async (endpoint: EndpointPreference): Promise<T> => {
-    const url = resolveUrl(endpointMap[endpoint], normalizedPath);
-    return getJSON<T>(url);
+    const substituted = baseSegmentMatcher.test(normalizedPath)
+      ? normalizedPath.replace(baseSegmentMatcher, `/api/${endpoint}`)
+      : resolveUrl(endpointMap[endpoint], suffix);
+
+    return getJSON<T>(substituted);
   };
 
   if (preferredEndpoint) {

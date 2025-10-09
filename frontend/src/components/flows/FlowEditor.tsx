@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { FLOWS_QUERY_KEY } from '@/lib/hooks/useFlowsMin';
@@ -33,16 +33,18 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { flows, currentFlow, setCurrentFlow, addFlow, updateFlow, addStep, updateStep, deleteStep, loadFlows } = useFlowStore();
+  const hasRequestedFlowsRef = useRef(false);
   
   console.log('FlowEditor mounted with flowId:', flowId);
   console.log('useFlowStore flows:', flows);
   
   // Cargar flujos una sola vez al montar
   useEffect(() => {
-    if (!flows || flows.length === 0) {
+    if (!hasRequestedFlowsRef.current) {
+      hasRequestedFlowsRef.current = true;
       loadFlows();
     }
-  }, [flows, loadFlows]);
+  }, [loadFlows]);
   
   const [editingStep, setEditingStep] = useState<FlowStep | null>(null);
   const [showStepForm, setShowStepForm] = useState(false);

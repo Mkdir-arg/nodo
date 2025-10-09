@@ -31,6 +31,24 @@ class FlowRuntime:
         print(f"[DEBUG] get_current_step_html - current_step: {self.instance.current_step}")
         print(f"[DEBUG] get_current_step_html - context: {self.instance.context}")
         
+        if not self.instance.current_step:
+            ordered_steps = list(self.flow.flow_steps.order_by('order'))
+            if ordered_steps:
+                fallback_step = next(
+                    (step for step in ordered_steps if step.step_type != 'start'),
+                    ordered_steps[0],
+                )
+                self.instance.current_step = fallback_step
+                update_fields = ['current_step']
+                if self.instance.status == 'pending':
+                    self.instance.status = 'running'
+                    update_fields.append('status')
+                if isinstance(self.instance.context, dict) and 'current_step_index' in self.instance.context:
+                    self.instance.context.pop('current_step_index', None)
+                    update_fields.append('context')
+                self.instance.save(update_fields=update_fields)
+                print(f"[DEBUG] Auto-assigned current_step: {fallback_step.name}")
+        
         # Manejar flujos con current_step (formato nuevo)
         if self.instance.current_step:
             print(f"[DEBUG] Using current_step format")
@@ -172,8 +190,44 @@ class FlowRuntime:
         print(f"[DEBUG] steps_data length: {len(steps_data) if isinstance(steps_data, list) else 'not list'}")
         print(f"[DEBUG] current_step_index: {current_step_index}")
         
-        if not isinstance(steps_data, list) or current_step_index >= len(steps_data):
-            return self._get_error_html(f"No se pudo obtener el paso actual. Index: {current_step_index}, Steps: {len(steps_data) if isinstance(steps_data, list) else 'not list'}")
+        if not isinstance(steps_data, list):
+            steps_data = self.flow.steps if hasattr(self.flow, 'steps') else []
+
+        if not isinstance(steps_data, list) or not steps_data:
+            # Intentar degradar al modelo Step si existe informaci�n estructurada
+            ordered_steps = list(self.flow.flow_steps.order_by('order'))
+            if ordered_steps:
+                target_index = 0
+                if isinstance(current_step_index, int):
+                    target_index = min(max(current_step_index, 0), len(ordered_steps) - 1)
+
+                fallback_step = ordered_steps[target_index]
+                self.instance.current_step = fallback_step
+                update_fields = ['current_step']
+
+                if self.instance.status == 'pending':
+                    self.instance.status = 'running'
+                    update_fields.append('status')
+
+                if isinstance(self.instance.context, dict) and 'current_step_index' in self.instance.context:
+                    self.instance.context.pop('current_step_index', None)
+                    update_fields.append('context')
+
+                self.instance.save(update_fields=update_fields)
+                print(f"[DEBUG] Recovered step from model fallback: {fallback_step.name}")
+                return self.get_current_step_html()
+
+            return self._get_error_html("El flujo no tiene pasos configurados.")
+
+        if not isinstance(current_step_index, int):
+            current_step_index = 0
+        if current_step_index < 0:
+            current_step_index = 0
+        if current_step_index >= len(steps_data):
+            current_step_index = len(steps_data) - 1
+            if isinstance(self.instance.context, dict):
+                self.instance.context['current_step_index'] = current_step_index
+                self.instance.save(update_fields=['context'])
         
         current_step_data = steps_data[current_step_index]
         step_type = current_step_data.get('type')
