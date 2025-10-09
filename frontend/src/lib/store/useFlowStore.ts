@@ -49,7 +49,14 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   addFlow: async (flowData) => {
     set({ loading: true, error: null });
     try {
-      const newFlow = await flowsApi.createFlow(flowData);
+      // Convert steps to steps_data for backend
+      const backendData = { ...flowData };
+      if (flowData.steps) {
+        backendData.steps_data = flowData.steps;
+        delete backendData.steps;
+      }
+      
+      const newFlow = await flowsApi.createFlow(backendData);
       set((state) => ({
         flows: [...(state.flows || []), newFlow],
         loading: false,
@@ -63,7 +70,14 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   updateFlow: async (id, updates) => {
     set({ loading: true, error: null });
     try {
-      const updatedFlow = await flowsApi.updateFlow(id, updates);
+      // Convert steps to steps_data for backend
+      const backendUpdates = { ...updates };
+      if (updates.steps) {
+        backendUpdates.steps_data = updates.steps;
+        delete backendUpdates.steps;
+      }
+      
+      const updatedFlow = await flowsApi.updateFlow(id, backendUpdates);
       set((state) => ({
         flows: (state.flows || []).map((flow) =>
           flow.id === id ? updatedFlow : flow

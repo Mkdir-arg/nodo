@@ -4,11 +4,12 @@ from .models import Flujo, EjecucionFlujo, InstanciaFlujo, Step, Transition, Ins
 
 class FlujoSerializer(serializers.ModelSerializer):
     steps = serializers.SerializerMethodField()
+    steps_data = serializers.JSONField(required=False, allow_null=True)
     
     class Meta:
         model = Flujo
         fields = [
-            'id', 'name', 'description', 'steps', 
+            'id', 'name', 'description', 'steps', 'steps_data',
             'created_at', 'updated_at', 'is_active'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

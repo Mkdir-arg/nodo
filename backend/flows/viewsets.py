@@ -24,6 +24,14 @@ class FlujoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Flujo.objects.all()
+    
+    def create(self, request, *args, **kwargs):
+        print(f"[DEBUG] CREATE Flow - Data received: {request.data}")
+        return super().create(request, *args, **kwargs)
+    
+    def update(self, request, *args, **kwargs):
+        print(f"[DEBUG] UPDATE Flow - Data received: {request.data}")
+        return super().update(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def execute(self, request, pk=None):
