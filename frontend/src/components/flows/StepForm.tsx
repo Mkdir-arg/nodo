@@ -10,7 +10,17 @@ import { sanitizeHtml, sanitizeUrl, validateEmail } from '@/lib/utils/sanitize';
 import StartNodeProperties from './StartNodeProperties';
 import { FormConfigEditor } from './FormConfigEditor';
 import { EvaluationConfigEditor } from './EvaluationConfigEditor';
-import type { FlowStep, ActionType, StartConfig, FormConfig, FormField, EvaluationConfig, EvaluationQuestion } from '@/lib/flows/types';
+import { ConditionConfigEditor } from './ConditionConfigEditor';
+import type {
+  FlowStep,
+  ActionType,
+  StartConfig,
+  FormConfig,
+  FormField,
+  EvaluationConfig,
+  EvaluationQuestion,
+  ConditionConfig,
+} from '@/lib/flows/types';
 import { ACTION_TYPES } from '@/lib/flows/types';
 
 interface StepFormProps {
@@ -21,6 +31,27 @@ interface StepFormProps {
 }
 
 export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] }: StepFormProps) {
+  const createConditionId = () =>
+    (typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `branch_${Math.random().toString(36).slice(2, 9)}`);
+
+  const ensureConditionConfigShape = (cfg?: ConditionConfig): ConditionConfig => {
+    const base = cfg || { branches: [], fallbackNextStepId: undefined };
+    return {
+      branches: Array.isArray(base.branches)
+        ? base.branches.map((branch, index) => ({
+            id: branch?.id || createConditionId(),
+            label: branch?.label || `Ruta ${index + 1}`,
+            logic: branch?.logic === 'OR' ? 'OR' : 'AND',
+            rules: Array.isArray(branch?.rules) ? branch.rules : [],
+            nextStepId: branch?.nextStepId,
+          }))
+        : [],
+      fallbackNextStepId: base.fallbackNextStepId,
+    };
+  };
+
   const [formData, setFormData] = useState({
     name: step?.name || '',
     type: step?.type || 'email' as ActionType,
@@ -28,6 +59,27 @@ export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] 
   });
 
   const selectedActionType = ACTION_TYPES.find(t => t.value === formData.type) || ACTION_TYPES[0];
+
+  const buildDefaultConfig = (type: ActionType) => {
+    switch (type) {
+      case 'condition':
+        return ensureConditionConfigShape();
+      default:
+        return {};
+    }
+  };
+
+  useEffect(() => {
+    if (formData.type === 'condition') {
+      const normalized = ensureConditionConfigShape(formData.config as ConditionConfig);
+      if (JSON.stringify(normalized) !== JSON.stringify(formData.config)) {
+        setFormData(prev => ({
+          ...prev,
+          config: normalized,
+        }));
+      }
+    }
+  }, [formData.type, formData.config]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +102,16 @@ export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] 
       };
     };
 
+    const configToSave =
+      formData.type === 'condition'
+        ? ensureConditionConfigShape(formData.config as ConditionConfig)
+        : formData.config;
+
     const stepData: FlowStep = {
       id: step?.id || `step_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: formData.name || `${selectedActionType.label} ${Date.now()}`,
       type: formData.type,
-      config: formData.config,
+      config: configToSave,
       position: generatePosition(),
       nextStepId: step?.nextStepId,
     };
@@ -223,16 +280,17 @@ export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] 
 
       case 'condition':
         return (
-          <div>
-            <Label htmlFor="condition">Condición</Label>
-            <Input
-              id="condition"
-              value={formData.config.condition || ''}
-              onChange={(e) => updateConfig('condition', e.target.value)}
-              placeholder="x > 5"
-              required
-            />
-          </div>
+          <ConditionConfigEditor
+            config={ensureConditionConfigShape(formData.config as ConditionConfig)}
+            onChange={(cfg) =>
+              setFormData((prev) => ({
+                ...prev,
+                config: ensureConditionConfigShape(cfg),
+              }))
+            }
+            steps={existingSteps}
+            currentStepId={step?.id}
+          />
         );
 
       case 'database':
@@ -337,11 +395,14 @@ export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] 
           <select
             id="type"
             value={formData.type}
-            onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
-              type: e.target.value as ActionType,
-              config: {} // Reset config when changing type
-            }))}
+            onChange={(e) => {
+              const newType = e.target.value as ActionType;
+              setFormData(prev => ({
+                ...prev,
+                type: newType,
+                config: newType === prev.type ? prev.config : buildDefaultConfig(newType),
+              }));
+            })}
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
             {ACTION_TYPES.map((type) => {
@@ -405,3 +466,4 @@ export default function StepForm({ step, onSubmit, onCancel, existingSteps = [] 
     </form>
   );
 }
+

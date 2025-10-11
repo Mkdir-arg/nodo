@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .viewsets import FlujoViewSet, EjecucionFlujoViewSet, InstanciaFlujoViewSet, StepViewSet, InstanceLogViewSet
-from .views import CreateInstanceView
+from .views import CreateInstanceView, FlowTransitionsView, FlowSimulateView
 from .simple_views import create_instance_simple
 from .direct_views import create_instance_direct
 
@@ -17,4 +17,6 @@ urlpatterns = [
     path('create-instance/', CreateInstanceView.as_view(), name='create-instance'),
     path('simple-create/', create_instance_simple, name='simple-create'),
     path('direct-create/', create_instance_direct, name='direct-create'),
+    path('flows/<uuid:flow_id>/transitions/', FlowTransitionsView.as_view(), name='flow-transitions'),
+    path('flows/<uuid:flow_id>/simulate/', FlowSimulateView.as_view(), name='flow-simulate'),
 ]

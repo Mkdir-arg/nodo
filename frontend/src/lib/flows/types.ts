@@ -51,10 +51,34 @@ export interface DelayConfig extends ActionConfig {
   unit: 'seconds' | 'minutes' | 'hours';
 }
 
+export type ConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_or_equal'
+  | 'less_or_equal'
+  | 'contains';
+
+export interface ConditionRule {
+  id: string;
+  source: string;
+  field: string;
+  operator: ConditionOperator;
+  value: string;
+}
+
+export interface ConditionBranch {
+  id: string;
+  label: string;
+  logic: 'AND' | 'OR';
+  rules: ConditionRule[];
+  nextStepId?: string;
+}
+
 export interface ConditionConfig extends ActionConfig {
-  condition: string;
-  trueStepId?: string;
-  falseStepId?: string;
+  branches: ConditionBranch[];
+  fallbackNextStepId?: string;
 }
 
 export interface DatabaseConfig extends ActionConfig {

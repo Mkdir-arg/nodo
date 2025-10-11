@@ -292,26 +292,46 @@ class FlowRuntime:
         try:
             # Manejar flujos con current_step (formato nuevo)
             if self.instance.current_step:
-                step_name = self.instance.current_step.name
-                self._log('info', f'Procesando interacción en paso {step_name}', 
-                         {'interaction': interaction_data}, user)
-                
-                # Para formularios, guardar datos directamente
-                if self.instance.current_step.step_type == 'form':
-                    return self._process_form_interaction(interaction_data, user)
-                
-                # Para evaluaciones, procesar con scoring
-                if self.instance.current_step.step_type == 'evaluation':
-                    return self._process_evaluation_interaction(interaction_data, user)
+                return self._process_step_interaction(interaction_data, user)
             
             # Manejar flujos con steps_data (formato antiguo)
             else:
                 return self._process_steps_data_interaction(interaction_data, user)
             
-            # Ejecutar el nodo actual
-            node_class = self.NODE_CLASSES.get(self.instance.current_step.step_type)
+
+            
+        except Exception as e:
+            self.instance.status = 'failed'
+            self.instance.error_message = str(e)
+            self.instance.save()
+            
+            self._log('error', f'Error en ejecución: {str(e)}', {'error': str(e)}, user)
+            
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _process_step_interaction(self, interaction_data, user):
+        """Procesa interacción para flujos con Step/Transition"""
+        step_name = self.instance.current_step.name
+        step_type = self.instance.current_step.step_type
+        
+        self._log('info', f'Procesando interacción en paso {step_name}', 
+                 {'interaction': interaction_data, 'step_type': step_type}, user)
+        
+        # Procesar según tipo de paso
+        if step_type == 'form':
+            return self._process_form_interaction(interaction_data, user)
+        elif step_type == 'evaluation':
+            return self._process_evaluation_interaction(interaction_data, user)
+        elif step_type == 'condition':
+            return self._process_condition_interaction(interaction_data, user)
+        else:
+            # Otros tipos de nodo
+            node_class = self.NODE_CLASSES.get(step_type)
             if not node_class:
-                raise ValueError(f"Tipo de nodo no soportado: {self.instance.current_step.step_type}")
+                raise ValueError(f"Tipo de nodo no soportado: {step_type}")
             
             node = node_class(self.instance.current_step, self.instance.context)
             result = node.execute(interaction_data, user)
@@ -328,7 +348,6 @@ class FlowRuntime:
                 self.instance.status = 'running'
                 self._log('info', f'Avanzando a paso: {next_step.name}', {'step_id': str(next_step.id)}, user)
             else:
-                # Flujo completado
                 self.instance.status = 'completed'
                 self.instance.completed_at = timezone.now()
                 self._log('info', 'Flujo completado', {}, user)
@@ -340,18 +359,29 @@ class FlowRuntime:
                 'next_step_id': str(next_step.id) if next_step else None,
                 'completed': self.instance.status == 'completed'
             }
-            
-        except Exception as e:
+    
+    def _process_condition_interaction(self, interaction_data, user):
+        """Procesa interacción específica para pasos de condición"""
+        # Las condiciones se evalúan automáticamente, no requieren interacción del usuario
+        next_step = self._select_condition_branch()
+        
+        if next_step:
+            self.instance.current_step = next_step
+            self.instance.status = 'running'
+            self._log('info', f'Condición evaluada, avanzando a: {next_step.name}', 
+                     {'step_id': str(next_step.id)}, user)
+        else:
             self.instance.status = 'failed'
-            self.instance.error_message = str(e)
-            self.instance.save()
-            
-            self._log('error', f'Error en ejecución: {str(e)}', {'error': str(e)}, user)
-            
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            self.instance.error_message = 'No se pudo determinar siguiente paso desde condición'
+            self._log('error', 'Condición sin rama válida', {}, user)
+        
+        self.instance.save()
+        
+        return {
+            'success': next_step is not None,
+            'next_step_id': str(next_step.id) if next_step else None,
+            'completed': self.instance.status == 'completed'
+        }
     
     def _process_form_interaction(self, form_data, user):
         """Procesa específicamente interacciones de formulario"""
@@ -558,14 +588,18 @@ class FlowRuntime:
         """Determina el siguiente paso basado en el resultado de ejecución"""
         current_step = self.instance.current_step
         
-        # Para evaluaciones con bifurcación
+        # Para evaluaciones con bifurcación específica
         if execution_result.get('next_step_id'):
             try:
                 return Step.objects.get(id=execution_result['next_step_id'])
             except Step.DoesNotExist:
                 pass
         
-        # Transición por defecto
+        # Para condiciones, usar la nueva lógica de selección de ramas
+        if current_step.step_type == 'condition':
+            return self._select_condition_branch()
+        
+        # Transición por defecto para otros tipos de paso
         transitions = current_step.outgoing_transitions.all()
         
         for transition in transitions:
@@ -573,6 +607,156 @@ class FlowRuntime:
                 return transition.to_step
                 
         return None
+    
+    def _select_condition_branch(self):
+        """Selecciona la rama de condición apropiada basada en reglas"""
+        current_step = self.instance.current_step
+        config = current_step.config or {}
+        branches = config.get('branches', [])
+        
+        self._log('info', f'Evaluando condición en paso {current_step.name}', 
+                 {'branches_count': len(branches)}, None)
+        
+        # Evaluar cada rama
+        for branch in branches:
+            branch_id = branch.get('id')
+            if self._evaluate_branch_rules(branch):
+                # Buscar transición correspondiente
+                transition = current_step.outgoing_transitions.filter(condition=branch_id).first()
+                if transition:
+                    self._log('info', f'Rama seleccionada: {branch.get("label", branch_id)}', 
+                             {'branch_id': branch_id, 'target_step': transition.to_step.name}, None)
+                    return transition.to_step
+        
+        # Fallback
+        fallback_transition = current_step.outgoing_transitions.filter(condition='__fallback__').first()
+        if fallback_transition:
+            self._log('info', 'Usando rama fallback', 
+                     {'target_step': fallback_transition.to_step.name}, None)
+            return fallback_transition.to_step
+        
+        self._log('warning', 'No se encontró rama válida ni fallback', {}, None)
+        return None
+    
+    def _evaluate_branch_rules(self, branch):
+        """Evalúa las reglas de una rama específica"""
+        rules = branch.get('rules', [])
+        logic = branch.get('logic', 'AND').upper()
+        
+        if not rules:
+            return False
+        
+        results = []
+        for rule in rules:
+            result = self._evaluate_single_rule(rule)
+            results.append(result)
+        
+        # Aplicar lógica AND/OR
+        if logic == 'OR':
+            return any(results)
+        else:  # AND por defecto
+            return all(results)
+    
+    def _evaluate_single_rule(self, rule):
+        """Evalúa una regla individual"""
+        source = rule.get('source')  # 'form' o 'evaluation'
+        field = rule.get('field')
+        operator = rule.get('operator')
+        expected_value = rule.get('value')
+        
+        if not all([source, field, operator]):
+            return False
+        
+        # Obtener valor actual del contexto
+        actual_value = self._get_context_value(source, field)
+        
+        return self._compare_values(actual_value, operator, expected_value)
+    
+    def _get_context_value(self, source, field):
+        """Obtiene valor del contexto según la fuente"""
+        context = self.instance.context
+        
+        # Parsear field si tiene formato compuesto "source|step_id|field_name"
+        if '|' in field:
+            parts = field.split('|')
+            if len(parts) >= 3:
+                field_source = parts[0]
+                step_id = parts[1]
+                field_name = parts[2]
+                
+                if field_source == 'form':
+                    forms = context.get('forms', {})
+                    form_data = forms.get(f'step_{step_id}')
+                    if form_data and isinstance(form_data, dict) and 'data' in form_data:
+                        return form_data['data'].get(field_name)
+                
+                elif field_source == 'evaluation':
+                    evaluations = context.get('evaluations', {})
+                    eval_data = evaluations.get(f'step_{step_id}')
+                    if eval_data and isinstance(eval_data, dict):
+                        return eval_data.get(field_name)
+                
+                elif field_source == 'evaluation_answer_score':
+                    evaluations = context.get('evaluations', {})
+                    eval_data = evaluations.get(f'step_{step_id}')
+                    if eval_data and isinstance(eval_data, dict):
+                        answers = eval_data.get('answers', {})
+                        answer = answers.get(field_name, {})
+                        return answer.get('score')
+                
+                elif field_source == 'evaluation_answer_selected':
+                    evaluations = context.get('evaluations', {})
+                    eval_data = evaluations.get(f'step_{step_id}')
+                    if eval_data and isinstance(eval_data, dict):
+                        answers = eval_data.get('answers', {})
+                        answer = answers.get(field_name, {})
+                        return answer.get('selected')
+        
+        # Fallback: búsqueda directa (formato legacy)
+        if source == 'form':
+            forms = context.get('forms', {})
+            for form_key, form_data in forms.items():
+                if isinstance(form_data, dict) and 'data' in form_data:
+                    if field in form_data['data']:
+                        return form_data['data'][field]
+        
+        elif source == 'evaluation':
+            evaluations = context.get('evaluations', {})
+            for eval_key, eval_data in evaluations.items():
+                if isinstance(eval_data, dict):
+                    if field == 'total_score':
+                        return eval_data.get('total_score')
+                    elif field == 'category':
+                        return eval_data.get('category')
+        
+        return None
+    
+    def _compare_values(self, actual, operator, expected):
+        """Compara valores usando el operador especificado"""
+        try:
+            if operator == 'equals':
+                return str(actual) == str(expected)
+            elif operator == 'not_equals':
+                return str(actual) != str(expected)
+            elif operator == 'contains':
+                return str(expected).lower() in str(actual).lower()
+            elif operator in ['>', '<', '>=', '<=']:
+                # Convertir a números para comparación
+                actual_num = float(actual) if actual is not None else 0
+                expected_num = float(expected)
+                
+                if operator == '>':
+                    return actual_num > expected_num
+                elif operator == '<':
+                    return actual_num < expected_num
+                elif operator == '>=':
+                    return actual_num >= expected_num
+                elif operator == '<=':
+                    return actual_num <= expected_num
+            
+            return False
+        except (ValueError, TypeError):
+            return False
     
     def _evaluate_transition_condition(self, transition):
         """Evalúa la condición de una transición de forma segura"""
@@ -618,14 +802,31 @@ class FlowRuntime:
         # Solo asignar user si es un usuario autenticado
         log_user = user if user and hasattr(user, 'id') and user.is_authenticated else None
         
+        # Sanitizar mensaje
+        clean_message = self._sanitize_log_message(message)
+        
         InstanceLog.objects.create(
             instance=self.instance,
             step=self.instance.current_step,
             level=level,
-            message=message,
+            message=clean_message,
             data=data or {},
             user=log_user
         )
+    
+    def _sanitize_log_message(self, message):
+        """Sanitiza mensajes de log removiendo caracteres problemáticos"""
+        if not message:
+            return ""
+        
+        # Convertir a string y limpiar caracteres especiales
+        clean_msg = str(message).encode('utf-8', 'ignore').decode('utf-8')
+        
+        # Remover caracteres de control excepto \n y \t
+        clean_msg = ''.join(char for char in clean_msg if ord(char) >= 32 or char in '\n\t')
+        
+        # Truncar si es muy largo
+        return clean_msg[:500] if len(clean_msg) > 500 else clean_msg
     
     def _sanitize_html(self, html):
         """Sanitiza HTML removiendo scripts y atributos peligrosos"""

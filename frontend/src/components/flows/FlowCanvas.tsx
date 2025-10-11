@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import ReactFlow, { 
   Node, 
   Edge, 
@@ -16,7 +16,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Plus, Mail, Globe, Clock, GitBranch, Database, Shuffle, Play, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { FlowStep } from '@/lib/flows/types';
+import { BranchConnectionModal } from './BranchConnectionModal';
+import type { ConditionConfig, FlowStep } from '@/lib/flows/types';
 
 // Custom Node Component with icons
 function CustomNode({ data }: { data: any }) {
@@ -89,12 +90,38 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
+const getConditionTargets = (step: FlowStep) => {
+  if (step.type !== 'condition') {
+    return [] as Array<{ id: string; label: string; targetId: string; kind: 'branch' | 'fallback' }>;
+  }
+
+  const config = (step.config || {}) as ConditionConfig;
+  const branches = (config.branches || []).map((branch: any, index: number) => ({
+    id: branch?.id || `branch-${index}`,
+    label: branch?.label || `Ruta ${index + 1}`,
+    targetId: branch?.nextStepId || '',
+    kind: 'branch' as const,
+  }));
+
+  const fallback = config.fallbackNextStepId
+    ? [{
+        id: 'fallback',
+        label: 'Caso contrario',
+        targetId: config.fallbackNextStepId,
+        kind: 'fallback' as const,
+      }]
+    : [];
+
+  return [...branches, ...fallback].filter(target => target.targetId);
+};
+
 interface FlowCanvasProps {
   steps: FlowStep[];
   onAddStep: () => void;
   onEditStep: (step: FlowStep) => void;
   onDeleteStep: (stepId: string) => void;
   onConnectSteps: (sourceId: string, targetId: string) => void;
+  onConnectBranch: (sourceId: string, targetId: string, branchId: string | 'fallback') => void;
   onUpdatePositions: (steps: FlowStep[]) => void;
 }
 
@@ -104,23 +131,50 @@ export default function FlowCanvas({
   onEditStep, 
   onDeleteStep,
   onConnectSteps,
+  onConnectBranch,
   onUpdatePositions 
 }: FlowCanvasProps) {
+  const [branchModal, setBranchModal] = useState<{
+    isOpen: boolean;
+    sourceStep?: FlowStep;
+    targetId?: string;
+  }>({ isOpen: false });
+  
+  const buildStepOrder = () => {
+    const order = new Map<string, number>();
+    const startStep = steps.find(step => step.type === 'start');
+    if (!startStep) return order;
+
+    const visited = new Set<string>();
+    const queue: Array<{ id: string; order: number }> = [{ id: startStep.id, order: 1 }];
+
+    while (queue.length > 0) {
+      const { id, order: currentOrder } = queue.shift()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      order.set(id, currentOrder);
+
+      const step = steps.find(s => s.id === id);
+      if (!step) continue;
+
+      const neighbours = [
+        ...(step.nextStepId ? [step.nextStepId] : []),
+        ...getConditionTargets(step).map(target => target.targetId),
+      ];
+
+      neighbours.forEach(targetId => {
+        if (!visited.has(targetId)) {
+          queue.push({ id: targetId, order: currentOrder + 1 });
+        }
+      });
+    }
+
+    return order;
+  };
   
   const initialNodes: Node[] = useMemo(() => {
-    // Calculate step numbers
-    const stepOrder = new Map<string, number>();
-    const startStep = steps.find(step => step.type === 'start');
-    
-    if (startStep) {
-      let currentStep = startStep;
-      let stepNumber = 1;
-      while (currentStep) {
-        stepOrder.set(currentStep.id, stepNumber++);
-        currentStep = steps.find(step => step.id === currentStep?.nextStepId);
-      }
-    }
-    
+    const stepOrder = buildStepOrder();
+
     return steps.map((step, index) => ({
       id: step.id,
       position: step.position || { x: 100 + index * 250, y: 100 },
@@ -138,44 +192,67 @@ export default function FlowCanvas({
   }, [steps, onEditStep, onDeleteStep]);
 
   const initialEdges: Edge[] = useMemo(() => {
+    const stepOrder = buildStepOrder();
     const edges: Edge[] = [];
-    let stepNumber = 1;
-    
-    // Create a map to track step order
-    const stepOrder = new Map<string, number>();
-    const startStep = steps.find(step => step.type === 'start');
-    
-    if (startStep) {
-      let currentStep = startStep;
-      while (currentStep) {
-        stepOrder.set(currentStep.id, stepNumber++);
-        currentStep = steps.find(step => step.id === currentStep?.nextStepId);
+
+    const pushEdge = (edge: Edge) => {
+      edges.push(edge);
+    };
+
+    steps.forEach(step => {
+      if (step.nextStepId) {
+        const sourceNum = stepOrder.get(step.id);
+        const targetNum = stepOrder.get(step.nextStepId);
+        pushEdge({
+          id: `${step.id}-${step.nextStepId}`,
+          source: step.id,
+          target: step.nextStepId,
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#6366f1', strokeWidth: 3 },
+          label: sourceNum && targetNum ? `${sourceNum} -> ${targetNum}` : '',
+          labelStyle: { 
+            fill: '#6366f1', 
+            fontWeight: 'bold', 
+            fontSize: '12px',
+            background: '#ffffff',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            border: '1px solid #6366f1'
+          },
+          labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 }
+        });
       }
-    }
-    
-    steps.filter(step => step.nextStepId).forEach(step => {
-      const sourceNum = stepOrder.get(step.id);
-      const targetNum = stepOrder.get(step.nextStepId!);
-      
-      edges.push({
-        id: `${step.id}-${step.nextStepId}`,
-        source: step.id,
-        target: step.nextStepId!,
-        type: 'smoothstep',
-        animated: true,
-        style: { stroke: '#6366f1', strokeWidth: 3 },
-        label: sourceNum && targetNum ? `${sourceNum} → ${targetNum}` : '',
-        labelStyle: { 
-          fill: '#6366f1', 
-          fontWeight: 'bold', 
-          fontSize: '12px',
-          background: '#ffffff',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          border: '1px solid #6366f1'
-        },
-        labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 }
-      });
+
+      if (step.type === 'condition') {
+        const targets = getConditionTargets(step);
+        targets.forEach(target => {
+          const color = target.kind === 'fallback' ? '#64748b' : '#f97316';
+          pushEdge({
+            id: `${step.id}-${target.id}-${target.targetId}`,
+            source: step.id,
+            target: target.targetId,
+            type: 'smoothstep',
+            animated: true,
+            style: {
+              stroke: color,
+              strokeWidth: 3,
+              strokeDasharray: target.kind === 'fallback' ? '6 3' : undefined,
+            },
+            label: target.label,
+            labelStyle: {
+              fill: color,
+              fontWeight: 'bold',
+              fontSize: '12px',
+              background: '#ffffff',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              border: `1px solid ${color}`,
+            },
+            labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 },
+          });
+        });
+      }
     });
     
     return edges;
@@ -196,10 +273,27 @@ export default function FlowCanvas({
 
   const onConnect = useCallback((params: Connection) => {
     if (params.source && params.target) {
-      onConnectSteps(params.source, params.target);
-      // Don't add edge here, it will be added when steps update
+      const sourceStep = steps.find(s => s.id === params.source);
+      
+      // Si es una condición, mostrar modal para seleccionar rama
+      if (sourceStep?.type === 'condition') {
+        setBranchModal({
+          isOpen: true,
+          sourceStep,
+          targetId: params.target
+        });
+      } else {
+        onConnectSteps(params.source, params.target);
+      }
     }
-  }, [onConnectSteps]);
+  }, [onConnectSteps, steps]);
+  
+  const handleBranchConnect = useCallback((branchId: string | 'fallback') => {
+    if (branchModal.sourceStep && branchModal.targetId) {
+      onConnectBranch(branchModal.sourceStep.id, branchModal.targetId, branchId);
+    }
+    setBranchModal({ isOpen: false });
+  }, [branchModal, onConnectBranch]);
 
   const onNodeDragStop = useCallback((event: any, node: Node) => {
     const updatedSteps = steps.map(step => 
@@ -233,6 +327,16 @@ export default function FlowCanvas({
           Agregar Paso
         </Button>
       </div>
+      
+      {branchModal.sourceStep && (
+        <BranchConnectionModal
+          isOpen={branchModal.isOpen}
+          onClose={() => setBranchModal({ isOpen: false })}
+          sourceStep={branchModal.sourceStep}
+          targetStepId={branchModal.targetId || ''}
+          onConnect={handleBranchConnect}
+        />
+      )}
     </div>
   );
 }

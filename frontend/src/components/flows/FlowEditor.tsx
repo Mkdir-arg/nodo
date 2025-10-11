@@ -22,7 +22,7 @@ import StartTableModal from './StartTableModal';
 import FlowMonitor from './FlowMonitor';
 import { useFlowStore } from '@/lib/store/useFlowStore';
 import { FLOW_TEMPLATES } from '@/lib/flows/templates';
-import type { Flow, FlowStep, StartConfig, ActionType } from '@/lib/flows/types';
+import type { ConditionConfig, Flow, FlowStep, StartConfig, ActionType } from '@/lib/flows/types';
 
 interface FlowEditorProps {
   flowId?: string;
@@ -34,6 +34,27 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
   const queryClient = useQueryClient();
   const { flows, currentFlow, setCurrentFlow, addFlow, updateFlow, addStep, updateStep, deleteStep, loadFlows } = useFlowStore();
   const hasRequestedFlowsRef = useRef(false);
+
+  const createConditionId = () =>
+    (typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `branch_${Math.random().toString(36).slice(2, 9)}`);
+
+  const normalizeConditionConfig = (step?: FlowStep): ConditionConfig => {
+    const cfg = (step?.config as ConditionConfig) || { branches: [], fallbackNextStepId: undefined };
+    return {
+      branches: Array.isArray(cfg.branches)
+        ? cfg.branches.map((branch, index) => ({
+            id: branch?.id || createConditionId(),
+            label: branch?.label || `Ruta ${index + 1}`,
+            logic: branch?.logic === 'OR' ? 'OR' : 'AND',
+            rules: Array.isArray(branch?.rules) ? branch.rules : [],
+            nextStepId: branch?.nextStepId,
+          }))
+        : [],
+      fallbackNextStepId: cfg.fallbackNextStepId,
+    };
+  };
   
   console.log('FlowEditor mounted with flowId:', flowId);
   console.log('useFlowStore flows:', flows);
@@ -75,43 +96,77 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
     }
   }, [flowId, isNew, flows, setCurrentFlow]);
 
-  const handleSave = async () => {
+  const validateFlowForSave = () => {
+    const errors: string[] = [];
+    
     if (!flowData.name.trim()) {
-      alert('El nombre del flujo es requerido');
-      return;
+      errors.push('El nombre del flujo es requerido');
     }
 
-    // Validate flow before saving
     if (!currentFlow?.steps || currentFlow.steps.length === 0) {
-      alert('El flujo debe tener al menos un paso');
-      return;
+      errors.push('El flujo debe tener al menos un paso');
     }
 
-    const hasStartNode = currentFlow.steps.some(step => step.type === 'start');
+    const hasStartNode = currentFlow?.steps.some(step => step.type === 'start');
     if (!hasStartNode) {
-      alert('El flujo debe tener un nodo de inicio');
-      return;
+      errors.push('El flujo debe tener un nodo de inicio');
     }
 
-    // Validate step configurations
-    const invalidSteps = currentFlow.steps.filter(step => {
+    // Validate condition steps
+    currentFlow?.steps.forEach(step => {
+      if (step.type === 'condition') {
+        const config = normalizeConditionConfig(step);
+        
+        if (config.branches.length === 0) {
+          errors.push(`Condición "${step.name}": Debe tener al menos una rama`);
+        }
+        
+        config.branches.forEach((branch, idx) => {
+          if (!branch.nextStepId) {
+            errors.push(`Condición "${step.name}", Rama ${idx + 1}: Falta paso destino`);
+          }
+          
+          if (!branch.rules || branch.rules.length === 0) {
+            errors.push(`Condición "${step.name}", Rama ${idx + 1}: Falta al menos una regla`);
+          }
+          
+          branch.rules?.forEach((rule, ruleIdx) => {
+            if (!rule.source || !rule.field || !rule.operator || rule.value === '') {
+              errors.push(`Condición "${step.name}", Rama ${idx + 1}, Regla ${ruleIdx + 1}: Configuración incompleta`);
+            }
+          });
+        });
+      }
+      
+      // Other step validations
       if (step.type === 'email') {
         const config = step.config as any;
-        return !config.to || !config.subject;
+        if (!config.to || !config.subject) {
+          errors.push(`Email "${step.name}": Falta destinatario o asunto`);
+        }
       }
       if (step.type === 'http') {
         const config = step.config as any;
-        return !config.url;
+        if (!config.url) {
+          errors.push(`HTTP "${step.name}": Falta URL`);
+        }
       }
       if (step.type === 'start') {
         const config = step.config as any;
-        return !config.acceptedPlantillas || config.acceptedPlantillas.length === 0;
+        if (!config.acceptedPlantillas || config.acceptedPlantillas.length === 0) {
+          errors.push(`Inicio "${step.name}": Falta configuración de plantillas`);
+        }
       }
-      return false;
     });
+    
+    return errors;
+  };
 
-    if (invalidSteps.length > 0) {
-      alert(`Pasos con configuración incompleta: ${invalidSteps.map(s => s.name).join(', ')}`);
+  const handleSave = async () => {
+    const validationErrors = validateFlowForSave();
+    
+    if (validationErrors.length > 0) {
+      alert(`No se puede guardar el flujo. Errores encontrados:\n\n${validationErrors.join('\n')}`);
       return;
     }
 
@@ -234,34 +289,96 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
   };
 
   const handleDeleteStep = (stepId: string) => {
-    if (currentFlow) {
-      const stepToDelete = currentFlow.steps.find(step => step.id === stepId);
-      if (!stepToDelete) return;
+    if (!currentFlow) return;
+    const stepToDelete = currentFlow.steps.find(step => step.id === stepId);
+    if (!stepToDelete) return;
 
-      // Find step that points to the one being deleted
-      const parentStep = currentFlow.steps.find(step => step.nextStepId === stepId);
-      
-      // Reconnect the flow: parent -> deleted.next
-      if (parentStep && stepToDelete.nextStepId) {
-        parentStep.nextStepId = stepToDelete.nextStepId;
-      } else if (parentStep) {
-        parentStep.nextStepId = undefined;
-      }
+    const updatedSteps = currentFlow.steps
+      .filter(step => step.id !== stepId)
+      .map(step => {
+        if (step.id === stepId) {
+          return step;
+        }
 
-      const updatedSteps = currentFlow.steps.filter(step => step.id !== stepId);
-      setCurrentFlow({ ...currentFlow, steps: updatedSteps });
-    }
+        if (step.type === 'condition') {
+          const cfg = normalizeConditionConfig(step);
+          const newBranches = cfg.branches.map(branch =>
+            branch.nextStepId === stepId ? { ...branch, nextStepId: undefined } : branch
+          );
+          const fallbackNextStepId =
+            cfg.fallbackNextStepId === stepId ? undefined : cfg.fallbackNextStepId;
+
+          return {
+            ...step,
+            config: {
+              ...cfg,
+              branches: newBranches,
+              fallbackNextStepId,
+            },
+          };
+        }
+
+        if (step.nextStepId === stepId) {
+          return {
+            ...step,
+            nextStepId: stepToDelete.nextStepId,
+          };
+        }
+
+        return step;
+      });
+
+    setCurrentFlow({ ...currentFlow, steps: updatedSteps });
   };
 
   const handleConnectSteps = (sourceId: string, targetId: string) => {
-    if (currentFlow) {
-      const updatedSteps = currentFlow.steps.map(step => 
-        step.id === sourceId 
-          ? { ...step, nextStepId: targetId }
-          : step
-      );
-      setCurrentFlow({ ...currentFlow, steps: updatedSteps });
-    }
+    if (!currentFlow) return;
+
+    const updatedSteps = currentFlow.steps.map(step => {
+      if (step.id !== sourceId) return step;
+
+      if (step.type === 'condition') {
+        const cfg = normalizeConditionConfig(step);
+        const branches =
+          cfg.branches.length > 0
+            ? cfg.branches.map(branch => ({ ...branch }))
+            : [
+                {
+                  id: createConditionId(),
+                  label: 'Ruta 1',
+                  logic: 'AND' as const,
+                  rules: [],
+                  nextStepId: undefined,
+                },
+              ];
+
+        let assigned = false;
+        const updatedBranches = branches.map(branch => {
+          if (!assigned && !branch.nextStepId) {
+            assigned = true;
+            return { ...branch, nextStepId: targetId };
+          }
+          return branch;
+        });
+
+        let fallbackNextStepId = cfg.fallbackNextStepId;
+        if (!assigned) {
+          fallbackNextStepId = fallbackNextStepId || targetId;
+        }
+
+        return {
+          ...step,
+          config: {
+            branches: updatedBranches,
+            fallbackNextStepId,
+          },
+        };
+      }
+
+      return { ...step, nextStepId: targetId };
+    });
+
+    setCurrentFlow({ ...currentFlow, steps: updatedSteps });
   };
 
   const handleUpdatePositions = (updatedSteps: FlowStep[]) => {
@@ -330,10 +447,18 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
             )}
             <Button 
               onClick={handleSave} 
-              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+              disabled={validateFlowForSave().length > 0}
+              className={`font-semibold ${
+                validateFlowForSave().length > 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-white text-blue-600 hover:bg-blue-50'
+              }`}
             >
               <Save className="h-4 w-4 mr-2" />
               Guardar Flujo
+              {validateFlowForSave().length > 0 && (
+                <span className="ml-2 text-xs">({validateFlowForSave().length} errores)</span>
+              )}
             </Button>
           </div>
         </div>

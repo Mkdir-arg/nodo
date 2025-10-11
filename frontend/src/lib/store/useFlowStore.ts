@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
 import { flowsApi } from '@/lib/api/flows';
-import type { Flow, FlowStep } from '@/lib/flows/types';
+import type { ConditionConfig, Flow, FlowStep } from '@/lib/flows/types';
 
 interface FlowStore {
   flows: Flow[];
@@ -22,6 +22,82 @@ interface FlowStore {
   deleteStep: (flowId: string, stepId: string) => void;
   connectSteps: (flowId: string, sourceId: string, targetId: string) => void;
 }
+
+const createConditionId = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `branch_${Math.random().toString(36).slice(2, 9)}`);
+
+const cloneConditionConfig = (config?: ConditionConfig): ConditionConfig => {
+  const cfg = config || { branches: [], fallbackNextStepId: undefined };
+  return {
+    branches: Array.isArray(cfg.branches)
+      ? cfg.branches.map((branch, index) => ({
+          id: branch?.id || createConditionId(),
+          label: branch?.label || `Ruta ${index + 1}`,
+          logic: branch?.logic === 'OR' ? 'OR' : 'AND',
+          rules: Array.isArray(branch?.rules) ? branch.rules : [],
+          nextStepId: branch?.nextStepId,
+        }))
+      : [],
+    fallbackNextStepId: cfg.fallbackNextStepId,
+  };
+};
+
+const assignConditionTarget = (step: FlowStep, targetId: string): FlowStep => {
+  const cfg = cloneConditionConfig(step.config as ConditionConfig);
+  const branches =
+    cfg.branches.length > 0
+      ? cfg.branches.map(branch => ({ ...branch }))
+      : [
+          {
+            id: createConditionId(),
+            label: 'Ruta 1',
+            logic: 'AND',
+            rules: [],
+            nextStepId: undefined,
+          },
+        ];
+
+  let assigned = false;
+  const updatedBranches = branches.map(branch => {
+    if (!assigned && !branch.nextStepId) {
+      assigned = true;
+      return { ...branch, nextStepId: targetId };
+    }
+    return branch;
+  });
+
+  const fallbackNextStepId = assigned
+    ? cfg.fallbackNextStepId
+    : cfg.fallbackNextStepId || targetId;
+
+  return {
+    ...step,
+    config: {
+      branches: updatedBranches,
+      fallbackNextStepId,
+    },
+  };
+};
+
+const removeConditionReference = (step: FlowStep, removedStepId: string): FlowStep => {
+  if (step.type !== 'condition') return step;
+  const cfg = cloneConditionConfig(step.config as ConditionConfig);
+  const updatedBranches = cfg.branches.map(branch =>
+    branch.nextStepId === removedStepId ? { ...branch, nextStepId: undefined } : branch
+  );
+  const fallbackNextStepId =
+    cfg.fallbackNextStepId === removedStepId ? undefined : cfg.fallbackNextStepId;
+
+  return {
+    ...step,
+    config: {
+      branches: updatedBranches,
+      fallbackNextStepId,
+    },
+  };
+};
 
 let isLoading = false;
 
@@ -162,48 +238,79 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   },
 
   deleteStep: (flowId, stepId) => {
-    set((state) => ({
-      flows: (state.flows || []).map((flow) =>
-        flow.id === flowId
-          ? {
-              ...flow,
-              steps: (flow.steps || []).filter((step) => step.id !== stepId),
-              updatedAt: new Date().toISOString(),
+    set((state) => {
+      const updateSteps = (steps?: FlowStep[]) => {
+        if (!steps) return [];
+        const stepToDelete = steps.find(step => step.id === stepId);
+        const successor = stepToDelete?.nextStepId;
+
+        return steps
+          .filter(step => step.id !== stepId)
+          .map(step => {
+            if (step.type === 'condition') {
+              return removeConditionReference(step, stepId);
             }
-          : flow
-      ),
-      currentFlow: state.currentFlow?.id === flowId
-        ? {
-            ...state.currentFlow,
-            steps: (state.currentFlow.steps || []).filter((step) => step.id !== stepId),
-            updatedAt: new Date().toISOString(),
-          }
-        : state.currentFlow,
-    }));
+            if (step.nextStepId === stepId) {
+              return { ...step, nextStepId: successor };
+            }
+            return step;
+          });
+      };
+
+      return {
+        flows: (state.flows || []).map(flow =>
+          flow.id === flowId
+            ? {
+                ...flow,
+                steps: updateSteps(flow.steps),
+                updatedAt: new Date().toISOString(),
+              }
+            : flow
+        ),
+        currentFlow:
+          state.currentFlow?.id === flowId
+            ? {
+                ...state.currentFlow,
+                steps: updateSteps(state.currentFlow.steps),
+                updatedAt: new Date().toISOString(),
+              }
+            : state.currentFlow,
+      };
+    });
   },
 
   connectSteps: (flowId, sourceId, targetId) => {
-    set((state) => ({
-      flows: (state.flows || []).map((flow) =>
-        flow.id === flowId
-          ? {
-              ...flow,
-              steps: (flow.steps || []).map((step) =>
-                step.id === sourceId ? { ...step, nextStepId: targetId } : step
-              ),
-              updatedAt: new Date().toISOString(),
-            }
-          : flow
-      ),
-      currentFlow: state.currentFlow?.id === flowId
-        ? {
-            ...state.currentFlow,
-            steps: (state.currentFlow.steps || []).map((step) =>
-              step.id === sourceId ? { ...step, nextStepId: targetId } : step
-            ),
-            updatedAt: new Date().toISOString(),
+    set((state) => {
+      const updateSteps = (steps?: FlowStep[]) => {
+        if (!steps) return [];
+        return steps.map(step => {
+          if (step.id !== sourceId) return step;
+          if (step.type === 'condition') {
+            return assignConditionTarget(step, targetId);
           }
-        : state.currentFlow,
-    }));
+          return { ...step, nextStepId: targetId };
+        });
+      };
+
+      return {
+        flows: (state.flows || []).map(flow =>
+          flow.id === flowId
+            ? {
+                ...flow,
+                steps: updateSteps(flow.steps),
+                updatedAt: new Date().toISOString(),
+              }
+            : flow
+        ),
+        currentFlow:
+          state.currentFlow?.id === flowId
+            ? {
+                ...state.currentFlow,
+                steps: updateSteps(state.currentFlow.steps),
+                updatedAt: new Date().toISOString(),
+              }
+            : state.currentFlow,
+      };
+    });
   },
 }));

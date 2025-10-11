@@ -36,6 +36,7 @@ services:
       sh -c "
       python manage.py makemigrations --no-input &&
       python manage.py migrate --no-input &&
+      python create_test_data.py &&
       echo 'Starting Django server...' &&
       python manage.py runserver 0.0.0.0:8000
       "

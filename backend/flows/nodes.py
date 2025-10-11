@@ -508,7 +508,46 @@ class ConditionNode(BaseNode):
     """Nodo para condiciones/bifurcaciones"""
     
     def render_html(self):
-        return '''
+        branches = self.config.get('branches') or []
+        fallback = self.config.get('fallbackNextStepId')
+        branches_html = ''
+        for idx, branch in enumerate(branches, start=1):
+            label = branch.get('label') or f'Ruta {idx}'
+            logic = branch.get('logic', 'AND').upper()
+            rules = branch.get('rules') or []
+            rules_html = ''
+            for rule in rules:
+                rules_html += f"""
+                    <li>
+                        <code>{escape(rule.get('field', ''))}</code>
+                        <strong>{escape(rule.get('operator', ''))}</strong>
+                        <em>{escape(str(rule.get('value', '')))}</em>
+                    </li>
+                """
+            if not rules_html:
+                rules_html = '<li><em>Sin condiciones configuradas</em></li>'
+            branches_html += f"""
+                <div class="rounded-lg border border-orange-200 p-3 mb-3 bg-orange-50">
+                    <h4 class="text-sm font-medium text-orange-700 mb-1">{escape(label)}</h4>
+                    <p class="text-xs text-orange-600 mb-2">Lógica: {logic}</p>
+                    <ul class="text-xs text-gray-700 space-y-1">
+                        {rules_html}
+                    </ul>
+                </div>
+            """
+
+        fallback_html = ''
+        if fallback:
+            fallback_html = f"""
+                <div class="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                    <h4 class="text-sm font-medium text-slate-700 mb-1">Ruta alternativa</h4>
+                    <p class="text-xs text-slate-600">
+                        Paso destino: <code>{escape(str(fallback))}</code>
+                    </p>
+                </div>
+            """
+
+        return f'''
         <div class="condition-node">
             <div class="text-center py-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
@@ -521,6 +560,11 @@ class ConditionNode(BaseNode):
                 <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
                     Evaluar
                 </button>
+            </div>
+            <div class="mt-4 text-left">
+                <h4 class="text-sm font-semibold text-purple-700 mb-2">Posibles rutas</h4>
+                {branches_html or '<p class="text-xs text-purple-600">Sin rutas configuradas.</p>'}
+                {fallback_html}
             </div>
         </div>
         '''
