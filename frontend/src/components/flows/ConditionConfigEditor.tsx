@@ -49,12 +49,24 @@ export function ConditionConfigEditor({
         ? config.branches.map((branch) => ({
             ...branch,
             logic: (branch.logic || 'AND') as 'AND' | 'OR',
-            rules: Array.isArray(branch.rules) ? branch.rules : [],
+            rules: Array.isArray(branch.rules) 
+              ? branch.rules.map((rule: any) => {
+                  if (rule.sourceStepId && !rule.source) {
+                    const step = steps.find(s => s.id === rule.sourceStepId);
+                    const sourceType = step?.type === 'evaluation' ? 'evaluation' : 'form';
+                    return {
+                      ...rule,
+                      source: `${sourceType}|${rule.sourceStepId}`,
+                    };
+                  }
+                  return rule;
+                })
+              : [],
           }))
         : [],
       fallbackNextStepId: config?.fallbackNextStepId,
     }),
-    [config]
+    [config, steps]
   );
 
   const availableSteps = useMemo(
@@ -179,9 +191,9 @@ export function ConditionConfigEditor({
   };
 
   const handleAddRule = (branchId: string) => {
-    const defaultSourceStep = availableSteps[0]?.id || '';
-    const defaultField =
-      defaultSourceStep ? getFieldsForStep(defaultSourceStep)[0]?.value || '' : '';
+    const defaultSourceStep = availableSteps.find(s => s.type === 'form' || s.type === 'evaluation');
+    const defaultField = defaultSourceStep ? getFieldsForStep(defaultSourceStep.id)[0]?.value || '' : '';
+    const sourceType = defaultSourceStep?.type === 'evaluation' ? 'evaluation' : 'form';
 
     updateBranch(branchId, (branch) => ({
       ...branch,
@@ -189,7 +201,7 @@ export function ConditionConfigEditor({
         ...(branch.rules || []),
         {
           id: randomId(),
-          sourceStepId: defaultSourceStep,
+          source: defaultSourceStep ? `${sourceType}|${defaultSourceStep.id}` : '',
           field: defaultField,
           operator: 'equals',
           value: '',
@@ -232,7 +244,7 @@ export function ConditionConfigEditor({
     }
     
     branch.rules?.forEach((rule, idx) => {
-      if (!rule.sourceStepId) errors.push(`Regla ${idx + 1}: Falta fuente`);
+      if (!rule.source) errors.push(`Regla ${idx + 1}: Falta fuente (form/evaluation)`);
       if (!rule.field) errors.push(`Regla ${idx + 1}: Campo vacío`);
       if (!rule.operator) errors.push(`Regla ${idx + 1}: Operador vacío`);
       if (rule.value === undefined || rule.value === '') {
@@ -332,9 +344,8 @@ export function ConditionConfigEditor({
       <div className="space-y-4">
         {normalizedConfig.branches.map((branch, branchIndex) => {
           const firstRule = branch.rules[0];
-          const fieldOptions = firstRule
-            ? getFieldsForStep(firstRule.sourceStepId)
-            : [];
+          const sourceStepId = firstRule?.source?.split('|')[1] || '';
+          const fieldOptions = sourceStepId ? getFieldsForStep(sourceStepId) : [];
           const validation = validateBranch(branch);
           const hasErrors = validation.errors.length > 0;
           const hasWarnings = validation.warnings.length > 0;
@@ -436,7 +447,8 @@ export function ConditionConfigEditor({
 
               <div className="space-y-3">
                 {branch.rules.map((rule) => {
-                  const ruleFields = getFieldsForStep(rule.sourceStepId);
+                  const sourceStepId = rule.source?.split('|')[1] || '';
+                  const ruleFields = sourceStepId ? getFieldsForStep(sourceStepId) : [];
                   const hasFieldOptions = ruleFields.length > 0;
 
                   return (
@@ -448,15 +460,17 @@ export function ConditionConfigEditor({
                         <Label>Fuente</Label>
                         <select
                           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                          value={rule.sourceStepId}
-                      onChange={(e) =>
+                          value={sourceStepId}
+                      onChange={(e) => {
+                        const selectedStep = availableSteps.find(s => s.id === e.target.value);
+                        const sourceType = selectedStep?.type === 'evaluation' ? 'evaluation' : 'form';
                         updateBranch(branch.id, (b) => ({
                           ...b,
                           rules: b.rules.map((r) =>
                             r.id === rule.id
                               ? {
                                   ...r,
-                                  sourceStepId: e.target.value,
+                                  source: e.target.value ? `${sourceType}|${e.target.value}` : '',
                                   field: (() => {
                                     const options = getFieldsForStep(e.target.value);
                                     return options[0]?.value || '';
@@ -465,12 +479,12 @@ export function ConditionConfigEditor({
                               : r
                           ),
                             }))
-                          }
+                          }}
                         >
                           {availableSteps.length === 0 && (
                             <option value="">No hay pasos anteriores</option>
                           )}
-                          {availableSteps.map((step) => (
+                          {availableSteps.filter(s => s.type === 'form' || s.type === 'evaluation').map((step) => (
                             <option key={step.id} value={step.id}>
                               {step.name}
                             </option>

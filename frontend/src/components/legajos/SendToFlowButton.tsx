@@ -25,7 +25,13 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
     queryKey: ['flows'],
     queryFn: async () => {
       try {
-        return await getJSON<Flow[]>('/api/flows/');
+        const response = await getJSON<any>('/flows/');
+        // Backend returns paginated response {results: [], count: X}
+        if (response && typeof response === 'object' && 'results' in response) {
+          return response.results || [];
+        }
+        // Fallback for non-paginated response
+        return Array.isArray(response) ? response : [];
       } catch {
         // Fallback a datos mock
         return [
