@@ -8,3 +8,5 @@ mysqlclient
 python-dotenv
 gunicorn
 requests
+redis
+django-redis

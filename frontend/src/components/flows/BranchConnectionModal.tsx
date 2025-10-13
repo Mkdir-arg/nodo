@@ -43,7 +43,7 @@ export function BranchConnectionModal({
         
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Selecciona qué rama de la condición "{sourceStep.name}" debe conectarse al paso destino.
+            Selecciona qué rama de la condición &quot;{sourceStep.name}&quot; debe conectarse al paso destino.
           </p>
           
           <div className="space-y-2">

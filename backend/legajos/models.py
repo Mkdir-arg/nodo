@@ -15,6 +15,10 @@ class Legajo(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=['plantilla', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
 
     def __str__(self):
         return f"Legajo {self.id} - {self.plantilla.nombre}"

@@ -616,7 +616,7 @@ export function canvasNodesToPreviewSchema(nodes: CanvasNode[]) {
 function slugifyName(value: string): string {
   return value
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -865,7 +865,7 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
           ? normalizeColSpan(data.component.colSpan)
           : getNodeColSpan(nodes, data.id);
 
-      const desired = calculateGridPosition(rect, gridRef.current, colSpan);
+      const desired = calculateGridPosition(rect as DOMRect, gridRef.current, colSpan);
       if (!desired) {
         setPreviewPosition(null);
         return;
@@ -899,7 +899,7 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
 
       if (data.type === "palette") {
         const colSpan = normalizeColSpan(data.component.colSpan);
-        const desired = calculateGridPosition(rect, gridRef.current, colSpan);
+        const desired = calculateGridPosition(rect as DOMRect, gridRef.current, colSpan);
         if (!desired) return;
 
         let createdId: string | null = null;
@@ -937,7 +937,7 @@ export function CanvasGridProvider({ children, layout }: CanvasGridProviderProps
         const existing = nodes.find((node) => node.id === data.id);
         if (!existing) return;
         const desired = calculateGridPosition(
-          rect,
+          rect as DOMRect,
           gridRef.current,
           existing.colSpan,
         );

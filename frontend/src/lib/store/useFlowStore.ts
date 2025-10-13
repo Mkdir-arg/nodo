@@ -114,9 +114,10 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await flowsApi.getFlows();
-      set({ flows: response.results, loading: false });
+      const flows = Array.isArray(response) ? response : (response?.results || []);
+      set({ flows, loading: false });
     } catch (error) {
-      set({ error: 'Error loading flows', loading: false });
+      set({ error: 'Error loading flows', loading: false, flows: [] });
     } finally {
       isLoading = false;
     }

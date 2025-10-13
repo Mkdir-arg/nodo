@@ -42,6 +42,11 @@ class Flujo(models.Model):
 
     class Meta:
         ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['is_active', 'status', 'created_by']),
+            models.Index(fields=['-updated_at']),
+            models.Index(fields=['slug']),
+        ]
 
     def __str__(self):
         return self.name
@@ -124,6 +129,10 @@ class Step(models.Model):
     
     class Meta:
         ordering = ['order']
+        indexes = [
+            models.Index(fields=['flow', 'order']),
+            models.Index(fields=['step_type']),
+        ]
         
     def __str__(self):
         return f"{self.flow.name} - {self.name}"
@@ -164,6 +173,12 @@ class InstanciaFlujo(models.Model):
 
     class Meta:
         ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['flow', 'status', 'created_by']),
+            models.Index(fields=['legajo_id', 'status']),
+            models.Index(fields=['-started_at']),
+            models.Index(fields=['resume_at']),
+        ]
 
     def __str__(self):
         return f"{self.flow.name} - {self.legajo_id} - {self.status}"
@@ -187,6 +202,10 @@ class InstanceLog(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['instance', '-timestamp']),
+            models.Index(fields=['level', '-timestamp']),
+        ]
         
     def __str__(self):
         return f"{self.instance} - {self.level} - {self.message[:50]}"

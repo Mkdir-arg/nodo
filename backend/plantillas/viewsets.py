@@ -1,6 +1,7 @@
 from rest_framework import viewsets, decorators, response, status, filters, exceptions
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from config.pagination import StandardResultsSetPagination
 from .models import Plantilla
 from .serializers import (
     PlantillaLayoutSerializer,
@@ -16,6 +17,7 @@ class PlantillaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["nombre"]
     filterset_fields = ["estado"]
+    pagination_class = StandardResultsSetPagination
 
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm("plantillas.add_plantilla"):

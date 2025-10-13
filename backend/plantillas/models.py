@@ -30,6 +30,10 @@ class Plantilla(models.Model):
             models.UniqueConstraint(Lower("nombre"), name="uq_plantilla_nombre_ci"),
         ]
         ordering = ["-updated_at"]
+        indexes = [
+            models.Index(fields=['estado', '-updated_at']),
+            models.Index(fields=['-updated_at']),
+        ]
 
     def __str__(self):
         return self.nombre

@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
 from django.core.paginator import Paginator
+from django.core.cache import cache
+from config.pagination import StandardResultsSetPagination
 
 from .models import Flujo, EjecucionFlujo, InstanciaFlujo, Step, InstanceLog
 from .serializers import FlujoSerializer, EjecucionFlujoSerializer, InstanciaFlujoSerializer, StepSerializer, InstanceLogSerializer, FlowStartSerializer, FlowCandidateSerializer, FlowInstanceSerializer
@@ -21,9 +23,10 @@ class FlujoViewSet(viewsets.ModelViewSet):
     permission_classes = []
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return Flujo.objects.all()
+        return Flujo.objects.select_related('created_by').prefetch_related('flow_steps').all()
     
     def create(self, request, *args, **kwargs):
         print(f"[DEBUG] CREATE Flow - Data received: {request.data}")
@@ -78,8 +81,10 @@ class FlujoViewSet(viewsets.ModelViewSet):
             return Response({'error': 'No start node configuration found'}, 
                           status=status.HTTP_400_BAD_REQUEST)
         
-        # Get real legajos from database
-        legajos_queryset = Legajo.objects.all()
+        # Get real legajos from database with only needed fields
+        legajos_queryset = Legajo.objects.select_related('plantilla').only(
+            'id', 'created_at', 'data', 'plantilla_id'
+        )
         
         # Apply filters from start_config
         accepted_plantillas = start_config.get('acceptedPlantillas', [])
@@ -99,10 +104,15 @@ class FlujoViewSet(viewsets.ModelViewSet):
         sort_dir = '-' if sort_config.get('dir') == 'desc' else ''
         legajos_queryset = legajos_queryset.order_by(f'{sort_dir}{sort_key}')
         
-        # Pagination
-        page_size = start_config.get('pageSize', 25)
+        # Pagination with limit
+        page_size = min(start_config.get('pageSize', 25), 100)
         page = int(request.query_params.get('page', 1))
-        paginator = Paginator(legajos_queryset, page_size)
+        
+        # Limit total results to prevent excessive queries
+        max_results = 1000
+        limited_queryset = legajos_queryset[:max_results]
+        
+        paginator = Paginator(limited_queryset, page_size)
         page_obj = paginator.get_page(page)
         
         # Format legajos data
@@ -254,12 +264,18 @@ class FlujoViewSet(viewsets.ModelViewSet):
     def get_instances(self, request, pk=None):
         """Get flow instances (execution history)"""
         flow = self.get_object()
-        instances = InstanciaFlujo.objects.filter(flow=flow, created_by=request.user)
+        instances = InstanciaFlujo.objects.select_related(
+            'flow', 'current_step', 'created_by'
+        ).filter(flow=flow, created_by=request.user)
         
         # Filter by status if provided
         status_filter = request.query_params.get('status')
         if status_filter:
             instances = instances.filter(status=status_filter)
+        
+        # Limit to last 100 instances by default
+        limit = int(request.query_params.get('limit', 100))
+        instances = instances[:min(limit, 500)]
         
         serializer = InstanciaFlujoSerializer(instances, many=True)
         return Response(serializer.data)
@@ -271,13 +287,14 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
     queryset = InstanciaFlujo.objects.all()
     serializer_class = InstanciaFlujoSerializer
     permission_classes = []
+    pagination_class = StandardResultsSetPagination
     
     def get_permissions(self):
         return []
     
     def get_queryset(self):
         print(f"[DEBUG] get_queryset called")
-        return InstanciaFlujo.objects.all()
+        return InstanciaFlujo.objects.select_related('flow', 'current_step', 'created_by').prefetch_related('logs').all()
     
     def list(self, request, *args, **kwargs):
         print(f"[DEBUG] LIST method called")
@@ -351,6 +368,12 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
     def current_step(self, request, pk=None):
         """Obtiene los datos del paso actual"""
         instance = self.get_object()
+        
+        # Check cache first (30 second TTL)
+        cache_key = f'instance_step_{instance.id}_{instance.current_step_id if instance.current_step else "none"}'
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            return Response(cached_response)
         
         print(f"[DEBUG] Instance: {instance.id}")
         print(f"[DEBUG] Current step: {instance.current_step}")
@@ -455,18 +478,24 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
                     step_data['steps_total'] = metadata['steps_total']
                 if metadata['step_title']:
                     step_data['step_title'] = metadata['step_title']
-                    
+                
+                # Cache response for 30 seconds
+                cache.set(cache_key, step_data, 30)
                 return Response(step_data)
             
             # Si es HTML, devolverlo en el formato anterior
             metadata_payload = {k: v for k, v in metadata.items() if v is not None}
-            return Response({
+            response_data = {
                 'html': step_data,
                 'transitions': transitions,
                 'status': instance.status,
                 'current_step_id': str(instance.current_step.id) if instance.current_step else None,
                 **metadata_payload
-            })
+            }
+            
+            # Cache response for 30 seconds
+            cache.set(cache_key, response_data, 30)
+            return Response(response_data)
             
         except Exception as e:
             print(f"[DEBUG] Error in current_step: {str(e)}")
@@ -489,6 +518,10 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
                 request.user
             )
             
+            # Invalidate cache after interaction
+            cache_key = f'instance_step_{instance.id}_{instance.current_step_id if instance.current_step else "none"}'
+            cache.delete(cache_key)
+            
             # Si hay delay, programar reanudación
             if result.get('pause_until'):
                 runtime.pause_for_delay(result['pause_until'])
@@ -505,7 +538,8 @@ class InstanciaFlujoViewSet(viewsets.ModelViewSet):
     def logs(self, request, pk=None):
         """Obtiene los logs de la instancia"""
         instance = self.get_object()
-        logs = instance.logs.all()[:50]  # Últimos 50 logs
+        limit = int(request.query_params.get('limit', 50))
+        logs = instance.logs.select_related('step', 'user').all()[:min(limit, 200)]
         serializer = InstanceLogSerializer(logs, many=True)
         return Response(serializer.data)
     
@@ -527,7 +561,7 @@ class EjecucionFlujoViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class StepViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Step.objects.all()
+    queryset = Step.objects.select_related('flow').all()
     serializer_class = StepSerializer
     permission_classes = [IsAuthenticated]
 
@@ -538,6 +572,6 @@ class InstanceLogViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return InstanceLog.objects.filter(
+        return InstanceLog.objects.select_related('instance', 'step', 'user').filter(
             instance__created_by=self.request.user
         )

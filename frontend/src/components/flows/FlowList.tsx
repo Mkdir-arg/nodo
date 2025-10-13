@@ -25,6 +25,8 @@ export default function FlowList({ flows, onEdit, onDelete, onNew, onDuplicate, 
     }
   };
 
+  const flowsArray = Array.isArray(flows) ? flows : [];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -38,7 +40,7 @@ export default function FlowList({ flows, onEdit, onDelete, onNew, onDuplicate, 
         }
       />
 
-      {!flows || flows.length === 0 ? (
+      {flowsArray.length === 0 ? (
         <Card className={`${designTokens.card.elevated} p-8 text-center`}>
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Workflow className="h-8 w-8 text-white" />
@@ -52,7 +54,7 @@ export default function FlowList({ flows, onEdit, onDelete, onNew, onDuplicate, 
         </Card>
       ) : (
         <div className="grid gap-4">
-          {flows?.map((flow) => (
+          {flowsArray.map((flow) => (
             <Card key={flow.id} className={`${designTokens.card.elevated} p-6 hover:shadow-lg transition-all duration-200`}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">

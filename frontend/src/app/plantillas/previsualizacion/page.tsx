@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import DynamicForm from '@/components/form/runtime/DynamicForm';
 
+export const dynamic = 'force-dynamic';
+
 export default function PreviewPage() {
   const [schema, setSchema] = useState<any>();
   useEffect(()=>{ const s = localStorage.getItem('nodo.plantilla.preview'); if(s) setSchema(JSON.parse(s)); },[]);

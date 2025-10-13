@@ -45,7 +45,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode }: Pr
   const addOption = () => {
     if (selectedNode.field && "options" in selectedNode.field) {
       const newOptions = [
-        ...selectedNode.field.options,
+        ...(selectedNode.field.options || []),
         { label: "Nueva opción", value: `opt_${Date.now()}` }
       ];
       updateField({ options: newOptions } as any);
@@ -54,7 +54,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode }: Pr
 
   const updateOption = (index: number, option: SelectOption) => {
     if (selectedNode.field && "options" in selectedNode.field) {
-      const newOptions = [...selectedNode.field.options];
+      const newOptions = [...(selectedNode.field.options || [])];
       newOptions[index] = option;
       updateField({ options: newOptions } as any);
     }
@@ -62,7 +62,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode }: Pr
 
   const removeOption = (index: number) => {
     if (selectedNode.field && "options" in selectedNode.field) {
-      const newOptions = selectedNode.field.options.filter((_, i) => i !== index);
+      const newOptions = (selectedNode.field.options || []).filter((_, i) => i !== index);
       updateField({ options: newOptions } as any);
     }
   };
@@ -191,7 +191,7 @@ export function PropertiesPanel({ selectedNode, onUpdateNode, onDeleteNode }: Pr
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  {selectedNode.field.options.map((option, index) => (
+                  {(selectedNode.field.options || []).map((option, index) => (
                     <div key={index} className="flex gap-2">
                       <Input
                         placeholder="Etiqueta"

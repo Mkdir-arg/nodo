@@ -1,5 +1,6 @@
 export type NodeKind = 'section' | 'field';
 export type ColumnSpan = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type FieldType = 'text' | 'number' | 'select' | 'date' | 'checkbox' | 'file';
 
 export interface BaseNode {
   id: string;
@@ -21,12 +22,14 @@ export interface LayoutSectionNode {
   type: 'section';
   title: string;
   children: Array<LayoutRowNode | LayoutColumnNode | LayoutFieldNode>;
+  field?: FieldProps;
 }
 
 export interface LayoutRowNode {
   id: string;
   type: 'row';
   columns: LayoutColumnNode[];
+  field?: FieldProps;
 }
 
 export interface LayoutColumnNode {
@@ -35,6 +38,7 @@ export interface LayoutColumnNode {
   span: ColumnSpan;
   children: LayoutFieldNode[];
   layout?: GridPlacement;
+  field?: FieldProps;
 }
 
 export interface LayoutFieldNode {
@@ -44,12 +48,14 @@ export interface LayoutFieldNode {
   fieldKey: string;
   colSpan: ColumnSpan;
   layout?: GridPlacement;
+  field?: FieldProps;
 }
 
 export interface SectionNode extends BaseNode {
   kind: 'section';
   title: string;
   columns: number;
+  field?: FieldProps;
 }
 
 export interface FieldNode extends BaseNode {
@@ -57,6 +63,7 @@ export interface FieldNode extends BaseNode {
   type: string;
   colSpan: number;
   props?: Record<string, unknown>;
+  field?: FieldProps;
 }
 
 export interface FormLayout {
@@ -70,4 +77,32 @@ export interface PlantillaLayoutResponse {
   layout_json: FormLayout;
   layout_version: number;
   updated_at: string;
+}
+
+export type LayoutNode = SectionNode | FieldNode | LayoutSectionNode | LayoutRowNode | LayoutColumnNode | LayoutFieldNode;
+
+export interface SelectOption {
+  label: string;
+  value: string;
+}
+
+export interface FieldProps {
+  id?: string;
+  name?: string;
+  type?: string;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  required?: boolean;
+  options?: SelectOption[];
+  min?: number;
+  max?: number;
+  step?: number;
+  minDate?: string;
+  maxDate?: string;
+  accept?: string[];
+  maxSizeMB?: number;
+  defaultValue?: unknown;
+  field?: FieldProps;
+  [key: string]: unknown;
 }

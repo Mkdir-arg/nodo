@@ -7,7 +7,7 @@ import {
   type LayoutFieldNode,
   type LayoutRowNode,
 } from "@/lib/forms/types";
-import DynamicFormRenderer from "@/lib/forms/runtime/DynamicFormRenderer";
+import { DynamicFormRenderer } from "@/lib/forms/runtime/DynamicFormRenderer";
 import { Button } from "@/components/ui/button";
 import { useCanvasGridContext, type CanvasNode } from "./CanvasGrid";
 import { useEffect, useMemo, useState } from "react";
@@ -212,7 +212,6 @@ export default function Preview({ open, onClose }: PreviewProps) {
   const [submitResult, setSubmitResult] = useState<Record<string, unknown> | null>(null);
 
   const layout = useMemo(() => buildPreviewLayout(nodes), [nodes]);
-  const fields = useMemo(() => nodes.map((node) => buildFieldConfig(node)), [nodes]);
 
   useEffect(() => {
     if (!open) {
@@ -261,10 +260,7 @@ export default function Preview({ open, onClose }: PreviewProps) {
           <div className="mx-auto w-full max-w-2xl space-y-6">
             <DynamicFormRenderer
               layout={layout}
-              fields={fields}
-              submitLabel="Simular envío"
               onSubmit={(values) => setSubmitResult(values)}
-              className="space-y-8"
             />
 
             {submitResult ? (
