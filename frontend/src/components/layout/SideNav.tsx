@@ -34,18 +34,12 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const { data: flowsData } = useFlowsMin();
 
   const legajoItems = useMemo(() => {
-    const base = [{
-      id: 'ver',
-      label: 'Ver legajos',
-      href: '/legajos',
-      icon: 'FilePlus' as const,
-    }];
     const plantillas = (data ?? []).map((p: any) => ({
       id: String(p.id),
       label: p.nombre,
       href: `/legajos/nuevo?formId=${p.id}`,
     }));
-    return [...base, ...plantillas];
+    return [ ...plantillas];
   }, [data]);
 
   const flowItems = useMemo(() => {

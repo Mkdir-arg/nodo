@@ -45,11 +45,6 @@ export default async function Page({ searchParams }: PageProps) {
           <Link href={`/legajos/nuevo/crear?formId=${formId}`}>Crear</Link>
         </Button>
       </div>
-      {showWarning && (
-        <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          No se pudo verificar la plantilla. Verifica que exista y que tengas permisos.
-        </div>
-      )}
       <ListView formId={formId} />
     </div>
   );

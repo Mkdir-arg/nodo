@@ -33,14 +33,14 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
   if (startNodes.length === 0) {
     errors.push('El flujo debe tener exactamente un nodo de inicio');
   } else if (startNodes.length > 1) {
-    errors.push('El flujo no puede tener mÃ¡s de un nodo de inicio');
+    errors.push('El flujo no puede tener más de un nodo de inicio');
   } else {
     const startNode = startNodes[0];
     // Check if start node has outgoing connections
     const hasOutgoing =
       startNode.nextStepId !== undefined || getConditionTargets(startNode).length > 0;
     if (!hasOutgoing && (flow?.steps || []).length > 1) {
-      warnings.push('El nodo de inicio deberÃ­a tener al menos una conexiÃ³n de salida');
+      warnings.push('El nodo de inicio debería tener al menos una conexión de salida');
     }
   }
 
@@ -61,12 +61,12 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
         try {
           if (config.url) new URL(config.url);
         } catch {
-          errors.push(`Paso "${step.name}": URL invÃ¡lida`);
+          errors.push(`Paso "${step.name}": URL inválida`);
         }
         break;
       case 'delay':
         if (!config.duration || config.duration <= 0) {
-          errors.push(`Paso "${step.name}": DuraciÃ³n debe ser mayor a 0`);
+          errors.push(`Paso "${step.name}": Duración debe ser mayor a 0`);
         }
         break;
       case 'condition': {
@@ -209,7 +209,7 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
   });
   
   if (stepsWithoutNext.length > 1) {
-    warnings.push(`MÃºltiples puntos finales detectados: ${stepsWithoutNext.map(s => s.name).join(', ')}`);
+    warnings.push(`Múltiples puntos finales detectados: ${stepsWithoutNext.map(s => s.name).join(', ')}`);
   }
 
   if (errors.length === 0 && warnings.length === 0) {
@@ -217,7 +217,7 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
       <Card className="p-3 bg-green-50 border-green-200">
         <div className="flex items-center gap-2 text-green-700">
           <CheckCircle className="h-4 w-4" />
-          <span className="text-sm">Flujo vÃ¡lido</span>
+          <span className="text-sm">Flujo válido</span>
         </div>
       </Card>
     );
@@ -232,7 +232,7 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
             <span className="text-sm font-medium">Errores</span>
           </div>
           <ul className="text-sm text-red-600 ml-6 space-y-1">
-            {errors.map((error, i) => <li key={i}>â€¢ {error}</li>)}
+            {errors.map((error, i) => <li key={i}>• {error}</li>)}
           </ul>
         </div>
       )}
@@ -244,7 +244,7 @@ export default function FlowValidator({ flow }: FlowValidatorProps) {
             <span className="text-sm font-medium">Advertencias</span>
           </div>
           <ul className="text-sm text-yellow-600 ml-6 space-y-1">
-            {warnings.map((warning, i) => <li key={i}>â€¢ {warning}</li>)}
+            {warnings.map((warning, i) => <li key={i}>• {warning}</li>)}
           </ul>
         </div>
       )}

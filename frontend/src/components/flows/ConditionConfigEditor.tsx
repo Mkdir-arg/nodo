@@ -232,7 +232,7 @@ export function ConditionConfigEditor({
     }
     
     branch.rules?.forEach((rule, idx) => {
-      if (!rule.source) errors.push(`Regla ${idx + 1}: Falta fuente`);
+      if (!rule.sourceStepId) errors.push(`Regla ${idx + 1}: Falta fuente`);
       if (!rule.field) errors.push(`Regla ${idx + 1}: Campo vacío`);
       if (!rule.operator) errors.push(`Regla ${idx + 1}: Operador vacío`);
       if (rule.value === undefined || rule.value === '') {
