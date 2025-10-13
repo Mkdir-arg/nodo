@@ -12,8 +12,7 @@ export default function FlowsPage() {
 
   useEffect(() => {
     loadFlows();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Solo cargar una vez al montar, ignorar loadFlows como dependencia
+  }, []); // Siempre recargar al montar
 
   const handleEdit = (flow: Flow) => {
     router.push(`/flujos/editar/${flow.id}`);

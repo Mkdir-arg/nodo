@@ -102,15 +102,20 @@ export default function EditorClient({ plantillaId }: { plantillaId: string }) {
       // Usar repo.upsertTemplate para actualizar
       await repo.upsertTemplate(updatedTemplate);
       
-      // Invalidar todas las queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['template'] });
-      queryClient.invalidateQueries({ queryKey: ['plantillas'] });
-      queryClient.invalidateQueries({ queryKey: ['legajos'] });
+      // Invalidar todas las queries relacionadas y esperar
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['template'] }),
+        queryClient.invalidateQueries({ queryKey: ['plantillas'] }),
+        queryClient.invalidateQueries({ queryKey: ['legajos'] })
+      ]);
       
       resetDirty();
       await refreshPlantillas();
       
       alert(`Plantilla "${nombre}" actualizada exitosamente`);
+      
+      // Esperar un momento para asegurar que el estado se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
       router.push('/plantillas');
     } catch (error: any) {
       console.error('Error:', error);

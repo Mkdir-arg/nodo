@@ -9,7 +9,13 @@ export interface FlowsResponse {
 export const flowsApi = {
   // Get all flows
   getFlows: async (): Promise<FlowsResponse> => {
-    const flows = await getJSON<Flow[]>('/flows/');
+    const response = await getJSON<any>('/flows/');
+    // Backend returns paginated response {results: [], count: X}
+    if (response && typeof response === 'object' && 'results' in response) {
+      return { results: response.results || [], count: response.count || 0 };
+    }
+    // Fallback for non-paginated response
+    const flows = Array.isArray(response) ? response : [];
     return { results: flows, count: flows.length };
   },
 

@@ -185,8 +185,12 @@ export default function FlowEditor({ flowId, isNew = false }: FlowEditorProps) {
         });
       }
       
-      // Invalidate flows query to update the sidebar menu
-      queryClient.invalidateQueries({ queryKey: FLOWS_QUERY_KEY });
+      // Invalidate flows query and wait
+      await queryClient.invalidateQueries({ queryKey: FLOWS_QUERY_KEY });
+      await loadFlows();
+      
+      // Wait a moment to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Navigate back to flows list
       router.push('/flujos');

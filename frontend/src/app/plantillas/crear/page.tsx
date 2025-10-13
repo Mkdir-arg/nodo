@@ -130,6 +130,9 @@ export default function CrearPlantillaPage() {
       await refreshPlantillas();
       
       alert(`Plantilla "${nombre}" guardada exitosamente`);
+      
+      // Esperar un momento para asegurar que el estado se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
       router.push('/plantillas');
     } catch (error: any) {
       console.error('Error completo:', error);

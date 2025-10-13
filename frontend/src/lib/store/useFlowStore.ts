@@ -108,15 +108,27 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
   error: null,
 
   loadFlows: async () => {
-    if (isLoading) return; // Evitar llamadas concurrentes globalmente
+    if (isLoading) return;
     
     isLoading = true;
     set({ loading: true, error: null });
     try {
       const response = await flowsApi.getFlows();
-      const flows = Array.isArray(response) ? response : (response?.results || []);
+      const rawFlows = Array.isArray(response) ? response : (response?.results || []);
+      
+      // Transform backend response to frontend format
+      const flows = rawFlows.map(flow => ({
+        id: flow.id,
+        name: flow.name,
+        description: flow.description,
+        steps: flow.steps || [],
+        createdAt: flow.created_at || flow.createdAt || new Date().toISOString(),
+        updatedAt: flow.updated_at || flow.updatedAt || new Date().toISOString(),
+      }));
+      
       set({ flows, loading: false });
     } catch (error) {
+      console.error('Error loading flows:', error);
       set({ error: 'Error loading flows', loading: false, flows: [] });
     } finally {
       isLoading = false;
@@ -133,12 +145,24 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
         delete backendData.steps;
       }
       
-      const newFlow = await flowsApi.createFlow(backendData);
+      const response = await flowsApi.createFlow(backendData);
+      
+      // Transform backend response to frontend format
+      const newFlow = {
+        id: response.id,
+        name: response.name,
+        description: response.description,
+        steps: response.steps || [],
+        createdAt: response.created_at || response.createdAt || new Date().toISOString(),
+        updatedAt: response.updated_at || response.updatedAt || new Date().toISOString(),
+      };
+      
       set((state) => ({
         flows: [...(state.flows || []), newFlow],
         loading: false,
       }));
     } catch (error) {
+      console.error('Error creating flow:', error);
       set({ error: 'Error creating flow', loading: false });
       throw error;
     }
@@ -154,7 +178,18 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
         delete backendUpdates.steps;
       }
       
-      const updatedFlow = await flowsApi.updateFlow(id, backendUpdates);
+      const response = await flowsApi.updateFlow(id, backendUpdates);
+      
+      // Transform backend response to frontend format
+      const updatedFlow = {
+        id: response.id,
+        name: response.name,
+        description: response.description,
+        steps: response.steps || [],
+        createdAt: response.created_at || response.createdAt || new Date().toISOString(),
+        updatedAt: response.updated_at || response.updatedAt || new Date().toISOString(),
+      };
+      
       set((state) => ({
         flows: (state.flows || []).map((flow) =>
           flow.id === id ? updatedFlow : flow
@@ -163,6 +198,7 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
         loading: false,
       }));
     } catch (error) {
+      console.error('Error updating flow:', error);
       set({ error: 'Error updating flow', loading: false });
       throw error;
     }

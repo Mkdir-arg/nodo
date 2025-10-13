@@ -42,7 +42,8 @@ export default function PlantillasPage() {
         page_size: 10,
       }),
     ...buildQueryOptions({
-      staleTime: 45 * 1000,
+      staleTime: 0,
+      refetchOnMount: 'always',
       refetchOnWindowFocus: true,
     }),
   });
