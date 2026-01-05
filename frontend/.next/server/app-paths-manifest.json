@@ -1,1 +1,22 @@
-{}
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/flujos/editar/[id]/page": "app/flujos/editar/[id]/page.js",
+  "/configuraciones/page": "app/configuraciones/page.js",
+  "/flujos/[id]/page": "app/flujos/[id]/page.js",
+  "/flujos/nuevo/page": "app/flujos/nuevo/page.js",
+  "/flujos/page": "app/flujos/page.js",
+  "/flujos/runtime/[instanceId]/page": "app/flujos/runtime/[instanceId]/page.js",
+  "/legajos/[id]/page": "app/legajos/[id]/page.js",
+  "/legajos/nuevo/crear/page": "app/legajos/nuevo/crear/page.js",
+  "/legajos/page": "app/legajos/page.js",
+  "/login/page": "app/login/page.js",
+  "/legajos/nuevo/page": "app/legajos/nuevo/page.js",
+  "/plantillas/crear/page": "app/plantillas/crear/page.js",
+  "/page": "app/page.js",
+  "/plantillas/page": "app/plantillas/page.js",
+  "/plantillas/editar/[id]/page": "app/plantillas/editar/[id]/page.js",
+  "/(private)/plantillas/editor/[id]/page": "app/(private)/plantillas/editor/[id]/page.js",
+  "/(private)/plantillas/render/[id]/page": "app/(private)/plantillas/render/[id]/page.js",
+  "/plantillas/previsualizacion/page": "app/plantillas/previsualizacion/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
+}

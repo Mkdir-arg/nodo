@@ -152,10 +152,8 @@ export default function PlantillasPage() {
                   data={p}
                   onEditar={() => router.push(`/plantillas/editar/${p.id}`)}
                   onPreview={() => {
-                    try {
-                      localStorage.setItem('nodo.plantilla.preview', JSON.stringify(p.schema));
-                    } catch {}
-                    window.open('/plantillas/previsualizacion', '_blank');
+                    // Preview deshabilitado - usar solo base de datos
+                    console.log('Preview deshabilitado');
                   }}
                   onUsar={() => router.push(`/legajos/nuevo?formId=${p.id}`)}
                   onDuplicar={() => duplicar.mutate(p)}

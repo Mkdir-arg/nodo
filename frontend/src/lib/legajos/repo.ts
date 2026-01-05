@@ -1,131 +1,79 @@
 import { ApiRepo, ITemplatesRepo } from "./api-repo";
-import { LocalRepo } from "./local-repo";
 
 class SimpleRepo implements ITemplatesRepo {
   private apiRepo = new ApiRepo();
-  private localRepo = new LocalRepo();
 
   private isAuthenticated(): boolean {
     return typeof window !== 'undefined' && !!localStorage.getItem('access_token');
   }
 
   async listTemplates() {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.listTemplates();
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para ver plantillas.');
     }
-    return this.localRepo.listTemplates();
+    return await this.apiRepo.listTemplates();
   }
 
   async getTemplate(id: string) {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.getTemplate(id);
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para ver plantillas.');
     }
-    return this.localRepo.getTemplate(id);
+    return await this.apiRepo.getTemplate(id);
   }
 
   async upsertTemplate(t: any) {
     console.log('📝 PASO 1: Datos recibidos en repositorio:', JSON.stringify(t, null, 2));
     
-    if (this.isAuthenticated()) {
-      try {
-        console.log('🚀 PASO 2: Guardando en backend...');
-        const result = await this.apiRepo.upsertTemplate(t);
-        console.log('✅ PASO 3: Guardado en backend exitoso:', JSON.stringify(result, null, 2));
-        return result;
-      } catch (error) {
-        console.error('❌ PASO 3: Error backend:', error);
-        
-        // Si es error de nombre duplicado, mostrar error y no usar fallback
-        if (error instanceof Error && error.message.includes('Nombre ya utilizado')) {
-          throw new Error('El nombre de la plantilla ya existe. Por favor elige otro nombre.');
-        }
-        
-        // Solo usar fallback para otros errores (conectividad, etc)
-        console.log('💾 PASO 4: Guardando en local como fallback');
-        const localResult = await this.localRepo.upsertTemplate(t);
-        console.log('✅ PASO 5: Guardado en local exitoso:', JSON.stringify(localResult, null, 2));
-        return localResult;
-      }
-    } else {
-      console.log('🔒 PASO 2: No autenticado, guardando en local');
-      const localResult = await this.localRepo.upsertTemplate(t);
-      console.log('✅ PASO 3: Guardado en local exitoso:', JSON.stringify(localResult, null, 2));
-      return localResult;
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para guardar plantillas.');
     }
+
+    console.log('🚀 PASO 2: Guardando en backend...');
+    const result = await this.apiRepo.upsertTemplate(t);
+    console.log('✅ PASO 3: Guardado en backend exitoso:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   async publishTemplate(id: string) {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.publishTemplate(id);
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para publicar plantillas.');
     }
-    return this.localRepo.publishTemplate(id);
+    return await this.apiRepo.publishTemplate(id);
   }
 
   async cloneTemplate(id: string) {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.cloneTemplate(id);
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para clonar plantillas.');
     }
-    return this.localRepo.cloneTemplate(id);
+    return await this.apiRepo.cloneTemplate(id);
   }
 
   async listDossiers() {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.listDossiers();
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para ver legajos.');
     }
-    return this.localRepo.listDossiers();
+    return await this.apiRepo.listDossiers();
   }
 
   async createDossier(d: any) {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.createDossier(d);
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para crear legajos.');
     }
-    return this.localRepo.createDossier(d);
+    return await this.apiRepo.createDossier(d);
   }
 
   async getDossier(id: string) {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.getDossier(id);
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para ver legajos.');
     }
-    return this.localRepo.getDossier(id);
+    return await this.apiRepo.getDossier(id);
   }
 
   async saveDossier(d: any) {
-    if (this.isAuthenticated()) {
-      try {
-        return await this.apiRepo.saveDossier(d);
-      } catch (error) {
-        console.warn('API falló, usando local:', error);
-      }
+    if (!this.isAuthenticated()) {
+      throw new Error('No autenticado. Inicia sesión para guardar legajos.');
     }
-    return this.localRepo.saveDossier(d);
+    return await this.apiRepo.saveDossier(d);
   }
 }
 

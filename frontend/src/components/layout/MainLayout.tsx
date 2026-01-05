@@ -6,7 +6,6 @@ import clsx from 'clsx';
 import TopNavBar from './TopNavBar';
 import SideNav from './SideNav';
 import ControlSidebar from './ControlSidebar';
-import { getStored, setStored } from '@/lib/ui-state';
 import { useAuth } from '@/lib/AuthContext';
 
 interface MainLayoutProps {
@@ -29,18 +28,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   useEffect(() => {
     if (isLoginRoute) return;
-    setIsMini(getStored('sideCollapsed', false));
-    setTheme(getStored('theme', 'light') as 'light' | 'dark');
+    // Sin localStorage - usar valores por defecto
+    setIsMini(false);
+    setTheme('light');
   }, [isLoginRoute]);
 
   useEffect(() => {
     if (isLoginRoute) return;
-    setStored('sideCollapsed', isMini);
-  }, [isMini, isLoginRoute]);
-
-  useEffect(() => {
-    if (isLoginRoute) return;
-    setStored('theme', theme);
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme, isLoginRoute]);
 

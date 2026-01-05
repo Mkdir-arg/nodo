@@ -131,14 +131,11 @@ export const PlantillasService = {
   },
 
   savePlantilla: (payload: any) =>
-    postJSON(`/api/plantillas/`, payload).catch(() => postJSON(`/api/formularios/`, payload)),
+    postJSON(`/api/plantillas/`, payload),
 
   updatePlantilla: (id: string, payload: any) =>
-    putJSON(`/api/plantillas/${id}/`, payload).catch(() => putJSON(`/api/formularios/${id}/`, payload)),
-
-  updateVisualConfig: (id: string, cfg: any) =>
-    patchJSON(`/api/plantillas/${id}/visual-config/`, cfg),
+    putJSON(`/api/plantillas/${id}/`, payload),
 
   deletePlantilla: (id: string) =>
-    deleteJSON(`/api/plantillas/${id}/`).catch(() => deleteJSON(`/api/formularios/${id}/`)),
+    deleteJSON(`/api/plantillas/${id}/`),
 };
