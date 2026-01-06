@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Settings, Trash2 } from 'lucide-react';
 
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
+import { HeaderNodePreview } from './ui-nodes/HeaderNode/HeaderNode';
 import type { FieldNode } from '@/lib/forms/types';
 
 interface FieldCardProps {
@@ -41,6 +42,23 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  // Renderizar UI nodes especiales
+  if (field.kind === 'ui' && field.type === 'ui:header') {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`col-span-12 ${isDragging ? 'opacity-50' : ''}`}
+      >
+        <HeaderNodePreview 
+          node={field as any}
+          isSelected={isSelected}
+          onClick={() => setSelected({ type: 'field', id: field.id })}
+        />
+      </div>
+    );
+  }
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();

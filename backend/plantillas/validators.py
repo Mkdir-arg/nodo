@@ -2,6 +2,8 @@ import re
 from typing import Dict, Any, List
 
 VALID_OPS = {"eq", "ne", "in", "nin", "gt", "gte", "lt", "lte", "contains"}
+VALID_UI_HEADER_ACTIONS = {"navigate", "command"}
+VALID_UI_HEADER_COMMANDS = {"print"}
 
 
 def _collect_fields(nodes, acc):
@@ -78,6 +80,38 @@ def validate_unique_keys(schema: Dict[str, Any]):
     _walk(schema.get("nodes", []), fn)
 
 
+def validate_ui_header_config(schema: Dict[str, Any]):
+    """Validate ui:header node configurations."""
+    def fn(n):
+        if n.get("type") == "ui:header" and n.get("variant") == "hero-glass":
+            config = n.get("config", {})
+            
+            # Validate background
+            bg = config.get("background", {})
+            if bg.get("mode") != "image":
+                raise ValueError("ui:header background.mode debe ser 'image'")
+            if not isinstance(bg.get("imageUrl"), str) or len(bg.get("imageUrl", "")) == 0:
+                raise ValueError("ui:header background.imageUrl debe ser string no vacío")
+            
+            # Validate card actions
+            card = config.get("card", {})
+            actions = card.get("actions", [])
+            if not isinstance(actions, list):
+                raise ValueError("ui:header card.actions debe ser array")
+            
+            for action in actions:
+                if not isinstance(action, dict):
+                    raise ValueError("ui:header action debe ser objeto")
+                if action.get("type") not in VALID_UI_HEADER_ACTIONS:
+                    raise ValueError(f"ui:header action.type inválido: {action.get('type')}")
+                if action.get("type") == "command" and action.get("name") not in VALID_UI_HEADER_COMMANDS:
+                    raise ValueError(f"ui:header command inválido: {action.get('name')}")
+                if not isinstance(action.get("icon"), str) or len(action.get("icon", "")) == 0:
+                    raise ValueError("ui:header action.icon debe ser string no vacío")
+    
+    _walk(schema.get("nodes", []), fn)
+
+
 def validate_group_children(schema: Dict[str, Any]):
     """Validate that groups have children."""
     def fn(n):
@@ -94,3 +128,4 @@ def run_schema_validations(schema: Dict[str, Any]):
     validate_non_empty_sections(schema)
     validate_unique_keys(schema)
     validate_group_children(schema)
+    validate_ui_header_config(schema)

@@ -80,6 +80,7 @@ class LegajoViewSet(viewsets.ModelViewSet):
             return response.Response(
                 {
                     "data": inst.data,
+                    "schema": inst.plantilla.schema,
                     "plantilla": str(inst.plantilla_id),
                     "visual_config": inst.plantilla.visual_config or {},
                     "meta": meta,

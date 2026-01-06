@@ -2,6 +2,7 @@
 
 import * as Icons from "lucide-react";
 import SectionGridView from "./SectionGridView";
+import { HeaderNodeRuntime } from "../form/builder/ui-nodes/HeaderNode/HeaderNodeRuntime";
 
 function isUiNode(n:any){ return n?.kind==="ui" || String(n?.type||"").startsWith("ui:"); }
 
@@ -42,12 +43,15 @@ export default function SectionRenderer({ section, ctx }:{ section:any; ctx:any 
 
 function UiBlock({ node, ctx }:{ node:any; ctx:any }) {
   const cfg = node.config || {};
+  
   if (node.type === "ui:header") {
     return (
-      <header className="rounded-2xl p-6 text-white bg-gradient-to-r from-indigo-600 to-sky-500">
-        <h1 className="text-2xl font-semibold">{tpl(cfg.title, ctx)}</h1>
-        {cfg.subtitle && <p className="opacity-80">{cfg.subtitle}</p>}
-      </header>
+      <HeaderNodeRuntime 
+        node={node}
+        data={ctx.data || {}}
+        meta={ctx.meta || {}}
+        context={ctx.context || {}}
+      />
     );
   }
   if (node.type === "ui:kpi-grid") {

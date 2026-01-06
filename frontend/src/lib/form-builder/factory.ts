@@ -5,7 +5,7 @@ import type { FieldType } from "@/lib/forms/types";
 export type { FieldType } from "@/lib/forms/types";
 
 const LAYOUT_DEFAULTS: Record<string, { w: number; h: number }> = {
-  "ui:header": { w: 12, h: 5 },
+  "ui:header": { w: 12, h: 6 },
   "ui:kpi-grid": { w: 6, h: 4 },
   "ui:divider": { w: 12, h: 1 },
   "ui:banner": { w: 12, h: 3 },
@@ -109,11 +109,44 @@ function createUiNode(type: string) {
   if (type === "ui:header") {
     return {
       ...base,
+      variant: "hero-glass",
       config: {
-        variant: "hero",
-        show_photo: true,
-        title: "{{ data.ciudadano.apellido }}, {{ data.ciudadano.nombre }}",
-        subtitle: "Legajo de Ciudadano",
+        background: {
+          mode: "image" as const,
+          imageUrl: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop",
+          overlay: {
+            enabled: true,
+            opacity: 0.15,
+            blur: 0
+          }
+        },
+        topbar: {
+          enabled: true,
+          position: "top-right" as const,
+          actions: ["theme", "notifications", "profile", "logout"] as const,
+          logoutLabel: "Cerrar Sesión"
+        },
+        card: {
+          enabled: true,
+          glass: {
+            blur: 13,
+            opacity: 0.8
+          },
+          leftIcon: {
+            enabled: true,
+            icon: "user",
+            gradient: {
+              from: "#F00B80",
+              to: "#7928CA",
+              angle: 45
+            }
+          },
+          title: "{{ data.nombre }} {{ data.apellido }}",
+          subtitle: "Legajo de Ciudadano",
+          actions: [
+            { id: "print", icon: "printer", type: "command" as const, name: "print" as const }
+          ]
+        }
       },
     };
   }

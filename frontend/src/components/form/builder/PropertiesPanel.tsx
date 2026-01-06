@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useMemo } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
+import { HeaderNodeEditor } from './ui-nodes/HeaderNode/HeaderNodeEditor';
+import type { HeaderNode } from './ui-nodes/HeaderNode/types';
 
 function Row({label, children}:{label:string; children:any}) {
   return (
@@ -34,6 +36,20 @@ export default function PropertiesPanel() {
       </div>
     </aside>
   );
+
+  // Special handling for ui:header
+  if (node.kind === 'ui' && node.type === 'ui:header') {
+    return (
+      <aside className="mt-4 lg:mt-0 lg:w-80">
+        <div className="rounded-2xl border p-3 bg-white/60 dark:bg-slate-800/60 dark:border-slate-700">
+          <HeaderNodeEditor 
+            node={node as HeaderNode}
+            onUpdate={(updates) => updateNode(node.id, updates)}
+          />
+        </div>
+      </aside>
+    );
+  }
 
   const numKeys = collectKeysByType('number');
 

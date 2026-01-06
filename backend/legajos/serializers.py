@@ -52,6 +52,9 @@ class LegajoSerializer(serializers.ModelSerializer):
         return data
 
     def _eval_conds(self, values: Dict[str, Any], conds: List[Dict[str, Any]]):
+        if not conds:  # Si no hay condiciones, no ocultar
+            return False
+            
         def evaluate_condition(condition):
             value = values.get(condition["key"])
             expected = condition.get("value")
@@ -83,7 +86,7 @@ class LegajoSerializer(serializers.ModelSerializer):
                     return expected in value
             return False
             
-        return all(evaluate_condition(c) for c in (conds or []))
+        return all(evaluate_condition(c) for c in conds)
 
     def validate(self, attrs):
         plantilla: Plantilla = attrs["plantilla"]
@@ -105,8 +108,11 @@ class LegajoSerializer(serializers.ModelSerializer):
                                 if self._eval_conds(item_vals, c.get("condicionesOcultar")):
                                     item.pop(c["key"], None)
                 else:
-                    if self._eval_conds(values, n.get("condicionesOcultar")):
-                        attrs["data"].pop(n["key"], None)
+                    # Solo procesar nodos que tienen key (no UI nodes)
+                    if "key" in n:
+                        conditions = n.get("condicionesOcultar", [])
+                        if conditions and self._eval_conds(values, conditions):
+                            attrs["data"].pop(n["key"], None)
         clean(schema.get("nodes", []))
         return attrs
 

@@ -28,6 +28,12 @@ const AVANZADOS: Item[] = [
   { type:"group", label:"Grupo iterativo" },
 ];
 
+const VISUALES: Item[] = [
+  { type:"ui:header" as any, label:"Encabezado Hero", note:"Imagen + card" },
+  { type:"ui:divider" as any, label:"Separador" },
+  { type:"ui:banner" as any, label:"Banner" },
+];
+
 export default function Palette() {
   const sections = useBuilderStore(s => s.sections);
   const selected = useBuilderStore(s => s.selected);
@@ -70,6 +76,7 @@ export default function Palette() {
       <Block title="Básicos" items={BASICOS} />
       <Block title="Selección" items={SELECCION} />
       <Block title="Avanzados" items={AVANZADOS} />
+      <Block title="Visuales" items={VISUALES} />
       <p className="text-xs opacity-60 mt-2">Tip: primero seleccioná una sección para insertar ahí.</p>
     </aside>
   );
