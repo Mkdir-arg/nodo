@@ -279,6 +279,7 @@ function Row({
   plantillaNombre?: string;
   onVer: () => void;
 }) {
+  const router = useRouter();
   const actualizado = formatDate(data.updated_at || undefined);
   const creado = formatDate(data.created_at || undefined);
   const estado = data.estado ? String(data.estado).toUpperCase() : '—';
@@ -297,6 +298,12 @@ function Row({
               className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700"
             >
               Ver detalle
+            </button>
+            <button
+              onClick={() => router.push(`/legajos/${data.id}/editar`)}
+              className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+            >
+              ✏️ Editar
             </button>
             <SendToFlowButton legajoId={data.id} />
           </div>

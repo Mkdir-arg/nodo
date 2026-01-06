@@ -23,7 +23,7 @@ function renderNode(node: any, ctx: any) {
         key={node.id}
         node={node}
         data={ctx.data || {}}
-        meta={ctx.meta || {}}
+        meta={{ ...ctx.meta, legajoId: ctx.legajoId }}
         context={ctx.context || {}}
       />
     );
@@ -53,7 +53,7 @@ export default async function LegajoDetallePage({ params }: { params: { id: stri
   const data = response.data ?? {};
   const schema = response.schema ?? {};
   const meta = response.meta ?? {};
-  const ctx = { data, meta, context: {} };
+  const ctx = { data, meta, context: {}, legajoId: params.id };
 
   const nodes = schema?.nodes || [];
   const sections = schema?.sections || [];

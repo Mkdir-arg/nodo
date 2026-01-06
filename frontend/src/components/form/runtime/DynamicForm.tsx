@@ -26,14 +26,14 @@ function normalizeSchema(raw: any): { nodes: any[] } {
 
 function isUiNode(n:any){ return n?.kind === "ui" || String(n?.type||"").startsWith("ui:"); }
 
-function renderUiNode(node: any, data: any = {}) {
+function renderUiNode(node: any, data: any = {}, meta: any = {}) {
   if (node.type === 'ui:header') {
     return (
       <HeaderNodeRuntime 
         key={node.id}
         node={node}
         data={data}
-        meta={{ legajoId: 'nuevo' }}
+        meta={meta}
         context={{}}
       />
     );
@@ -45,9 +45,13 @@ function renderUiNode(node: any, data: any = {}) {
 
 export default function DynamicForm({
   schema,
+  initialData = {},
+  meta = {},
   onSubmit,
 }: {
-  schema?: any; // ← ahora es opcional (puede venir undefined)
+  schema?: any;
+  initialData?: Record<string, any>;
+  meta?: Record<string, any>;
   onSubmit: (data: any) => void;
 }) {
   const normalized = useMemo(() => normalizeSchema(schema), [schema]);
@@ -62,7 +66,7 @@ export default function DynamicForm({
 
   const methods = useForm({
     resolver: zodResolver(zodSchema),
-    defaultValues: {}, // opcional: podés hidratar con valores por defecto
+    defaultValues: initialData,
   });
 
   const formData = methods.watch(); // Para pasar a UI nodes
@@ -87,7 +91,7 @@ export default function DynamicForm({
   return (
     <div className="space-y-6">
       {/* Renderizar UI nodes primero */}
-      {uiNodes.map((node) => renderUiNode(node, formData))}
+      {uiNodes.map((node) => renderUiNode(node, formData, meta))}
       
       {/* Luego el formulario */}
       <FormProvider {...methods}>

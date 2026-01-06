@@ -1,14 +1,23 @@
-import DOMPurify from 'isomorphic-dompurify';
+'use client';
+
+import { useEffect, useState } from 'react';
 
 export default function InfoField({ field }:{field:any}) {
+  const [sanitizedHtml, setSanitizedHtml] = useState('');
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined' && field?.html) {
+      import('isomorphic-dompurify').then(({ default: DOMPurify }) => {
+        setSanitizedHtml(DOMPurify.sanitize(field.html || ''));
+      }).catch(() => {
+        setSanitizedHtml(field.html || '');
+      });
+    }
+  }, [field?.html]);
+  
   if (!field) return null;
   
-  try {
-    const sanitizedHtml = DOMPurify.sanitize(field.html || '');
-    return (
-      <div className="p-2" dangerouslySetInnerHTML={{__html: sanitizedHtml}} />
-    );
-  } catch {
-    return <div className="p-2 text-red-500">Error al procesar contenido</div>;
-  }
+  return (
+    <div className="p-2" dangerouslySetInnerHTML={{__html: sanitizedHtml}} />
+  );
 }

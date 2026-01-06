@@ -16,7 +16,7 @@ class LegajoViewSet(viewsets.ModelViewSet):
     queryset = Legajo.objects.select_related("plantilla").all()
     serializer_class = LegajoSerializer
     permission_classes = []
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "put", "patch"]
     pagination_class = LegajoPagination
 
     def get_queryset(self):
@@ -103,4 +103,32 @@ class LegajoViewSet(viewsets.ModelViewSet):
             return response.Response(
                 {"error": "Error interno del servidor"},
                 status=500
+            )
+
+    def update(self, request, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            logger.info(f"Update request data: {request.data}")
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Update error: {e}")
+            return response.Response(
+                {"error": str(e)},
+                status=400
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            logger.info(f"Partial update request data: {request.data}")
+            return super().partial_update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Partial update error: {e}")
+            return response.Response(
+                {"error": str(e)},
+                status=400
             )

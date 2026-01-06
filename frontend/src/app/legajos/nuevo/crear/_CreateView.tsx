@@ -45,6 +45,7 @@ export default function CreateView({ formId }: { formId: string }) {
   return (
     <DynamicForm
       schema={schema}
+      meta={{ legajoId: 'nuevo' }}
       onSubmit={async (values) => {
         if (mutation.isPending) return;
         try {

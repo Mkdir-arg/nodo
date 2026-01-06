@@ -144,6 +144,7 @@ function createUiNode(type: string) {
           title: "{{ data.nombre }} {{ data.apellido }}",
           subtitle: "Legajo de Ciudadano",
           actions: [
+            { id: "edit", icon: "edit", type: "navigate" as const, to: "/legajos/{{ meta.legajoId }}/editar" },
             { id: "print", icon: "printer", type: "command" as const, name: "print" as const }
           ]
         }

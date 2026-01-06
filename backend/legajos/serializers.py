@@ -132,3 +132,20 @@ class LegajoSerializer(serializers.ModelSerializer):
         if updates:
             legajo.save(update_fields=updates)
         return legajo
+
+    def update(self, instance, validated_data):
+        legajo = super().update(instance, validated_data)
+        updates = []
+        try:
+            from plantillas.utils import build_grid_values
+
+            legajo.grid_values = build_grid_values(
+                legajo.plantilla.schema, legajo.data
+            )
+            updates.append("grid_values")
+        except Exception:
+            pass
+
+        if updates:
+            legajo.save(update_fields=updates)
+        return legajo

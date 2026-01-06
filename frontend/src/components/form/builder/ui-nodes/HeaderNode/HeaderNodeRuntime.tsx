@@ -1,6 +1,6 @@
 'use client';
 
-import { User, Printer, MapPin, List, Bell, Settings, LogOut } from 'lucide-react';
+import { User, Printer, MapPin, List, Bell, Settings, LogOut, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { HeaderNode } from './types';
 
@@ -19,13 +19,14 @@ const iconMap = {
   bell: Bell,
   settings: Settings,
   'log-out': LogOut,
+  edit: Edit,
 };
 
 function resolveTemplate(template: string, context: { data?: any; meta?: any; context?: any }): string {
   try {
     return template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, path) => {
       const value = path.split('.').reduce((obj: any, key: string) => obj?.[key], context);
-      return value ?? '—';
+      return value != null ? String(value) : match; // Mantener template si no hay valor
     });
   } catch {
     return template;
@@ -42,9 +43,28 @@ export function HeaderNodeRuntime({ node, data = {}, meta = {}, context = {} }: 
   }
 
   const handleAction = (action: any) => {
+    console.log('handleAction called with:', action);
+    console.log('templateContext:', templateContext);
+    console.log('meta.legajoId:', templateContext.meta?.legajoId);
+    
     if (action.type === 'navigate' && action.to) {
       const resolvedUrl = resolveTemplate(action.to, templateContext);
-      router.push(resolvedUrl);
+      console.log('Original URL:', action.to);
+      console.log('Resolved URL:', resolvedUrl);
+      
+      // Solo navegar si el template se resolvió completamente
+      if (!resolvedUrl.includes('{{') && !resolvedUrl.includes('}}')) {
+        console.log('Navigating to:', resolvedUrl);
+        router.push(resolvedUrl);
+      } else {
+        console.warn('Template not fully resolved, cannot navigate:', resolvedUrl);
+        // Fallback: intentar navegar de todas formas si tenemos legajoId
+        if (templateContext.meta?.legajoId) {
+          const fallbackUrl = `/legajos/${templateContext.meta.legajoId}/editar`;
+          console.log('Using fallback URL:', fallbackUrl);
+          router.push(fallbackUrl);
+        }
+      }
     } else if (action.type === 'command' && action.name === 'print') {
       window.print();
     }
