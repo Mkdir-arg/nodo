@@ -1,19 +1,59 @@
 import { useId } from "react";
 import { useFormContext } from "react-hook-form";
+import { Type, Mail, Hash } from 'lucide-react';
+import FieldShell from "../ui/FieldShell";
+import { baseInputStyles, baseTextareaStyles } from "../ui/styles";
+
 export default function TextField({ field }:{field:any}) {
   const { register } = useFormContext();
   const autoId = useId();
   const id = field.key ?? field.id ?? autoId;
+  
+  const icon = field.type === 'email' ? <Mail size={16} /> : <Type size={16} />;
+  const inputType = field.type === 'email' ? 'email' : 'text';
+  
+  if (field.type === 'textarea') {
+    return (
+      <FieldShell
+        fieldKey={field.key}
+        label={field.label}
+        required={field.required}
+        helpText={field.help}
+        icon={<Type size={16} />}
+        disabled={field.disabled}
+        readonly={field.readOnly}
+      >
+        <textarea
+          id={id}
+          className={baseTextareaStyles}
+          {...register(field.key)}
+          placeholder={field.placeholder}
+          disabled={field.disabled}
+          readOnly={field.readOnly}
+        />
+      </FieldShell>
+    );
+  }
+  
   return (
-    <div className="flex flex-col">
-      <label className="mb-1" htmlFor={id}>{field.label}</label>
-      <input 
-        id={id} 
-        type={field.type === 'email' ? 'email' : field.type === 'textarea' ? 'text' : 'text'}
-        className="border rounded px-2 py-1" 
-        {...register(field.key)} 
-        placeholder={field.placeholder} 
+    <FieldShell
+      fieldKey={field.key}
+      label={field.label}
+      required={field.required}
+      helpText={field.help}
+      icon={icon}
+      disabled={field.disabled}
+      readonly={field.readOnly}
+    >
+      <input
+        id={id}
+        type={inputType}
+        className={baseInputStyles}
+        {...register(field.key)}
+        placeholder={field.placeholder}
+        disabled={field.disabled}
+        readOnly={field.readOnly}
       />
-    </div>
+    </FieldShell>
   );
 }
