@@ -19,6 +19,23 @@ class PlantillaSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("version", "estado", "visual_config", "created_at", "updated_at")
 
+    def to_representation(self, instance):
+        # DEBUG: Logging cada vez que se serializa una plantilla
+        print(f"\n=== PLANTILLA SERIALIZER DEBUG ===")
+        print(f"ID: {instance.id}")
+        print(f"Nombre: {instance.nombre}")
+        print(f"Schema completo: {instance.schema}")
+        if isinstance(instance.schema, dict):
+            print(f"Schema keys: {list(instance.schema.keys())}")
+            if 'nodes' in instance.schema:
+                print(f"Nodes encontrados: {len(instance.schema['nodes'])}")
+                for i, node in enumerate(instance.schema.get('nodes', [])):
+                    print(f"  Node {i}: {node.get('type', 'no-type')} - {node.get('kind', 'no-kind')}")
+            else:
+                print("NO HAY NODES EN SCHEMA")
+        print(f"========================\n")
+        return super().to_representation(instance)
+
     def validate_nombre(self, value):
         qs = Plantilla.objects.filter(nombre__iexact=value)
         if self.instance:
@@ -28,6 +45,17 @@ class PlantillaSerializer(serializers.ModelSerializer):
         return value
 
     def validate_schema(self, value):
+        print(f"\n=== VALIDATING SCHEMA ===")
+        print(f"Schema recibido: {value}")
+        if isinstance(value, dict):
+            print(f"Schema keys: {list(value.keys())}")
+            if 'nodes' in value:
+                print(f"Nodes encontrados: {len(value['nodes'])}")
+                for i, node in enumerate(value.get('nodes', [])):
+                    print(f"  Node {i}: {node.get('type', 'no-type')} - {node.get('kind', 'no-kind')}")
+            else:
+                print("NO HAY NODES EN SCHEMA")
+        print(f"========================\n")
         run_schema_validations(value)
         return value
 
@@ -35,6 +63,18 @@ class PlantillaSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        print(f"\n=== UPDATING PLANTILLA ===")
+        print(f"Instance ID: {instance.id}")
+        print(f"Validated data: {validated_data}")
+        if 'schema' in validated_data:
+            schema = validated_data['schema']
+            print(f"Schema a guardar: {schema}")
+            if isinstance(schema, dict) and 'nodes' in schema:
+                print(f"Nodes a guardar: {len(schema['nodes'])}")
+                for i, node in enumerate(schema.get('nodes', [])):
+                    print(f"  Node {i}: {node.get('type', 'no-type')} - {node.get('kind', 'no-kind')}")
+        print(f"========================\n")
+        
         instance.version += 1
         for attr, val in validated_data.items():
             setattr(instance, attr, val)

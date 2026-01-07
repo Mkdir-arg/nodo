@@ -23,15 +23,24 @@ export default function EditorClient({ plantillaId }: { plantillaId: string }) {
   const { data: template, isLoading, error } = useQuery({
     queryKey: ['template', plantillaId],
     queryFn: async () => {
-      console.log('Fetching template with ID:', plantillaId);
-      const result = await repo.getTemplate(plantillaId);
-      console.log('Template fetched:', result);
-      return result;
+      console.log('🔍 Fetching template with ID:', plantillaId);
+      try {
+        const result = await repo.getTemplate(plantillaId);
+        console.log('✅ Template fetched successfully:', result);
+        return result;
+      } catch (err) {
+        console.error('❌ Error fetching template:', err);
+        throw err;
+      }
     },
     retry: 1
   });
   
-  console.log('Query state:', { template, isLoading, error, plantillaId });
+  console.log('📊 Query state:', { template, isLoading, error, plantillaId });
+  
+  if (error) {
+    console.error('🚨 Query error:', error);
+  }
 
   // Cargar plantilla en el builder cuando esté disponible
   useEffect(() => {
@@ -46,16 +55,17 @@ export default function EditorClient({ plantillaId }: { plantillaId: string }) {
         version: template.version || 1,
         descripcion: template.description,
         schema: {
-          sections: template.layout ? [{
+          sections: template.layout && template.layout.length > 0 ? template.layout : [{
             id: 'sec_1',
             title: 'Campos',
-            nodes: template.fields || [],
+            nodes: template.fields || [], // Incluir TODOS los nodos (UI y datos)
             layout_mode: 'flow'
-          }] : []
+          }]
         }
       };
       
       console.log('Setting template in builder:', templateForBuilder);
+      console.log('Nodos cargados:', template.fields?.map(f => ({ type: f.type, kind: f.kind })));
       const { setTemplate } = useBuilderStore.getState();
       setTemplate(templateForBuilder);
     }
@@ -74,30 +84,21 @@ export default function EditorClient({ plantillaId }: { plantillaId: string }) {
       const builderSchema = buildSchema();
       console.log('Builder schema:', builderSchema);
       
-      // Transformar layout para que sea compatible con el schema
-      const transformedLayout = (builderSchema.sections || []).map(section => ({
-        type: 'section',
-        label: section.title || 'Sección',
-        children: (section.nodes || section.children || []).map(field => ({
-          type: 'field',
-          fieldKey: field.key
-        }))
-      }));
-      
       const updatedTemplate = {
         id: template.id,
         name: nombre.trim(),
         slug: template.slug || nombre.trim().toLowerCase().replace(/\s+/g, '-'),
         description: template.description || '',
-        fields: builderSchema.nodes || template?.fields || [],
-        layout: transformedLayout,
+        fields: builderSchema.nodes || template?.fields || [], // Incluir TODOS los nodos
+        layout: builderSchema.sections || [], // Mantener estructura de secciones
         version: template.version || 1,
         status: template.status || 'published',
         createdAt: template.createdAt,
         updatedAt: new Date().toISOString()
       };
       
-      console.log('Updated template:', updatedTemplate);
+      console.log('Updated template con nodos UI:', updatedTemplate);
+      console.log('Nodos incluidos:', updatedTemplate.fields.map(f => ({ type: f.type, kind: f.kind })));
       
       // Usar repo.upsertTemplate para actualizar
       await repo.upsertTemplate(updatedTemplate);
@@ -133,12 +134,38 @@ export default function EditorClient({ plantillaId }: { plantillaId: string }) {
     );
   }
 
+  if (error) {
+    console.error('🚨 Error completo:', error);
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Error al cargar plantilla</h1>
+          <p className="text-gray-600 mb-4">{error.message || 'Error desconocido'}</p>
+          <p className="text-sm text-gray-500 mb-4">ID: {plantillaId}</p>
+          <details className="text-left mb-4 p-4 bg-gray-100 rounded">
+            <summary className="cursor-pointer">Detalles técnicos</summary>
+            <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(error, null, 2)}</pre>
+          </details>
+          <button
+            onClick={() => router.push("/plantillas")}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Volver a Plantillas
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!template) {
+    console.log('🔍 Template is null/undefined, query state:', { isLoading, error, plantillaId });
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Plantilla no encontrada</h1>
           <p className="text-gray-600 mb-4">La plantilla que buscas no existe.</p>
+          <p className="text-sm text-gray-500 mb-4">ID: {plantillaId}</p>
+          <p className="text-sm text-gray-500 mb-4">Estado: loading={String(isLoading)}, error={String(!!error)}</p>
           <button
             onClick={() => router.push("/plantillas")}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"

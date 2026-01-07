@@ -15,12 +15,13 @@ export async function saveTemplateSimple(templateData: any) {
     schema: {
       type: 'object',
       properties: {},
-      fields: templateData.fields || [],
-      layout: templateData.layout || []
+      nodes: templateData.fields || [], // Usar 'nodes' para incluir UI
+      sections: templateData.layout || [] // Usar 'sections' para estructura
     }
   };
 
-  console.log('📦 PAYLOAD SIMPLE:', payload);
+  console.log('📦 PAYLOAD SIMPLE con nodos UI:', payload);
+  console.log('📦 Nodos en payload:', payload.schema.nodes.map(n => ({ type: n.type, kind: n.kind })));
 
   const response = await fetch('http://localhost:8000/api/plantillas/', {
     method: 'POST',
@@ -44,7 +45,7 @@ export async function saveTemplateSimple(templateData: any) {
     name: result.nombre,
     slug: result.nombre?.toLowerCase().replace(/\s+/g, '-') || 'sin-slug',
     status: result.estado === 'ACTIVO' ? 'published' : 'draft',
-    fields: result.schema?.fields || [],
-    layout: result.schema?.layout || []
+    fields: result.schema?.nodes || result.schema?.fields || [], // Priorizar 'nodes'
+    layout: result.schema?.sections || result.schema?.layout || []
   };
 }

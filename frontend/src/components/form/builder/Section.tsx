@@ -15,7 +15,7 @@ interface SectionProps {
 
 export default function Section({ section }: SectionProps) {
   const { removeSection } = useBuilderStore();
-  const fields = (section.nodes || section.children || []).filter((n: any) => n.kind !== 'ui');
+  const fields = (section.nodes || section.children || []); // Mostrar TODOS los nodos
 
   const {
     attributes,

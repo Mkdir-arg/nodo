@@ -67,40 +67,12 @@ export default function CrearPlantillaPage() {
           }
         ];
       } else {
-        // Convertir secciones del builder a fields y layout
-        const allFields: any[] = [];
-        
-        sections.forEach(section => {
-          const sectionFields = (section.nodes || section.children || []).filter((n: any) => n.kind !== 'ui');
-          sectionFields.forEach(field => {
-            allFields.push({
-              id: field.id,
-              key: field.key || field.id,
-              type: field.type,
-              label: field.label || 'Campo sin nombre',
-              required: field.required || false,
-              ui: {
-                colSpan: 6
-              }
-            });
-          });
-        });
-        
-        fields = allFields;
-        
-        layout = sections.map(section => ({
-          type: 'section',
-          label: section.title || 'Sección',
-          children: (section.nodes || section.children || [])
-            .filter((n: any) => n.kind !== 'ui')
-            .map((f: any) => ({
-              type: 'field',
-              fieldKey: f.key || f.id
-            }))
-        }));
+        // Usar directamente los nodos del builder (incluye UI y datos)
+        fields = builderSchema.nodes || [];
+        layout = builderSchema.sections || [];
       }
       
-      console.log('📋 Fields finales:', fields);
+      console.log('📋 Fields finales (incluye UI):', fields.map(f => ({ type: f.type, kind: f.kind })));
       console.log('🏗️ Layout final:', layout);
       
       const uniqueId = `template-${Date.now()}`;

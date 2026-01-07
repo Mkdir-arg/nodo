@@ -524,15 +524,15 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   buildSchema: () => {
     const sections = (get().sections || []).map((sec) => syncSection(sec));
-    // Aplanar todos los campos de todas las secciones
-    const allFields = sections.flatMap(sec => 
-      (sec.nodes || sec.children || []).filter((n: any) => n.kind !== 'ui')
+    // Incluir TODOS los nodos (UI y datos)
+    const allNodes = sections.flatMap(sec => 
+      (sec.nodes || sec.children || [])
     );
     return { 
       id: get().plantillaId || undefined, 
       name: get().nombre, 
       version: get().version, 
-      nodes: allFields,
+      nodes: allNodes, // Incluir nodos UI y de datos
       sections // Mantener las secciones para el builder
     };
   },

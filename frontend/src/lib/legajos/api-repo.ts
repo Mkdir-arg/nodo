@@ -43,16 +43,17 @@ export class ApiRepo implements ITemplatesRepo {
   async listTemplates(): Promise<Template[]> {
     try {
       const data = await fetchWithAuth<any[]>('plantillas/');
-      return data.map(item => templateSchema.parse({
+      return data.map(item => ({
         id: item.id?.toString() || nanoid(),
         name: item.nombre || item.name || 'Sin nombre',
         slug: item.nombre?.toLowerCase().replace(/\s+/g, '-') || 'sin-slug',
         status: item.estado === 'ACTIVO' ? 'published' : 'draft',
-        fields: item.schema?.fields || [],
-        layout: item.schema?.layout || [],
+        fields: item.schema?.nodes || item.schema?.fields || [],
+        layout: item.schema?.sections || item.schema?.layout || [],
+        version: item.version?.toString() || '1',
         createdAt: item.created_at || new Date().toISOString(),
         updatedAt: item.updated_at || new Date().toISOString()
-      }));
+      } as Template));
     } catch (error) {
       console.error('Error fetching templates:', error);
       throw new Error(`Backend no disponible: ${error}`);
@@ -61,19 +62,35 @@ export class ApiRepo implements ITemplatesRepo {
 
   async getTemplate(id: Id): Promise<Template | null> {
     try {
+      console.log('🔍 API: Fetching template with ID:', id);
       const item = await fetchWithAuth<any>(`plantillas/${id}/`);
-      return templateSchema.parse({
+      console.log('📝 API: Raw response:', item);
+      
+      let fields = [];
+      let layout = [];
+      
+      if (item.schema) {
+        fields = item.schema.nodes || item.schema.fields || [];
+        layout = item.schema.sections || item.schema.layout || [];
+      }
+      
+      // No validar con Zod, retornar directamente
+      const result = {
         id: item.id?.toString() || id,
         name: item.nombre || item.name || 'Sin nombre',
         slug: item.nombre?.toLowerCase().replace(/\s+/g, '-') || 'sin-slug',
         status: item.estado === 'ACTIVO' ? 'published' : 'draft',
-        fields: item.schema?.fields || [],
-        layout: item.schema?.layout || [],
+        fields,
+        layout,
+        version: item.version?.toString() || '1',
         createdAt: item.created_at || new Date().toISOString(),
         updatedAt: item.updated_at || new Date().toISOString()
-      });
+      };
+      
+      console.log('✅ API: Template parsed successfully:', result);
+      return result as Template;
     } catch (error) {
-      console.error('Error fetching template:', error);
+      console.error('❌ API: Error fetching template:', error);
       return null;
     }
   }
@@ -88,12 +105,12 @@ export class ApiRepo implements ITemplatesRepo {
         schema: {
           type: 'object',
           properties: {},
-          fields: t.fields || [],
-          layout: t.layout || []
+          nodes: t.fields || [],
+          sections: t.layout || []
         }
       };
       
-      console.log('📦 API PASO 2: Payload preparado:', JSON.stringify(payload, null, 2));
+      console.log('📦 API PASO 2: Payload:', JSON.stringify(payload, null, 2));
 
       const method = t.id && t.id !== 'new' && !t.id.startsWith('temp-') ? 'PUT' : 'POST';
       const path = method === 'PUT' ? `plantillas/${t.id}/` : 'plantillas/';
@@ -107,19 +124,20 @@ export class ApiRepo implements ITemplatesRepo {
 
       console.log('📨 API PASO 4: Respuesta del backend:', JSON.stringify(item, null, 2));
 
-      const result = templateSchema.parse({
+      const result = {
         id: item.id?.toString() || t.id,
         name: item.nombre || t.name,
         slug: t.slug || item.nombre?.toLowerCase().replace(/\s+/g, '-') || 'sin-slug',
         status: item.estado === 'ACTIVO' ? 'published' : 'draft',
-        fields: item.schema?.fields || t.fields || [],
-        layout: item.schema?.layout || t.layout || [],
+        fields: item.schema?.nodes || item.schema?.fields || t.fields || [],
+        layout: item.schema?.sections || item.schema?.layout || t.layout || [],
+        version: item.version?.toString() || t.version || '1',
         createdAt: item.created_at || t.createdAt,
         updatedAt: item.updated_at || new Date().toISOString()
-      });
+      };
       
       console.log('✅ API PASO 5: Template parseado exitosamente:', JSON.stringify(result, null, 2));
-      return result;
+      return result as Template;
     } catch (error) {
       console.error('❌ API ERROR:', error);
       throw error;
