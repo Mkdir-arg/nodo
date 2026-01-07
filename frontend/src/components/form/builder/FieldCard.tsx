@@ -62,6 +62,22 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
   }
 
   if (field.kind === 'ui' && field.type === 'ui:paginator') {
+    // Obtener campos disponibles para el preview
+    const { sections } = useBuilderStore.getState();
+    const availableFields: Array<{ key: string; label?: string; type: string }> = [];
+    sections.forEach(section => {
+      const nodes = section.nodes || section.children || [];
+      nodes.forEach((node: any) => {
+        if (node.kind !== 'ui' && !node.type?.startsWith('ui:') && node.key) {
+          availableFields.push({
+            key: node.key,
+            label: node.label || node.key,
+            type: node.type || 'unknown'
+          });
+        }
+      });
+    });
+
     return (
       <div
         ref={setNodeRef}
@@ -69,7 +85,7 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
         className={`col-span-12 ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500/40' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
-        <PaginatorPreview node={field as any} />
+        <PaginatorPreview node={field as any} availableFields={availableFields} />
       </div>
     );
   }

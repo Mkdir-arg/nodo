@@ -105,6 +105,12 @@ export interface BuilderState {
   ensureUniqueKey: (base: string) => string;
   validateAll: () => ValidationError[];
 
+  paginatorAddField: (nodeId: string, pageId: string, fieldKey: string) => void;
+  paginatorRemoveField: (nodeId: string, pageId: string, fieldKey: string) => void;
+  paginatorMoveField: (nodeId: string, fromPageId: string, toPageId: string, fieldKey: string) => void;
+  paginatorReorderFields: (nodeId: string, pageId: string, fromIndex: number, toIndex: number) => void;
+  paginatorFindFieldPage: (nodeId: string, fieldKey: string) => string | null;
+
   setSelected: (sel: Selected) => void;
   findSectionIdByField: (fieldId: string) => string | null;
   getSectionIdForInsert: () => string;
@@ -244,6 +250,92 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       }
     }
     return null;
+  },
+
+  paginatorAddField: (nodeId, pageId, fieldKey) => {
+    const hit = (get() as any)._locateNode(nodeId);
+    if (!hit) return;
+    const node = hit.node;
+    if (node.type !== 'ui:paginator') return;
+
+    const config = node.config || {};
+    const pages = (config.pages || []).map((p: any) => {
+      if (p.id === pageId) {
+        return { ...p, fieldKeys: [...(p.fieldKeys || []), fieldKey] };
+      }
+      return p;
+    });
+
+    get().updateNode(nodeId, { config: { ...config, pages } });
+  },
+
+  paginatorRemoveField: (nodeId, pageId, fieldKey) => {
+    const hit = (get() as any)._locateNode(nodeId);
+    if (!hit) return;
+    const node = hit.node;
+    if (node.type !== 'ui:paginator') return;
+
+    const config = node.config || {};
+    const pages = (config.pages || []).map((p: any) => {
+      if (p.id === pageId) {
+        return { ...p, fieldKeys: (p.fieldKeys || []).filter((k: string) => k !== fieldKey) };
+      }
+      return p;
+    });
+
+    get().updateNode(nodeId, { config: { ...config, pages } });
+  },
+
+  paginatorMoveField: (nodeId, fromPageId, toPageId, fieldKey) => {
+    const hit = (get() as any)._locateNode(nodeId);
+    if (!hit) return;
+    const node = hit.node;
+    if (node.type !== 'ui:paginator') return;
+
+    const config = node.config || {};
+    const pages = (config.pages || []).map((p: any) => {
+      if (p.id === fromPageId) {
+        return { ...p, fieldKeys: (p.fieldKeys || []).filter((k: string) => k !== fieldKey) };
+      }
+      if (p.id === toPageId) {
+        return { ...p, fieldKeys: [...(p.fieldKeys || []), fieldKey] };
+      }
+      return p;
+    });
+
+    get().updateNode(nodeId, { config: { ...config, pages } });
+  },
+
+  paginatorReorderFields: (nodeId, pageId, fromIndex, toIndex) => {
+    const hit = (get() as any)._locateNode(nodeId);
+    if (!hit) return;
+    const node = hit.node;
+    if (node.type !== 'ui:paginator') return;
+
+    const config = node.config || {};
+    const pages = (config.pages || []).map((p: any) => {
+      if (p.id === pageId) {
+        const fieldKeys = [...(p.fieldKeys || [])];
+        const [removed] = fieldKeys.splice(fromIndex, 1);
+        fieldKeys.splice(toIndex, 0, removed);
+        return { ...p, fieldKeys };
+      }
+      return p;
+    });
+
+    get().updateNode(nodeId, { config: { ...config, pages } });
+  },
+
+  paginatorFindFieldPage: (nodeId, fieldKey) => {
+    const hit = (get() as any)._locateNode(nodeId);
+    if (!hit) return null;
+    const node = hit.node;
+    if (node.type !== 'ui:paginator') return null;
+
+    const config = node.config || {};
+    const pages = config.pages || [];
+    const page = pages.find((p: any) => (p.fieldKeys || []).includes(fieldKey));
+    return page?.id || null;
   },
 
   setSelected: (sel: Selected) => set({ selected: sel }),
