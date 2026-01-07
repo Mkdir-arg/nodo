@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { zodFromTemplate } from "../builder/zodFromTemplate";
 import DynamicNode from "./DynamicNode";
 import { HeaderNodeRuntime } from "../builder/ui-nodes/HeaderNode/HeaderNodeRuntime";
+import PaginatorRuntime from "./ui/paginator/PaginatorRuntime";
 import { Button } from "@/components/ui/button";
 
 // Normaliza distintos formatos y hace fallback seguro
@@ -39,6 +40,8 @@ function renderUiNode(node: any, data: any = {}, meta: any = {}) {
     );
   }
   
+  // ui:paginator se maneja por separado en el flujo principal
+  
   // Otros UI nodes...
   return null;
 }
@@ -48,16 +51,22 @@ export default function DynamicForm({
   initialData = {},
   meta = {},
   onSubmit,
+  mode = 'create',
 }: {
   schema?: any;
   initialData?: Record<string, any>;
   meta?: Record<string, any>;
   onSubmit: (data: any) => void;
+  mode?: 'create' | 'view' | 'edit';
 }) {
   const normalized = useMemo(() => normalizeSchema(schema), [schema]);
   const allNodes = normalized.nodes || [];
   const uiNodes = useMemo(() => allNodes.filter((n: any) => isUiNode(n)), [allNodes]);
   const dataNodes = useMemo(() => allNodes.filter((n: any) => !isUiNode(n)), [allNodes]);
+  
+  // Buscar si hay un paginador
+  const paginatorNode = uiNodes.find((n: any) => n.type === 'ui:paginator');
+  const hasPaginator = !!paginatorNode;
   
   const zodSchema = useMemo(
     () => zodFromTemplate(dataNodes),
@@ -69,7 +78,16 @@ export default function DynamicForm({
     defaultValues: initialData,
   });
 
-  const formData = methods.watch(); // Para pasar a UI nodes
+  // Validar página del paginador usando RHF trigger
+  const validatePage = async (pageIndex: number) => {
+    if (!paginatorNode) return true;
+    const page = paginatorNode.config.pages[pageIndex];
+    const fieldKeys = page?.fieldKeys || [];
+    
+    // Usar trigger de RHF para validar con Zod
+    const result = await methods.trigger(fieldKeys);
+    return result;
+  };
 
   // Estado vacío visual si no hay nodos/fields
   if (!allNodes.length) {
@@ -90,21 +108,33 @@ export default function DynamicForm({
 
   return (
     <div className="space-y-6">
-      {/* Renderizar UI nodes primero */}
-      {uiNodes.map((node) => renderUiNode(node, formData, meta))}
+      {/* Renderizar UI nodes no-paginator primero */}
+      {uiNodes.filter(n => n.type !== 'ui:paginator').map((node) => renderUiNode(node, methods.watch(), meta))}
       
-      {/* Luego el formulario */}
+      {/* Formulario */}
       <FormProvider {...methods}>
         <form
           onSubmit={methods.handleSubmit(onSubmit)}
           className="space-y-4"
           noValidate
         >
-          {dataNodes.map((n:any)=> <DynamicNode key={n.id} node={n} />)}
-
-          <div className="pt-2">
-            <Button type="submit">Guardar</Button>
-          </div>
+          {hasPaginator ? (
+            // Si hay paginador, usarlo
+            <PaginatorRuntime
+              config={paginatorNode.config}
+              allNodes={dataNodes}
+              mode={mode}
+              onValidatePage={validatePage}
+            />
+          ) : (
+            // Sin paginador, renderizar campos normalmente
+            <>
+              {dataNodes.map((n:any)=> <DynamicNode key={n.id} node={n} />)}
+              <div className="pt-2">
+                <Button type="submit">Guardar</Button>
+              </div>
+            </>
+          )}
         </form>
       </FormProvider>
     </div>

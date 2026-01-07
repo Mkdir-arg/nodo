@@ -7,7 +7,7 @@ import { GripVertical, Settings, Trash2 } from 'lucide-react';
 
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { HeaderNodePreview } from './ui-nodes/HeaderNode/HeaderNode';
-import PaginatorPreview from '../runtime/ui/paginator/PaginatorPreview';
+import PaginatorPreview from './ui-preview/PaginatorPreview';
 import type { FieldNode } from '@/lib/forms/types';
 
 interface FieldCardProps {

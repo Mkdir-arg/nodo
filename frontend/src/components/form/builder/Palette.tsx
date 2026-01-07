@@ -47,6 +47,18 @@ export default function Palette() {
 
   const handleAdd = (t: FieldType) => {
     if (!selectedSectionId) return alert("Primero agregá/seleccioná una sección");
+    
+    // Restricción: solo 1 paginador por plantilla
+    if (t === 'ui:paginator' as any) {
+      const hasPaginator = sections.some(s => 
+        (s.nodes || s.children || []).some((n: any) => n.type === 'ui:paginator')
+      );
+      if (hasPaginator) {
+        alert('⚠️ Solo se permite un paginador por plantilla');
+        return;
+      }
+    }
+    
     // si el store espera (sectionId, type):
     try {
       addField(selectedSectionId, t as any);

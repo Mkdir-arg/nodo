@@ -66,6 +66,7 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
         schema={schema}
         initialData={initialData}
         meta={{ legajoId: params.id, plantillaId: data?.plantilla }}
+        mode="edit"
         onSubmit={async (values) => {
           if (mutation.isPending) return;
           try {
