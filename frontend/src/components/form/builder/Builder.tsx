@@ -45,7 +45,7 @@ export default function Builder() {
   }
 
   return (
-    <div className="h-full bg-gray-50">
+    <div className="min-h-full bg-gray-50">
       <DndContext
         sensors={sensors}
         onDragEnd={handleDragEnd}

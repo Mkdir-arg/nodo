@@ -143,16 +143,16 @@ export default function CrearPlantillaPage() {
       
       <BuilderHeader plantillaId="" plantillaNombre={nombre} />
       
-      <div className="flex-1 overflow-hidden flex">
-        <div className="flex-1 p-4">
-          <div className="flex gap-4 h-full">
-            <div className="w-64 flex-shrink-0">
+      <div className="flex-1 overflow-hidden flex min-h-0">
+        <div className="flex-1 p-4 overflow-hidden">
+          <div className="flex gap-6 h-full max-w-[1800px] mx-auto">
+            <div className="w-56 flex-shrink-0 overflow-y-auto">
               <Palette />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 overflow-y-auto">
               <BuilderWrapper />
             </div>
-            <div className="w-80 flex-shrink-0">
+            <div className="w-96 flex-shrink-0 overflow-y-auto">
               <PropertiesPanel />
             </div>
           </div>

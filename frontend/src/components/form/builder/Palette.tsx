@@ -78,7 +78,7 @@ export default function Palette() {
       <Block title="Selección" items={SELECCION} />
       <Block title="Avanzados" items={AVANZADOS} />
       <Block title="Visuales" items={VISUALES} />
-      <p className="text-xs opacity-60 mt-2">Tip: primero seleccioná una sección para insertar ahí.</p>
+      <p className="text-xs opacity-60 mt-2 mb-4">Tip: primero seleccioná una sección para insertar ahí.</p>
     </aside>
   );
 }

@@ -20,6 +20,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const { isLoading } = useAuth();
   const isLoginRoute = pathname.startsWith('/login');
+  const isFullWidthRoute =
+  pathname.startsWith('/plantillas/crear') ||
+  pathname.startsWith('/plantillas/editar') ||
+  pathname.startsWith('/plantillas/editor');
 
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
@@ -78,7 +82,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         />
 
         <main className="flex-1">
-          <div className="mx-auto max-w-screen-2xl p-4 md:p-6">{children}</div>
+          <div
+            className={clsx(
+              'p-4 md:p-6',
+              isFullWidthRoute ? 'w-full max-w-none' : 'mx-auto max-w-screen-2xl'
+            )}
+          >
+            {children}
+          </div>
         </main>
       </div>
 

@@ -14,8 +14,28 @@ interface SectionProps {
 }
 
 export default function Section({ section }: SectionProps) {
-  const { removeSection } = useBuilderStore();
-  const fields = (section.nodes || section.children || []); // Mostrar TODOS los nodos
+  const { removeSection, sections } = useBuilderStore();
+  const allFields = (section.nodes || section.children || []);
+  
+  // Obtener todos los fieldKeys asignados a paginadores
+  const assignedToPaginators = new Set<string>();
+  sections.forEach(sec => {
+    const nodes = sec.nodes || sec.children || [];
+    nodes.forEach((node: any) => {
+      if (node.kind === 'ui' && node.type === 'ui:paginator') {
+        const pages = node.config?.pages || [];
+        pages.forEach((page: any) => {
+          (page.fieldKeys || []).forEach((key: string) => assignedToPaginators.add(key));
+        });
+      }
+    });
+  });
+  
+  // Filtrar campos: mostrar UI nodes y campos NO asignados a paginadores
+  const fields = allFields.filter((field: any) => {
+    if (field.kind === 'ui' || field.type?.startsWith('ui:')) return true;
+    return !assignedToPaginators.has(field.key);
+  });
 
   const {
     attributes,
