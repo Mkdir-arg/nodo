@@ -65,7 +65,7 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
       <DynamicForm
         schema={schema}
         initialData={initialData}
-        meta={{ legajoId: params.id }}
+        meta={{ legajoId: params.id, plantillaId: data?.plantilla }}
         onSubmit={async (values) => {
           if (mutation.isPending) return;
           try {

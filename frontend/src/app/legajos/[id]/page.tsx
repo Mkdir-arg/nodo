@@ -53,31 +53,35 @@ export default async function LegajoDetallePage({ params }: { params: { id: stri
   const data = response.data ?? {};
   const schema = response.schema ?? {};
   const meta = response.meta ?? {};
-  const ctx = { data, meta, context: {}, legajoId: params.id };
+  const ctx = { data, meta: { ...meta, legajoId: params.id }, context: {}, legajoId: params.id };
 
   const nodes = schema?.nodes || [];
   const sections = schema?.sections || [];
+  
+  // Separar nodos UI de nodos de datos
+  const uiNodes = nodes.filter((n: any) => isUiNode(n));
+  const dataNodes = nodes.filter((n: any) => !isUiNode(n));
 
   return (
     <div className="space-y-6">
-      {/* Renderizar nodos individuales si existen */}
-      {nodes.length > 0 && (
+      {/* Renderizar solo nodos UI desde nodes */}
+      {uiNodes.length > 0 && (
         <div className="space-y-4">
-          {nodes.map((node: any) => renderNode(node, ctx))}
+          {uiNodes.map((node: any) => renderNode(node, ctx))}
         </div>
       )}
       
-      {/* Renderizar secciones si existen */}
+      {/* Renderizar secciones si existen (sin nodos UI duplicados) */}
       {sections.length > 0 && (
         <div className="space-y-8">
           {sections.map((s: any) => (
-            <SectionRenderer key={s.id} section={s} ctx={ctx} />
+            <SectionRenderer key={s.id} section={s} ctx={ctx} skipUiNodes={true} />
           ))}
         </div>
       )}
       
       {/* Fallback si no hay nada */}
-      {nodes.length === 0 && sections.length === 0 && (
+      {uiNodes.length === 0 && sections.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No hay datos para mostrar
         </div>

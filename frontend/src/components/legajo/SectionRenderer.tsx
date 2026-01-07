@@ -10,14 +10,25 @@ function getPath(obj:any, path?:string){ if(!obj || !path) return ""; return pat
 function tpl(tplStr:string, ctx:any){ return (tplStr||"").replace(/{{\s*([^}]+)\s*}}/g,(_,p)=> String(getPath(ctx,p.trim())) ); }
 
 function FieldReadOnly({ node, ctx }:{ node:any; ctx:any }) {
-  return <div>{node.label || node.key}</div>;
+  const value = ctx.data?.[node.key];
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {node.label || node.key}
+      </label>
+      <div className="text-gray-900">
+        {value || '—'}
+      </div>
+    </div>
+  );
 }
 const AttachmentsCard = (props:any)=> <div className="text-sm text-slate-500">Archivos</div>;
 const Timeline = (props:any)=> <div className="text-sm text-slate-500">Timeline</div>;
 const SummaryPinned = ({cfg, ctx}:{cfg:any; ctx:any})=> <div className="text-sm text-slate-500">Resumen</div>;
 
-export default function SectionRenderer({ section, ctx }:{ section:any; ctx:any }) {
-  const nodes = section?.nodes || section?.children || [];
+export default function SectionRenderer({ section, ctx, skipUiNodes = false }:{ section:any; ctx:any; skipUiNodes?: boolean }) {
+  const allNodes = section?.nodes || section?.children || [];
+  const nodes = skipUiNodes ? allNodes.filter((n: any) => !isUiNode(n)) : allNodes;
   const layoutMode = section?.layout_mode === "grid" ? "grid" : "flow";
 
   if (layoutMode === "grid") {
