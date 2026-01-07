@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, Type, Hash, Calendar, CheckSquare, List, FileText, Mail, Phone, Globe, CreditCard, Percent, Clock, Image, Star, Palette, MapPin, BarChart3, Eye, Table, Folder, AlignLeft, Minus, AlertCircle, Layout, ChevronDown, User, Map, Search, Link, Calculator } from 'lucide-react';
+import { X, Type, Hash, Calendar, CheckSquare, List, FileText, Mail, Phone, Globe, CreditCard, Percent, Clock, Image, Star, Palette, MapPin, BarChart3, Eye, Table, Folder, AlignLeft, Minus, AlertCircle, Layout, ChevronDown, User, Map, Search, Link, Calculator, PanelsTopLeft } from 'lucide-react';
 
 interface FieldType {
   id: string;
@@ -35,6 +35,7 @@ const FIELD_TYPES: FieldType[] = [
   { id: 'card', label: 'Card', icon: Layout, category: 'visual', defaultColSpan: 12, config: { title: 'Título de la card' } },
   { id: 'image_view', label: 'Visor de imagen', icon: Image, category: 'visual', defaultColSpan: 6, config: { binding: { fieldId: '' } } },
   { id: 'map', label: 'Mapa', icon: Map, category: 'visual', defaultColSpan: 12, config: { binding: { fieldId: '' } } },
+  { id: 'ui:paginator', label: 'Paginador', icon: PanelsTopLeft, category: 'visual', defaultColSpan: 12, config: {} },
   
   // Secciones
   { id: 'section', label: 'Sección', icon: Folder, category: 'section', defaultColSpan: 12, config: { title: 'Nueva Sección', columns: 12, collapsible: false } },

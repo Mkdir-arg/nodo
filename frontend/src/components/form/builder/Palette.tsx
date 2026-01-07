@@ -32,6 +32,7 @@ const VISUALES: Item[] = [
   { type:"ui:header" as any, label:"Encabezado Hero", note:"Imagen + card" },
   { type:"ui:divider" as any, label:"Separador" },
   { type:"ui:banner" as any, label:"Banner" },
+  { type:"ui:paginator" as any, label:"Paginador", note:"Wizard/Tabs" },
 ];
 
 export default function Palette() {

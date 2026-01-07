@@ -9,6 +9,7 @@ const LAYOUT_DEFAULTS: Record<string, { w: number; h: number }> = {
   "ui:kpi-grid": { w: 6, h: 4 },
   "ui:divider": { w: 12, h: 1 },
   "ui:banner": { w: 12, h: 3 },
+  "ui:paginator": { w: 12, h: 4 },
   "field:text": { w: 6, h: 3 },
   "field:number": { w: 4, h: 3 },
 };
@@ -172,6 +173,27 @@ function createUiNode(type: string) {
   if (type === "ui:summary-pinned") return { ...base, config: { fields: [] } };
   if (type === "ui:attachments") return { ...base, config: { allow_preview: true } };
   if (type === "ui:timeline") return { ...base, config: { dense: false } };
+  
+  if (type === "ui:paginator") {
+    return {
+      ...base,
+      ui: { colSpan: 12 },
+      config: {
+        pages: [
+          { id: "p1", title: "Página 1", fieldKeys: [] },
+          { id: "p2", title: "Página 2", fieldKeys: [] }
+        ],
+        behavior: { create: "wizard", view: "sections" },
+        variant: "stepper",
+        show_progress: true,
+        allow_jump: true,
+        sticky_nav: false,
+        glass: true,
+        labels: { prev: "Anterior", next: "Siguiente", finish: "Finalizar" },
+        initial_page: 0
+      }
+    };
+  }
 
   return { ...base, config: {} };
 }
