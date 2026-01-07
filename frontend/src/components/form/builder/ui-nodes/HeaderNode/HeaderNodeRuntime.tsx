@@ -1,7 +1,7 @@
 'use client';
 
 import { User, Printer, MapPin, List, Bell, Settings, LogOut, Edit } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import type { HeaderNode } from './types';
 
 interface HeaderNodeRuntimeProps {
@@ -35,6 +35,7 @@ function resolveTemplate(template: string, context: { data?: any; meta?: any; co
 
 export function HeaderNodeRuntime({ node, data = {}, meta = {}, context = {} }: HeaderNodeRuntimeProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const config = node.config;
   const templateContext = { data, meta, context };
 
@@ -43,15 +44,23 @@ export function HeaderNodeRuntime({ node, data = {}, meta = {}, context = {} }: 
   }
 
   const handleAction = (action: any) => {
+    const isEditAction = action?.icon === 'edit' || action?.id === 'edit';
+    const legajoId = templateContext.meta?.legajoId;
+
+    if (isEditAction && legajoId) {
+      const isInEditMode = /\/editar\/?$/.test(pathname || '');
+      if (isInEditMode) return;
+      router.push(`/legajos/${legajoId}/editar`);
+      return;
+    }
+
     if (action.type === 'navigate' && action.to) {
       const resolvedUrl = resolveTemplate(action.to, templateContext);
-      
-      if (!resolvedUrl.includes('{{') && !resolvedUrl.includes('}}')) {
-        router.push(resolvedUrl);
-      } else if (action.id === 'edit' && templateContext.meta?.plantillaId) {
-        router.push(`/plantillas/editar/${templateContext.meta.plantillaId}`);
-      }
-    } else if (action.type === 'command' && action.name === 'print') {
+      router.push(resolvedUrl);
+      return;
+    }
+
+    if (action.type === 'command' && action.name === 'print') {
       window.print();
     }
   };
