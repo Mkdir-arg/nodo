@@ -24,8 +24,11 @@ export default function PaginatorRuntime({
   const [currentPage, setCurrentPage] = useState(config.initial_page || 0);
   const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set(config.pages.map(p => p.id)));
   const pages = config.pages || [];
+  
+
   const isWizardMode = mode === 'create' && config.behavior.create === 'wizard';
-  const isSectionsMode = mode === 'view' || (mode === 'edit' && config.behavior.edit === 'sections');
+  const isSectionsMode = (mode === 'edit' && config.behavior.edit === 'sections');
+  const isViewMode = mode === 'view';
   const formData = methods.watch();
 
   // Obtener campos del schema por key
@@ -241,6 +244,78 @@ export default function PaginatorRuntime({
           const field = getFieldByKey(key);
           if (!field) return null;
 
+          // En modo view, renderizar como readonly
+          if (isViewMode) {
+            const value = formData[key];
+            
+            // Si es un grupo, verificar si es array o objeto simple
+            if (field.type === 'group') {
+              const isArray = field.maxItems !== 1;
+              
+              if (isArray) {
+                // Grupo repetible (array)
+                const items = Array.isArray(value) ? value : (value ? [value] : []);
+                return (
+                  <div key={field.id} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {field.label || field.key}
+                    </label>
+                    {items.length === 0 ? (
+                      <div className="text-gray-500 text-sm italic">Sin datos</div>
+                    ) : (
+                      <div className="space-y-3">
+                        {items.map((item: any, idx: number) => (
+                          <div key={idx} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                            {(field.children || []).map((child: any) => (
+                              <div key={child.id} className="mb-2 last:mb-0">
+                                <div className="text-xs font-medium text-gray-600">{child.label || child.key}</div>
+                                <div className="text-sm text-gray-900">{item[child.key] || '—'}</div>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              } else {
+                // Grupo simple (objeto)
+                const hasData = value && typeof value === 'object' && Object.values(value).some(v => v);
+                return (
+                  <div key={field.id} className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {field.label || field.key}
+                    </label>
+                    {!hasData ? (
+                      <div className="text-gray-500 text-sm italic">Sin datos</div>
+                    ) : (
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        {(field.children || []).map((child: any) => (
+                          <div key={child.id} className="mb-2 last:mb-0">
+                            <div className="text-xs font-medium text-gray-600">{child.label || child.key}</div>
+                            <div className="text-sm text-gray-900">{value[child.key] || '—'}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            }
+            
+            // Campo simple
+            return (
+              <div key={field.id} className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {field.label || field.key}
+                </label>
+                <div className="text-gray-900 px-3 py-2 bg-gray-50 rounded border border-gray-200">
+                  {value || '—'}
+                </div>
+              </div>
+            );
+          }
+
           return <DynamicNode key={field.id} node={field} />;
         })}
       </div>
@@ -255,6 +330,34 @@ export default function PaginatorRuntime({
     const isLastPage = currentPage === pages.length - 1;
     const labels = config.labels || {};
 
+  
+
+    // En modo view, solo navegación sin submit
+    if (isViewMode) {
+      return (
+        <div className="flex justify-between mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePrev}
+            disabled={isFirstPage}
+          >
+            <ChevronLeft size={16} className="mr-1" />
+            {labels.prev || 'Anterior'}
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleNext}
+            disabled={isLastPage}
+          >
+            {labels.next || 'Siguiente'}
+            <ChevronRight size={16} className="ml-1" />
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <div className="flex justify-between mt-6">
         <Button
@@ -267,16 +370,20 @@ export default function PaginatorRuntime({
           {labels.prev || 'Anterior'}
         </Button>
 
-        {isLastPage ? (
-          <Button type="submit">
-            {labels.finish || 'Finalizar'}
-          </Button>
-        ) : (
-          <Button type="button" onClick={handleNext}>
+        <div className="flex gap-2">
+          <Button 
+            type="button" 
+            onClick={handleNext}
+            disabled={isLastPage}
+          >
             {labels.next || 'Siguiente'}
             <ChevronRight size={16} className="ml-1" />
           </Button>
-        )}
+          
+          <Button type="submit">
+            {labels.finish || 'Finalizar'}
+          </Button>
+        </div>
       </div>
     );
   };
@@ -329,16 +436,16 @@ export default function PaginatorRuntime({
     );
   }
 
-  // Modo wizard: mostrar página actual
+  // Modo wizard o view: mostrar página actual
   const currentPageData = pages[currentPage];
   if (!currentPageData) return null;
 
   const containerClass = config.glass
-    ? 'bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/40'
-    : 'bg-white border border-gray-200';
+    ? 'bg-white/90 dark:bg-slate-900/70 backdrop-blur-md border border-gray-200 dark:border-slate-700'
+    : 'bg-white border border-gray-200 shadow-sm';
 
   return (
-    <div className={`${containerClass} rounded-2xl shadow-sm p-6 ${config.sticky_nav ? 'sticky top-4' : ''}`}>
+    <div className={`${containerClass} rounded-2xl p-6 ${config.sticky_nav ? 'sticky top-4' : ''}`}>
       {config.show_progress && renderNavigation()}
       
       <div className="mb-6">

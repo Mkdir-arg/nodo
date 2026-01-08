@@ -36,3 +36,22 @@ class Legajo(models.Model):
             kwargs["update_fields"] = list(update_fields)
 
         super().save(*args, **kwargs)
+
+
+class LegajoRelation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    source_legajo = models.ForeignKey(Legajo, on_delete=models.CASCADE, related_name="relations_from")
+    target_legajo = models.ForeignKey(Legajo, on_delete=models.CASCADE, related_name="relations_to")
+    relation_type = models.CharField(max_length=100)
+    inverse_relation_type = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['source_legajo', 'target_legajo', 'relation_type']]
+        indexes = [
+            models.Index(fields=['source_legajo', 'relation_type']),
+            models.Index(fields=['target_legajo', 'inverse_relation_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.source_legajo_id} -> {self.target_legajo_id} ({self.relation_type})"

@@ -4,6 +4,18 @@ import { useBuilderStore } from "@/lib/store/usePlantillaBuilderStore";
 import { newField, FieldType } from "@/lib/form-builder/factory";
 
 type Item = { type: FieldType; label: string; note?: string };
+
+const DATOS_REFERENCIA: Item[] = [
+  { type:"ref:nombre" as any, label:"Nombre" },
+  { type:"ref:apellido" as any, label:"Apellido" },
+  { type:"ref:documento_tipo" as any, label:"Tipo Documento" },
+  { type:"ref:documento" as any, label:"Número Documento" },
+  { type:"ref:direccion_provincia" as any, label:"Provincia" },
+  { type:"ref:direccion_municipio" as any, label:"Municipio" },
+  { type:"ref:direccion" as any, label:"Calle" },
+  { type:"ref:direccion_numero" as any, label:"Número" },
+];
+
 const BASICOS: Item[] = [
   { type:"text", label:"Texto corto" },
   { type:"email", label:"Email" },
@@ -33,6 +45,7 @@ const VISUALES: Item[] = [
   { type:"ui:divider" as any, label:"Separador" },
   { type:"ui:banner" as any, label:"Banner" },
   { type:"ui:paginator" as any, label:"Paginador", note:"Wizard/Tabs" },
+  { type:"ui:relation" as any, label:"Relación" },
 ];
 
 export default function Palette() {
@@ -86,11 +99,11 @@ export default function Palette() {
 
   return (
     <aside className="w-full">
+      <Block title="Datos referencia" items={DATOS_REFERENCIA} />
       <Block title="Básicos" items={BASICOS} />
       <Block title="Selección" items={SELECCION} />
       <Block title="Avanzados" items={AVANZADOS} />
       <Block title="Visuales" items={VISUALES} />
-      <p className="text-xs opacity-60 mt-2 mb-4">Tip: primero seleccioná una sección para insertar ahí.</p>
     </aside>
   );
 }

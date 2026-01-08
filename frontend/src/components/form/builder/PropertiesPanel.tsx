@@ -3,8 +3,10 @@ import { useEffect, useMemo } from 'react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { HeaderNodeEditor } from './ui-nodes/HeaderNode/HeaderNodeEditor';
 import PaginatorProperties from './properties/PaginatorProperties';
+import RelationProperties from './properties/RelationProperties';
 import type { HeaderNode } from './ui-nodes/HeaderNode/types';
 import type { UIPaginatorNode } from '../runtime/ui/paginator/types';
+import type { UIRelationNode } from '../shared/ui/relation/types';
 
 function Row({label, children}:{label:string; children:any}) {
   return (
@@ -60,6 +62,20 @@ export default function PropertiesPanel() {
         <div className="rounded-2xl border bg-white/60 dark:bg-slate-800/60 dark:border-slate-700 overflow-y-auto max-h-[calc(100vh-8rem)]">
           <PaginatorProperties 
             node={node as UIPaginatorNode}
+            onChange={(patch) => updateNode(node.id, patch)}
+          />
+        </div>
+      </aside>
+    );
+  }
+
+  // Special handling for ui:relation
+  if (node.kind === 'ui' && node.type === 'ui:relation') {
+    return (
+      <aside className="mt-4 lg:mt-0 lg:w-80">
+        <div className="rounded-2xl border bg-white/60 dark:bg-slate-800/60 dark:border-slate-700 overflow-y-auto max-h-[calc(100vh-8rem)]">
+          <RelationProperties 
+            node={node as UIRelationNode}
             onChange={(patch) => updateNode(node.id, patch)}
           />
         </div>

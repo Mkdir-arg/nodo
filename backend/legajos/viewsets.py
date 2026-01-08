@@ -132,3 +132,73 @@ class LegajoViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=400
             )
+
+    def relations(self, request, pk=None):
+        """GET /api/legajos/{id}/relations/ - List all relations for a legajo"""
+        from .models import LegajoRelation
+        from rest_framework.decorators import action
+        
+        legajo = self.get_object()
+        relations_from = LegajoRelation.objects.filter(source_legajo=legajo).select_related('target_legajo', 'target_legajo__plantilla')
+        relations_to = LegajoRelation.objects.filter(target_legajo=legajo).select_related('source_legajo', 'source_legajo__plantilla')
+        
+        data = {
+            'outgoing': [{
+                'id': str(r.id),
+                'target_legajo_id': str(r.target_legajo_id),
+                'target_data': r.target_legajo.data,
+                'target_plantilla': r.target_legajo.plantilla.nombre,
+                'relation_type': r.relation_type,
+                'created_at': r.created_at
+            } for r in relations_from],
+            'incoming': [{
+                'id': str(r.id),
+                'source_legajo_id': str(r.source_legajo_id),
+                'source_data': r.source_legajo.data,
+                'source_plantilla': r.source_legajo.plantilla.nombre,
+                'relation_type': r.inverse_relation_type,
+                'created_at': r.created_at
+            } for r in relations_to]
+        }
+        return response.Response(data)
+
+    def create_relation(self, request, pk=None):
+        """POST /api/legajos/{id}/relations/ - Create a relation"""
+        from .models import LegajoRelation, Legajo
+        
+        legajo = self.get_object()
+        target_id = request.data.get('target_legajo_id')
+        relation_type = request.data.get('relation_type')
+        inverse_type = request.data.get('inverse_relation_type', '')
+        
+        if not target_id or not relation_type:
+            return response.Response({'error': 'target_legajo_id and relation_type required'}, status=400)
+        
+        try:
+            target = Legajo.objects.get(id=target_id)
+        except Legajo.DoesNotExist:
+            return response.Response({'error': 'Target legajo not found'}, status=404)
+        
+        # Create bidirectional relation
+        rel, created = LegajoRelation.objects.get_or_create(
+            source_legajo=legajo,
+            target_legajo=target,
+            relation_type=relation_type,
+            defaults={'inverse_relation_type': inverse_type}
+        )
+        
+        return response.Response({
+            'id': str(rel.id),
+            'created': created
+        }, status=201 if created else 200)
+
+    def delete_relation(self, request, pk=None, relation_id=None):
+        """DELETE /api/legajos/{id}/relations/{relation_id}/ - Delete a relation"""
+        from .models import LegajoRelation
+        
+        try:
+            rel = LegajoRelation.objects.get(id=relation_id, source_legajo_id=pk)
+            rel.delete()
+            return response.Response(status=204)
+        except LegajoRelation.DoesNotExist:
+            return response.Response({'error': 'Relation not found'}, status=404)

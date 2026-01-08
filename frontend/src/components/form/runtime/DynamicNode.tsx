@@ -12,6 +12,8 @@ import PhoneField from "./fields/PhoneField";
 import CuitRazonSocialField from "./fields/CuitRazonSocialField";
 import InfoField from "./fields/InfoField";
 import GroupField from "./fields/GroupField";
+import RelationRuntime from "./ui/relation/RelationRuntime";
+import { useController } from "react-hook-form";
 
 type DynamicNodeProps = {
   node: any;
@@ -31,6 +33,11 @@ export default function DynamicNode({ node, prefix = "" }: DynamicNodeProps) {
 
   if (isHidden || isUiNode(node)) {
     return null;
+  }
+
+  // Handle ui:relation
+  if (node.type === 'ui:relation') {
+    return <RelationRuntime config={node.config} />;
   }
 
   if (node.type === "section") {

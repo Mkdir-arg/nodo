@@ -7,6 +7,7 @@ import { zodFromTemplate } from "../builder/zodFromTemplate";
 import DynamicNode from "./DynamicNode";
 import { HeaderNodeRuntime } from "../builder/ui-nodes/HeaderNode/HeaderNodeRuntime";
 import PaginatorRuntime from "./ui/paginator/PaginatorRuntime";
+import RelationRuntime from "./ui/relation/RelationRuntime";
 import { Button } from "@/components/ui/button";
 
 // Normaliza distintos formatos y hace fallback seguro
@@ -27,7 +28,7 @@ function normalizeSchema(raw: any): { nodes: any[] } {
 
 function isUiNode(n:any){ return n?.kind === "ui" || String(n?.type||"").startsWith("ui:"); }
 
-function renderUiNode(node: any, data: any = {}, meta: any = {}) {
+function renderUiNode(node: any, data: any = {}, meta: any = {}, legajoId?: string) {
   if (node.type === 'ui:header') {
     return (
       <HeaderNodeRuntime 
@@ -38,6 +39,10 @@ function renderUiNode(node: any, data: any = {}, meta: any = {}) {
         context={{}}
       />
     );
+  }
+  
+  if (node.type === 'ui:relation') {
+    return <RelationRuntime key={node.id} config={node.config} legajoId={legajoId} />;
   }
   
   // ui:paginator se maneja por separado en el flujo principal
@@ -52,12 +57,14 @@ export default function DynamicForm({
   meta = {},
   onSubmit,
   mode = 'create',
+  legajoId,
 }: {
   schema?: any;
   initialData?: Record<string, any>;
   meta?: Record<string, any>;
   onSubmit: (data: any) => void;
   mode?: 'create' | 'view' | 'edit';
+  legajoId?: string;
 }) {
   const normalized = useMemo(() => normalizeSchema(schema), [schema]);
   const allNodes = normalized.nodes || [];
@@ -109,7 +116,7 @@ export default function DynamicForm({
   return (
     <div className="space-y-6">
       {/* Renderizar UI nodes no-paginator primero */}
-      {uiNodes.filter(n => n.type !== 'ui:paginator').map((node) => renderUiNode(node, methods.watch(), meta))}
+      {uiNodes.filter(n => n.type !== 'ui:paginator').map((node) => renderUiNode(node, methods.watch(), meta, legajoId))}
       
       {/* Formulario */}
       <FormProvider {...methods}>

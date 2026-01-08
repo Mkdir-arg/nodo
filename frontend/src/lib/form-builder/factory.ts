@@ -36,6 +36,37 @@ export function newField(type: FieldType) {
   if (type === "group") {
     return { type, id, key: `grupo_${nanoid(4)}`, label: "Grupo", required:false, minItems:0, maxItems:999, children: [] };
   }
+  
+  // Campos de referencia
+  if (type === "ref:nombre") {
+    return { type: "text", id, key: "nombre", label: "Nombre", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: true };
+  }
+  if (type === "ref:apellido") {
+    return { type: "text", id, key: "apellido", label: "Apellido", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: true };
+  }
+  if (type === "ref:documento") {
+    return { type: "text", id, key: "documento_numero", label: "Documento", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: true };
+  }
+  if (type === "ref:documento_tipo") {
+    return { type: "select", id, key: "documento_tipo", label: "Tipo Documento", required: false, options: [
+      { value: "DNI", label: "DNI" },
+      { value: "CUIL", label: "CUIL" },
+      { value: "CUIT", label: "CUIT" },
+      { value: "Pasaporte", label: "Pasaporte" }
+    ], esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: false };
+  }
+  if (type === "ref:direccion") {
+    return { type: "text", id, key: "direccion_calle", label: "Calle", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: false };
+  }
+  if (type === "ref:direccion_numero") {
+    return { type: "text", id, key: "direccion_numero", label: "Número", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: false };
+  }
+  if (type === "ref:direccion_provincia") {
+    return { type: "text", id, key: "direccion_provincia", label: "Provincia", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: false };
+  }
+  if (type === "ref:direccion_municipio") {
+    return { type: "text", id, key: "direccion_municipio", label: "Municipio", required: false, esSubsanable: false, esEditableOperador: false, seMuestraEnGrilla: false };
+  }
   if (type === "info") {
     return { type, id, key: `info_${nanoid(4)}`, label: "Texto informativo", format:"text", html:"" };
   }
@@ -191,6 +222,22 @@ function createUiNode(type: string) {
         glass: true,
         labels: { prev: "Anterior", next: "Siguiente", finish: "Finalizar" },
         initial_page: 0
+      }
+    };
+  }
+
+  if (type === "ui:relation") {
+    return {
+      ...base,
+      config: {
+        title: "Relaciones",
+        description: "",
+        target_template_id: "",
+        target_template_name: "",
+        cardinality: "one_to_many",
+        selection: { required: false },
+        search: { display_template: "{{ id }}", searchable_keys: [] },
+        relations: []
       }
     };
   }

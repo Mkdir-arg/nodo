@@ -8,6 +8,7 @@ import { GripVertical, Settings, Trash2 } from 'lucide-react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { HeaderNodePreview } from './ui-nodes/HeaderNode/HeaderNode';
 import PaginatorPreview from './ui-preview/PaginatorPreview';
+import RelationPreview from './ui-preview/RelationPreview';
 import type { FieldNode } from '@/lib/forms/types';
 
 interface FieldCardProps {
@@ -86,6 +87,19 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <PaginatorPreview node={field as any} availableFields={availableFields} />
+      </div>
+    );
+  }
+
+  if (field.kind === 'ui' && field.type === 'ui:relation') {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`col-span-12 ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500/40' : ''}`}
+        onClick={() => setSelected({ type: 'field', id: field.id })}
+      >
+        <RelationPreview node={field as any} />
       </div>
     );
   }

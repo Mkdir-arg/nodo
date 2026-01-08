@@ -36,6 +36,11 @@ def guess_legajo_display(
 
     for container in _as_iterable(grid_values):
         if isinstance(container, dict):
+            # Primero intentar construir nombre completo
+            guess = pick_name(container)
+            if guess:
+                return guess
+            # Si no, buscar display o nombre solo
             display = container.get("display") or container.get("nombre")
             if display:
                 return str(display)

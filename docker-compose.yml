@@ -80,6 +80,7 @@ services:
     command: >
       sh -c "
       mkdir -p /app/logs &&
+      pip install -r requirements.txt &&
       python manage.py makemigrations --no-input &&
       python manage.py migrate --no-input &&
       python create_test_data.py &&

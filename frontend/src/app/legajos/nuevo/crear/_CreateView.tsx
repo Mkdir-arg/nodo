@@ -3,6 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import DynamicForm from "@/components/form/runtime/DynamicForm";
+import { RelationProvider, useRelationContext } from "@/components/form/runtime/ui/relation/RelationRuntime";
+import { RelationsService } from "@/lib/services/relations";
 
 import { getJSON, postJSON } from "@/lib/api";
 
@@ -19,9 +21,10 @@ async function createLegajo(payload: { plantilla_id: string; data: any }) {
 
 }
 
-export default function CreateView({ formId }: { formId: string }) {
+function CreateViewInner({ formId }: { formId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { pendingRelations } = useRelationContext();
 
   const { data, isLoading, error } = useQuery<PlantillaResponse>({
     queryKey: ["plantilla", formId],
@@ -50,13 +53,26 @@ export default function CreateView({ formId }: { formId: string }) {
       onSubmit={async (values) => {
         if (mutation.isPending) return;
         try {
-          await mutation.mutateAsync({ plantilla_id: formId, data: values });
-          // Invalidar todas las queries relacionadas
+          const result: any = await mutation.mutateAsync({ plantilla_id: formId, data: values });
+          const newLegajoId = result.id;
+
+          // Crear relaciones pendientes
+          if (pendingRelations.length > 0 && newLegajoId) {
+            await Promise.all(
+              pendingRelations.map(rel => 
+                RelationsService.create(newLegajoId, {
+                  target_legajo_id: rel.targetId,
+                  relation_type: rel.relationType,
+                  inverse_relation_type: '' // Se obtiene del config
+                })
+              )
+            );
+          }
+
           await queryClient.invalidateQueries({ queryKey: ["legajos"] });
           await queryClient.invalidateQueries({ queryKey: ["plantillas"] });
-          // Mostrar éxito y redirigir
           alert("Legajo creado exitosamente");
-          router.push(`/legajos`);
+          router.push(`/legajos/${newLegajoId}`);
         } catch (e) {
           console.error(e);
           const message = e instanceof Error ? e.message : "No se pudo crear el legajo";
@@ -64,5 +80,13 @@ export default function CreateView({ formId }: { formId: string }) {
         }
       }}
     />
+  );
+}
+
+export default function CreateView({ formId }: { formId: string }) {
+  return (
+    <RelationProvider>
+      <CreateViewInner formId={formId} />
+    </RelationProvider>
   );
 }

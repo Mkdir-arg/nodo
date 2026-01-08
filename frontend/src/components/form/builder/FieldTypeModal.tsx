@@ -36,6 +36,7 @@ const FIELD_TYPES: FieldType[] = [
   { id: 'image_view', label: 'Visor de imagen', icon: Image, category: 'visual', defaultColSpan: 6, config: { binding: { fieldId: '' } } },
   { id: 'map', label: 'Mapa', icon: Map, category: 'visual', defaultColSpan: 12, config: { binding: { fieldId: '' } } },
   { id: 'ui:paginator', label: 'Paginador', icon: PanelsTopLeft, category: 'visual', defaultColSpan: 12, config: {} },
+  { id: 'ui:relation', label: 'Relación', icon: Link, category: 'visual', defaultColSpan: 12, config: {} },
   
   // Secciones
   { id: 'section', label: 'Sección', icon: Folder, category: 'section', defaultColSpan: 12, config: { title: 'Nueva Sección', columns: 12, collapsible: false } },
