@@ -51,19 +51,35 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
       <div
         ref={setNodeRef}
         style={style}
-        className={`col-span-12 ${isDragging ? 'opacity-50' : ''}`}
+        className={`col-span-12 relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        onClick={() => setSelected({ type: 'field', id: field.id })}
       >
-        <HeaderNodePreview 
-          node={field as any}
-          isSelected={isSelected}
-          onClick={() => setSelected({ type: 'field', id: field.id })}
-        />
+        <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-2 bg-white hover:bg-gray-100 rounded shadow cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4 text-gray-600" />
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              removeNode(field.id);
+            }}
+            className="p-2 bg-white hover:bg-red-100 rounded shadow"
+            title="Eliminar"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </button>
+        </div>
+        <HeaderNodePreview node={field as any} isSelected={isSelected} onClick={() => {}} />
       </div>
     );
   }
 
   if (field.kind === 'ui' && field.type === 'ui:paginator') {
-    // Obtener campos disponibles para el preview
     const { sections } = useBuilderStore.getState();
     const availableFields: Array<{ key: string; label?: string; type: string }> = [];
     sections.forEach(section => {
@@ -83,9 +99,29 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
       <div
         ref={setNodeRef}
         style={style}
-        className={`col-span-12 ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500/40' : ''}`}
+        className={`col-span-12 relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
+        <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-2 bg-white hover:bg-gray-100 rounded shadow cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4 text-gray-600" />
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              removeNode(field.id);
+            }}
+            className="p-2 bg-white hover:bg-red-100 rounded shadow"
+            title="Eliminar"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </button>
+        </div>
         <PaginatorPreview node={field as any} availableFields={availableFields} />
       </div>
     );
@@ -96,9 +132,29 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
       <div
         ref={setNodeRef}
         style={style}
-        className={`col-span-12 ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500/40' : ''}`}
+        className={`col-span-12 relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
+        <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-2 bg-white hover:bg-gray-100 rounded shadow cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4 text-gray-600" />
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              removeNode(field.id);
+            }}
+            className="p-2 bg-white hover:bg-red-100 rounded shadow"
+            title="Eliminar"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </button>
+        </div>
         <RelationPreview node={field as any} />
       </div>
     );

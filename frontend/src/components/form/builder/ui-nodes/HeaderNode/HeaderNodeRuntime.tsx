@@ -25,7 +25,10 @@ const iconMap = {
 function resolveTemplate(template: string, context: { data?: any; meta?: any; context?: any }): string {
   try {
     return template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, path) => {
-      const value = path.split('.').reduce((obj: any, key: string) => obj?.[key], context);
+      const value = path
+        .trim()
+        .split('.')
+        .reduce((obj: any, key: string) => obj?.[key.trim()], context);
       return value != null ? String(value) : match; // Mantener template si no hay valor
     });
   } catch {

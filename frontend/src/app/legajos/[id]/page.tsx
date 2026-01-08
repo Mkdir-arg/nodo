@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import SectionRenderer from "@/components/legajo/SectionRenderer";
 import { HeaderNodeRuntime } from "@/components/form/builder/ui-nodes/HeaderNode/HeaderNodeRuntime";
 import PaginatorRuntime from "@/components/form/runtime/ui/paginator/PaginatorRuntime";
@@ -127,6 +128,13 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
     mode: 'onChange'
   });
 
+  // Actualizar form cuando lleguen los datos
+  useEffect(() => {
+    if (response?.data && Object.keys(response.data).length > 0) {
+      methods.reset(response.data);
+    }
+  }, [response?.data]);
+
   if (isLoading) {
     return <div className="p-6">Cargando legajo...</div>;
   }
@@ -138,12 +146,10 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
   const data = response.data ?? {};
   const schema = response.schema ?? {};
   const meta = response.meta ?? {};
-  const ctx = { data, meta: { ...meta, legajoId: params.id }, context: {}, legajoId: params.id, relationsData };
-
-  // Reinicializar form con datos
-  if (Object.keys(methods.formState.defaultValues || {}).length === 0 && Object.keys(data).length > 0) {
-    methods.reset(data);
-  }
+  
+  // Usar datos actuales del formulario
+  const formData = methods.watch();
+  const ctx = { data: Object.keys(formData).length > 0 ? formData : data, meta: { ...meta, legajoId: params.id }, context: {}, legajoId: params.id, relationsData };
 
   const nodes = schema?.nodes || [];
   const sections = schema?.sections || [];
