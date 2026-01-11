@@ -2,58 +2,64 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { X, Type, Hash, Calendar, CheckSquare, List, FileText, Mail, Phone, Globe, CreditCard, Percent, Clock, Image, Star, Palette, MapPin, BarChart3, Eye, Table, Folder, AlignLeft, Minus, AlertCircle, Layout, ChevronDown, User, Map, Search, Link, Calculator, PanelsTopLeft } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface FieldType {
   id: string;
   label: string;
-  icon: any;
-  category: 'input' | 'visual' | 'section';
-  defaultColSpan: number;
-  config: Record<string, any>;
 }
 
-const FIELD_TYPES: FieldType[] = [
-  // Campos de entrada
-  { id: 'text', label: 'Texto', icon: Type, category: 'input', defaultColSpan: 6, config: { name: '', label: '', placeholder: '' } },
-  { id: 'textarea', label: 'Área de texto', icon: FileText, category: 'input', defaultColSpan: 12, config: { name: '', label: '', multilineRows: 3 } },
-  { id: 'number', label: 'Número', icon: Hash, category: 'input', defaultColSpan: 4, config: { name: '', label: '', min: 0, max: 100 } },
-  { id: 'email', label: 'Email', icon: Mail, category: 'input', defaultColSpan: 6, config: { name: '', label: '' } },
-  { id: 'phone', label: 'Teléfono', icon: Phone, category: 'input', defaultColSpan: 6, config: { name: '', label: '', mask: '' } },
-  { id: 'date', label: 'Fecha', icon: Calendar, category: 'input', defaultColSpan: 4, config: { name: '', label: '' } },
-  { id: 'select', label: 'Select', icon: List, category: 'input', defaultColSpan: 6, config: { name: '', label: '', options: { mode: 'static', staticOptions: [] } } },
-  { id: 'checkbox', label: 'Checkbox', icon: CheckSquare, category: 'input', defaultColSpan: 6, config: { name: '', label: '' } },
-  { id: 'file', label: 'Archivo', icon: FileText, category: 'input', defaultColSpan: 12, config: { name: '', label: '', multiple: false, maxSizeMB: 10 } },
-  { id: 'image', label: 'Imagen', icon: Image, category: 'input', defaultColSpan: 12, config: { name: '', label: '', multiple: false, accept: ['.png', '.jpg', '.jpeg'] } },
-  
-  // Visuales
-  { id: 'title', label: 'Título', icon: Type, category: 'visual', defaultColSpan: 12, config: { title: 'Título' } },
-  { id: 'paragraph', label: 'Párrafo', icon: AlignLeft, category: 'visual', defaultColSpan: 12, config: { binding: { template: 'Texto del párrafo' } } },
-  { id: 'divider', label: 'Divider', icon: Minus, category: 'visual', defaultColSpan: 12, config: {} },
-  { id: 'alert', label: 'Alerta', icon: AlertCircle, category: 'visual', defaultColSpan: 12, config: { variant: 'info', binding: { template: 'Mensaje de alerta' } } },
-  { id: 'card', label: 'Card', icon: Layout, category: 'visual', defaultColSpan: 12, config: { title: 'Título de la card' } },
-  { id: 'image_view', label: 'Visor de imagen', icon: Image, category: 'visual', defaultColSpan: 6, config: { binding: { fieldId: '' } } },
-  { id: 'map', label: 'Mapa', icon: Map, category: 'visual', defaultColSpan: 12, config: { binding: { fieldId: '' } } },
-  { id: 'ui:paginator', label: 'Paginador', icon: PanelsTopLeft, category: 'visual', defaultColSpan: 12, config: {} },
-  { id: 'ui:relation', label: 'Relación', icon: Link, category: 'visual', defaultColSpan: 12, config: {} },
-  
-  // Secciones
-  { id: 'section', label: 'Sección', icon: Folder, category: 'section', defaultColSpan: 12, config: { title: 'Nueva Sección', columns: 12, collapsible: false } },
-];
+const FIELD_GROUPS = {
+  "Datos referencia": [
+    { id: 'text', label: 'Nombre' },
+    { id: 'text', label: 'Apellido' },
+    { id: 'select', label: 'Tipo Documento' },
+    { id: 'number', label: 'Número Documento' },
+    { id: 'select', label: 'Provincia' },
+    { id: 'select', label: 'Municipio' },
+    { id: 'text', label: 'Calle' },
+    { id: 'number', label: 'Número' },
+  ],
+  "Básicos": [
+    { id: 'text', label: 'Texto corto' },
+    { id: 'email', label: 'Email' },
+    { id: 'textarea', label: 'Texto largo' },
+    { id: 'number', label: 'Número' },
+    { id: 'phone', label: 'Teléfono' },
+    { id: 'checkbox', label: 'Checkbox' },
+    { id: 'info', label: 'Texto informativo' },
+    { id: 'sum', label: 'Suma (readonly)' },
+  ],
+  "Selección": [
+    { id: 'select', label: 'Selector excluyente' },
+    { id: 'dropdown', label: 'Lista desplegable' },
+    { id: 'multiselect', label: 'Selector múltiple' },
+    { id: 'select_with_filter', label: 'Lista con filtro' },
+  ],
+  "Avanzados": [
+    { id: 'date', label: 'Fecha' },
+    { id: 'document', label: 'Archivo' },
+    { id: 'image', label: 'Imagen' },
+    { id: 'cuit_razon_social', label: 'CUIT y Razón social' },
+    { id: 'group', label: 'Grupo iterativo' },
+  ],
+  "Visuales": [
+    { id: 'ui:header', label: 'Encabezado Hero\nImagen + card' },
+    { id: 'ui:divider', label: 'Separador' },
+    { id: 'ui:banner', label: 'Banner' },
+    { id: 'ui:paginator', label: 'Paginador\nWizard/Tabs' },
+    { id: 'ui:relation', label: 'Relación' },
+  ],
+};
 
 interface FieldTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (fieldType: FieldType) => void;
+  onSelect: (fieldType: any) => void;
 }
 
 export default function FieldTypeModal({ isOpen, onClose, onSelect }: FieldTypeModalProps) {
-  const [selectedCategory, setSelectedCategory] = useState<'input' | 'visual' | 'section'>('input');
-  
   if (!isOpen) return null;
-
-  const filteredTypes = FIELD_TYPES.filter(type => type.category === selectedCategory);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -65,54 +71,27 @@ export default function FieldTypeModal({ isOpen, onClose, onSelect }: FieldTypeM
           </Button>
         </div>
         
-        <div className="flex">
-          <div className="w-48 border-r">
-            <div className="p-4 space-y-2">
-              <Button
-                variant={selectedCategory === 'input' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => setSelectedCategory('input')}
-              >
-                Campos de entrada
-              </Button>
-              <Button
-                variant={selectedCategory === 'visual' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => setSelectedCategory('visual')}
-              >
-                Elementos visuales
-              </Button>
-              <Button
-                variant={selectedCategory === 'section' ? 'default' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => setSelectedCategory('section')}
-              >
-                Secciones
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex-1 p-4 overflow-y-auto max-h-[60vh]">
-            <div className="grid grid-cols-3 gap-3">
-              {filteredTypes.map((type) => {
-                const Icon = type.icon;
-                return (
-                  <Card
-                    key={type.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => {
-                      onSelect(type);
-                      onClose();
-                    }}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <Icon className="h-8 w-8 mx-auto mb-2 text-gray-600" />
-                      <div className="font-medium text-sm">{type.label}</div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+        <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+          <div className="space-y-6">
+            {Object.entries(FIELD_GROUPS).map(([groupName, fields]) => (
+              <div key={groupName}>
+                <h3 className="text-sm font-semibold mb-3 text-gray-700">{groupName}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {fields.map((field, idx) => (
+                    <button
+                      key={`${field.id}-${idx}`}
+                      onClick={() => {
+                        onSelect({ id: field.id, label: field.label });
+                        onClose();
+                      }}
+                      className="border rounded-xl p-3 text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors whitespace-pre-line text-sm"
+                    >
+                      {field.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

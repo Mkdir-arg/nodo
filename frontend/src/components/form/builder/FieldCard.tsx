@@ -47,11 +47,41 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
 
   // Renderizar UI nodes especiales
   if (field.kind === 'ui' && field.type === 'ui:header') {
+    const uiColSpan = field.colSpan || 12;
+    
+    const handleResizeStart = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
+      startX.current = e.clientX;
+      startColSpan.current = uiColSpan;
+
+      const handleMouseMove = (e: MouseEvent) => {
+        const deltaX = e.clientX - startX.current;
+        const columnWidth = 60;
+        const deltaColumns = Math.round(deltaX / columnWidth);
+        const newColSpan = Math.max(1, Math.min(12, startColSpan.current + deltaColumns));
+        
+        if (newColSpan !== uiColSpan) {
+          resizeField(field.id, newColSpan);
+        }
+      };
+
+      const handleMouseUp = () => {
+        setIsResizing(false);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+    
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={`col-span-12 relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        className={`col-span-${uiColSpan} relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -74,6 +104,11 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
             <Trash2 className="h-4 w-4 text-red-500" />
           </button>
         </div>
+        <div
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 hover:bg-blue-500 transition-all z-10"
+          onMouseDown={handleResizeStart}
+          title="Arrastrar para redimensionar"
+        />
         <HeaderNodePreview node={field as any} isSelected={isSelected} onClick={() => {}} />
       </div>
     );
@@ -94,12 +129,42 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
         }
       });
     });
+    
+    const uiColSpan = field.colSpan || 12;
+    
+    const handleResizeStart = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
+      startX.current = e.clientX;
+      startColSpan.current = uiColSpan;
+
+      const handleMouseMove = (e: MouseEvent) => {
+        const deltaX = e.clientX - startX.current;
+        const columnWidth = 60;
+        const deltaColumns = Math.round(deltaX / columnWidth);
+        const newColSpan = Math.max(1, Math.min(12, startColSpan.current + deltaColumns));
+        
+        if (newColSpan !== uiColSpan) {
+          resizeField(field.id, newColSpan);
+        }
+      };
+
+      const handleMouseUp = () => {
+        setIsResizing(false);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
 
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={`col-span-12 relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        className={`col-span-${uiColSpan} relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -122,17 +187,52 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
             <Trash2 className="h-4 w-4 text-red-500" />
           </button>
         </div>
+        <div
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 hover:bg-blue-500 transition-all z-10"
+          onMouseDown={handleResizeStart}
+          title="Arrastrar para redimensionar"
+        />
         <PaginatorPreview node={field as any} availableFields={availableFields} />
       </div>
     );
   }
 
   if (field.kind === 'ui' && field.type === 'ui:relation') {
+    const uiColSpan = field.colSpan || 12;
+    
+    const handleResizeStart = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
+      startX.current = e.clientX;
+      startColSpan.current = uiColSpan;
+
+      const handleMouseMove = (e: MouseEvent) => {
+        const deltaX = e.clientX - startX.current;
+        const columnWidth = 60;
+        const deltaColumns = Math.round(deltaX / columnWidth);
+        const newColSpan = Math.max(1, Math.min(12, startColSpan.current + deltaColumns));
+        
+        if (newColSpan !== uiColSpan) {
+          resizeField(field.id, newColSpan);
+        }
+      };
+
+      const handleMouseUp = () => {
+        setIsResizing(false);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+    
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={`col-span-12 relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        className={`col-span-${uiColSpan} relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -155,6 +255,11 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
             <Trash2 className="h-4 w-4 text-red-500" />
           </button>
         </div>
+        <div
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 hover:bg-blue-500 transition-all z-10"
+          onMouseDown={handleResizeStart}
+          title="Arrastrar para redimensionar"
+        />
         <RelationPreview node={field as any} />
       </div>
     );

@@ -3,27 +3,48 @@ import { useEffect } from "react";
 import { FieldType } from "@/lib/form-builder/factory";
 import { useBuilderStore } from "@/lib/store/usePlantillaBuilderStore";
 
-const GROUPS: Record<string,[FieldType,string][]> = {
-  "Componentes básicos": [
-    ["text","Texto corto"], ["textarea","Texto largo"],
-    ["info","Texto informativo"], ["number","Número"], ["sum","Suma (readonly)"],
+const GROUPS: Record<string, [FieldType, string][]> = {
+  "Datos referencia": [
+    ["text", "Nombre"],
+    ["text", "Apellido"],
+    ["select", "Tipo Documento"],
+    ["number", "Número Documento"],
+    ["select", "Provincia"],
+    ["select", "Municipio"],
+    ["text", "Calle"],
+    ["number", "Número"],
   ],
-  "Componentes avanzados": [
-    ["select_with_filter","Lista desplegable con filtro"], ["date","Fecha"],
-    ["phone","Teléfono"], ["cuit_razon_social","CUIT y razón social"], ["document","Archivo"],
-    ["select","Selector excluyente"], ["multiselect","Selector múltiple"], ["dropdown","Lista desplegable"],
-    ["group","Grupo iterativo"],
+  "Básicos": [
+    ["text", "Texto corto"],
+    ["email", "Email"],
+    ["textarea", "Texto largo"],
+    ["number", "Número"],
+    ["phone", "Teléfono"],
+    ["checkbox", "Checkbox"],
+    ["info", "Texto informativo"],
+    ["sum", "Suma (readonly)"],
+  ],
+  "Selección": [
+    ["select", "Selector excluyente"],
+    ["dropdown", "Lista desplegable"],
+    ["multiselect", "Selector múltiple"],
+    ["select_with_filter", "Lista con filtro"],
+  ],
+  "Avanzados": [
+    ["date", "Fecha"],
+    ["document", "Archivo"],
+    ["image", "Imagen"],
+    ["cuit_razon_social", "CUIT y Razón social"],
+    ["group", "Grupo iterativo"],
   ],
 };
 
-const ESTETICA = [
-  { type: "ui:header", label: "Encabezado" },
-  { type: "ui:kpi-grid", label: "Contadores / KPIs" },
+const VISUALES = [
+  { type: "ui:header", label: "Encabezado Hero\nImagen + card" },
   { type: "ui:divider", label: "Separador" },
   { type: "ui:banner", label: "Banner" },
-  { type: "ui:summary-pinned", label: "Resumen (pinned)" },
-  { type: "ui:attachments", label: "Archivos" },
-  { type: "ui:timeline", label: "Timeline" },
+  { type: "ui:paginator", label: "Paginador\nWizard/Tabs" },
+  { type: "ui:relation", label: "Relación" },
 ];
 
 export default function ComponentsModal({ open, onClose }:{open:boolean; onClose:()=>void}) {
@@ -63,14 +84,14 @@ export default function ComponentsModal({ open, onClose }:{open:boolean; onClose
             </div>
           ))}
 
-          <section className="mt-6">
-            <h4 className="text-sm font-semibold mb-2">Estética</h4>
-            <div className="grid gap-2" style={{gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))"}}>
-              {ESTETICA.map((c) => (
+          <section>
+            <h4 className="text-sm font-semibold mb-2">Visuales</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {VISUALES.map((c) => (
                 <button
                   key={c.type}
                   type="button"
-                  className="border rounded-md h-10 px-3 text-left"
+                  className="border rounded-xl p-2 text-left hover:bg-gray-50 focus:outline-none focus:ring dark:border-slate-700 dark:hover:bg-slate-700 whitespace-pre-line text-sm"
                   onClick={() => insert(c.type)}
                 >
                   {c.label}
