@@ -28,7 +28,7 @@ function normalizeSchema(raw: any): { nodes: any[] } {
 
 function isUiNode(n:any){ return n?.kind === "ui" || String(n?.type||"").startsWith("ui:"); }
 
-function renderUiNode(node: any, data: any = {}, meta: any = {}, legajoId?: string) {
+function renderUiNode(node: any, data: any = {}, meta: any = {}, legajoId?: string, mode?: 'create' | 'view' | 'edit') {
   if (node.type === 'ui:header') {
     return (
       <HeaderNodeRuntime 
@@ -42,7 +42,7 @@ function renderUiNode(node: any, data: any = {}, meta: any = {}, legajoId?: stri
   }
   
   if (node.type === 'ui:relation') {
-    return <RelationRuntime key={node.id} config={node.config} legajoId={legajoId} />;
+    return <RelationRuntime key={node.id} config={node.config} legajoId={legajoId} mode={mode} />;
   }
   
   // ui:paginator se maneja por separado en el flujo principal
@@ -58,6 +58,7 @@ export default function DynamicForm({
   onSubmit,
   mode = 'create',
   legajoId,
+  formId,
 }: {
   schema?: any;
   initialData?: Record<string, any>;
@@ -65,6 +66,7 @@ export default function DynamicForm({
   onSubmit: (data: any) => void;
   mode?: 'create' | 'view' | 'edit';
   legajoId?: string;
+  formId?: string;
 }) {
   const normalized = useMemo(() => normalizeSchema(schema), [schema]);
   const allNodes = normalized.nodes || [];
@@ -116,11 +118,12 @@ export default function DynamicForm({
   return (
     <div className="space-y-6">
       {/* Renderizar UI nodes no-paginator primero */}
-      {uiNodes.filter(n => n.type !== 'ui:paginator').map((node) => renderUiNode(node, methods.watch(), meta, legajoId))}
+      {uiNodes.filter(n => n.type !== 'ui:paginator').map((node) => renderUiNode(node, methods.watch(), meta, legajoId, mode))}
       
       {/* Formulario */}
       <FormProvider {...methods}>
         <form
+          id={formId}
           onSubmit={methods.handleSubmit(onSubmit)}
           className="space-y-4"
           noValidate

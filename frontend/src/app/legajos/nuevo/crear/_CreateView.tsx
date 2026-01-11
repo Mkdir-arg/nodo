@@ -18,7 +18,6 @@ async function fetchPlantilla(id: string): Promise<PlantillaResponse> {
 
 async function createLegajo(payload: { plantilla_id: string; data: any }) {
   return postJSON(`/api/legajos`, payload);
-
 }
 
 function CreateViewInner({ formId }: { formId: string }) {
@@ -36,7 +35,7 @@ function CreateViewInner({ formId }: { formId: string }) {
   });
 
   if (isLoading) {
-    return <div>Cargando plantilla…</div>;
+    return <div>Cargando plantilla...</div>;
   }
 
   if (error || !data) {
@@ -48,7 +47,7 @@ function CreateViewInner({ formId }: { formId: string }) {
   return (
     <DynamicForm
       schema={schema}
-      meta={{ legajoId: 'nuevo', plantillaId: formId }}
+      meta={{ legajoId: "nuevo", plantillaId: formId }}
       mode="create"
       onSubmit={async (values) => {
         if (mutation.isPending) return;
@@ -56,14 +55,13 @@ function CreateViewInner({ formId }: { formId: string }) {
           const result: any = await mutation.mutateAsync({ plantilla_id: formId, data: values });
           const newLegajoId = result.id;
 
-          // Crear relaciones pendientes
           if (pendingRelations.length > 0 && newLegajoId) {
             await Promise.all(
-              pendingRelations.map(rel => 
+              pendingRelations.map(rel =>
                 RelationsService.create(newLegajoId, {
                   target_legajo_id: rel.targetId,
                   relation_type: rel.relationType,
-                  inverse_relation_type: '' // Se obtiene del config
+                  inverse_relation_type: rel.inverseRelationType
                 })
               )
             );

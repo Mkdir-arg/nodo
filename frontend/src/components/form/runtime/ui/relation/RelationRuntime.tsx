@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 interface PendingRelation {
   targetId: string;
   relationType: string;
+  inverseRelationType: string;
   targetData: any;
 }
 
@@ -74,28 +75,55 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
   const allCurrentRelations = useMemo(() => {
     if (isCreateMode) return [];
     if (!relationsData) return [];
-    return relationsData.outgoing.filter((r: any) => 
-      relations.some(rel => rel.relation_label === r.relation_type)
-    );
+
+    const matchesLabel = (label: string) =>
+      relations.some(rel => rel.relation_label === label || rel.inverse_relation_label === label);
+
+    const outgoing = (relationsData.outgoing || [])
+      .filter((r: any) => matchesLabel(r.relation_type))
+      .map((r: any) => ({
+        id: r.id,
+        relation_type: r.relation_type,
+        legajo_id: r.target_legajo_id,
+        legajo_data: r.target_data,
+        direction: 'outgoing'
+      }));
+
+    const incoming = (relationsData.incoming || [])
+      .filter((r: any) => matchesLabel(r.relation_type))
+      .map((r: any) => ({
+        id: r.id,
+        relation_type: r.relation_type,
+        legajo_id: r.source_legajo_id,
+        legajo_data: r.source_data,
+        direction: 'incoming'
+      }));
+
+    return [...outgoing, ...incoming];
   }, [relationsData, relations, isCreateMode]);
 
   const { data: searchData, isLoading } = useQuery({
     queryKey: ['legajos-relation-search', config.target_template_id, searchQuery],
-    queryFn: () => LegajosService.list({ 
-      formId: config.target_template_id, 
-      search: searchQuery || undefined,
-      page_size: 50 
-    }),
+    queryFn: async () => {
+      return await LegajosService.list({
+        formId: config.target_template_id,
+        search: searchQuery || undefined,
+        page_size: 50
+      });
+    },
     enabled: !!config.target_template_id && !isReadonly,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const legajos = useMemo(() => {
     const results = (searchData as any)?.results || [];
-    const linkedIds = isCreateMode 
+    const linkedIds = isCreateMode
       ? pendingRelations.map(r => r.targetId)
-      : allCurrentRelations.map((r: any) => r.target_legajo_id);
-    return results.filter((l: any) => !linkedIds.includes(l.id));
-  }, [searchData, allCurrentRelations, pendingRelations, isCreateMode]);
+      : allCurrentRelations.map((r: any) => r.legajo_id);
+
+    return results.filter((l: any) => !linkedIds.includes(l.id) && l.id !== legajoId);
+  }, [searchData, allCurrentRelations, pendingRelations, isCreateMode, legajoId]);
 
   const createMutation = useMutation({
     mutationFn: ({ targetId, relationType }: { targetId: string; relationType: string }) => {
@@ -119,7 +147,9 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
   });
 
   const handleSelect = (targetLegajoId: string) => {
-    const totalCount = isCreateMode ? pendingRelations.length : allCurrentRelations.length;
+    const totalCount = isCreateMode
+      ? pendingRelations.length
+      : allCurrentRelations.filter((r: any) => r.direction === 'outgoing').length;
     if (isReadonly || totalCount >= maxItems || !selectedRelationType) return;
 
     if (isCreateMode) {
@@ -129,6 +159,7 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
         relationCtx.addPendingRelation({
           targetId: targetLegajoId,
           relationType: rel.relation_label,
+          inverseRelationType: rel.inverse_relation_label,
           targetData: targetLegajo.data
         });
       }
@@ -162,123 +193,221 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
 
   if (relations.length === 0) {
     return (
-      <div className="border border-yellow-300 bg-yellow-50 rounded-lg p-4 text-sm text-yellow-800">
-        No hay relaciones configuradas en el builder
+      <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-xl">
+        <div className="flex items-center gap-3">
+          <LinkIcon className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+          <p className="text-sm text-yellow-700">
+            No hay relaciones configuradas en el builder
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!config.target_template_id) {
     return (
-      <div className="border border-yellow-300 bg-yellow-50 rounded-lg p-4 text-sm text-yellow-800">
-        Sin plantilla destino configurada
+      <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-xl">
+        <div className="flex items-center gap-3">
+          <LinkIcon className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+          <p className="text-sm text-yellow-700">
+            Sin plantilla destino configurada
+          </p>
+        </div>
       </div>
     );
   }
 
   const displayRelations = isCreateMode ? pendingRelations : allCurrentRelations;
-  const totalCount = displayRelations.length;
+  const outgoingCount = isCreateMode
+    ? pendingRelations.length
+    : allCurrentRelations.filter((r: any) => r.direction === 'outgoing').length;
+  const maxItemsLabel = maxItems === Infinity ? 'sin limite' : String(maxItems);
+  const canAddMore = !isReadonly && outgoingCount < maxItems;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <LinkIcon className="h-5 w-5 text-purple-600" />
-        <h3 className="font-semibold">{config.title || 'Relaciones'}</h3>
-      </div>
-
-      {!isReadonly && totalCount < maxItems && (
-        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-3">
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedRelationType}
-              onChange={(e) => setSelectedRelationType(e.target.value)}
-              className="border rounded px-3 py-2 text-sm bg-white"
-            >
-              {relations.map(rel => (
-                <option key={rel.id} value={rel.id}>{rel.relation_label}</option>
-              ))}
-            </select>
-            <div className="flex-1 flex items-center gap-2">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar..."
-                className="flex-1 text-sm bg-white border border-gray-200 rounded px-3 py-2"
-              />
-            </div>
+    <div className="space-y-6">
+      {/* Contenedor unificado con glass morphism */}
+      <div className="bg-white/90 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="p-6 flex items-center gap-6 border-b border-gray-200/50">
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg flex items-center justify-center flex-shrink-0">
+            <LinkIcon className="w-6 h-6 text-white" />
           </div>
-
-          <div className="border border-gray-200 rounded bg-white max-h-48 overflow-y-auto">
-            {isLoading ? (
-              <div className="p-3 text-center text-sm text-gray-500">Cargando...</div>
-            ) : legajos.length === 0 ? (
-              <div className="p-3 text-center text-sm text-gray-500">No hay resultados</div>
-            ) : (
-              <div className="divide-y">
-                {legajos.map((legajo: any) => (
-                  <button
-                    key={legajo.id}
-                    onClick={() => handleSelect(legajo.id)}
-                    disabled={createMutation.isPending}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm disabled:opacity-50"
-                  >
-                    {renderLegajoDisplay(legajo.data)}
-                  </button>
-                ))}
-              </div>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-gray-900">{config.title || 'Relaciones'}</h1>
+            {config.description && (
+              <p className="text-sm text-gray-600 mt-1">{config.description}</p>
             )}
           </div>
-        </div>
-      )}
-
-      {displayRelations.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700">Relaciones {isCreateMode ? 'pendientes' : 'vinculadas'}</div>
-          <div className="space-y-2">
-            {displayRelations.map((rel: any) => {
-              const relType = isCreateMode ? rel.relationType : rel.relation_type;
-              const targetId = isCreateMode ? rel.targetId : rel.target_legajo_id;
-              const targetData = isCreateMode ? rel.targetData : rel.target_data;
-              const relId = isCreateMode ? rel.targetId : rel.id;
-
-              return (
-                <div key={relId} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{relType}</div>
-                    <div className="text-xs text-gray-600">{renderLegajoDisplay(targetData)}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!isCreateMode && (
-                      <button
-                        onClick={() => router.push(`/legajos/${targetId}`)}
-                        className="p-1 hover:bg-gray-100 rounded"
-                        title="Ver legajo"
-                      >
-                        <ExternalLink className="h-4 w-4 text-gray-600" />
-                      </button>
-                    )}
-                    {!isReadonly && (
-                      <button 
-                        onClick={() => handleRemove(isCreateMode ? targetId : relId)} 
-                        className="p-1 hover:bg-red-100 rounded"
-                        title="Eliminar vínculo"
-                      >
-                        <X className="h-4 w-4 text-red-600" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="text-sm text-gray-500">
+            {outgoingCount}/{maxItemsLabel}
           </div>
         </div>
-      )}
 
-      {totalCount >= maxItems && !isReadonly && (
-        <div className="text-xs text-gray-500 italic">
-          Máximo de vínculos alcanzado ({maxItems})
+        {/* Search section - solo en modo edición */}
+        {canAddMore && (
+          <div className="p-6 border-b border-gray-200/50 space-y-4">
+            {/* Selector de tipo si hay múltiples */}
+            {relations.length > 1 && (
+              <div>
+                <label className="text-xs font-medium text-gray-600 block mb-2">Tipo de relación</label>
+                <select
+                  value={selectedRelationType}
+                  onChange={(e) => setSelectedRelationType(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  {relations.map(rel => (
+                    <option key={rel.id} value={rel.id}>{rel.relation_label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Search input */}
+            <div className="relative">
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por nombre o código..."
+                  className="flex-1 bg-transparent outline-none text-gray-900 placeholder:text-gray-500"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="w-8 h-8 rounded-lg bg-white hover:bg-gray-100 text-gray-600 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Search dropdown */}
+              {searchQuery && (
+                <div className="absolute z-50 mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden max-h-80 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center p-8">
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                    </div>
+                  ) : legajos.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Search className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">No se encontraron resultados</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {legajos.map((legajo: any) => (
+                        <button
+                          key={legajo.id}
+                          type="button"
+                          onClick={() => handleSelect(legajo.id)}
+                          disabled={createMutation.isPending}
+                          className="w-full p-4 hover:bg-gray-50 transition-colors text-left flex items-center gap-4 disabled:opacity-50"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <LinkIcon className="w-5 h-5 text-gray-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {renderLegajoDisplay(legajo.data)}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">{legajo.id}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Relations list */}
+        <div className="p-6">
+          {displayRelations.length === 0 ? (
+            <div className="py-12 text-center">
+              <LinkIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-600">
+                No hay relaciones {isCreateMode ? 'pendientes' : 'vinculadas'}
+              </p>
+              {canAddMore && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Usa el buscador arriba para agregar
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {displayRelations.map((rel: any) => {
+                const relType = isCreateMode ? rel.relationType : rel.relation_type;
+                const targetId = isCreateMode ? rel.targetId : rel.legajo_id;
+                const targetData = isCreateMode ? rel.targetData : rel.legajo_data;
+                const relId = isCreateMode ? rel.targetId : rel.id;
+                const canRemove = !isReadonly && (isCreateMode || rel.direction === 'outgoing');
+
+                return (
+                  <div 
+                    key={relId} 
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                      <LinkIcon className="w-5 h-5 text-gray-600" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          {relType}
+                        </span>
+                        {!isCreateMode && rel.direction === 'incoming' && (
+                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            Inversa
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-semibold text-gray-900 truncate">
+                        {renderLegajoDisplay(targetData)}
+                      </h3>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {!isCreateMode && (
+                        <button
+                          onClick={() => router.push(`/legajos/${targetId}`)}
+                          className="w-9 h-9 rounded-lg bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center"
+                          title="Ver legajo"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canRemove && (
+                        <button
+                          onClick={() => handleRemove(isCreateMode ? targetId : relId)}
+                          className="w-9 h-9 rounded-lg bg-white hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors flex items-center justify-center"
+                          title="Eliminar vínculo"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {outgoingCount >= maxItems && !isReadonly && (
+        <div className="text-xs text-slate-500 italic">
+          Maximo de vinculos alcanzado ({maxItemsLabel})
         </div>
       )}
     </div>

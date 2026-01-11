@@ -39,6 +39,21 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
     }),
   });
 
+  const handleSubmit = async (values: any) => {
+    if (mutation.isPending) return;
+    try {
+      await mutation.mutateAsync(values);
+      await queryClient.invalidateQueries({ queryKey: ["legajo", params.id] });
+      await queryClient.invalidateQueries({ queryKey: ["legajos"] });
+      alert("Legajo actualizado exitosamente");
+      router.push(`/legajos/${params.id}`);
+    } catch (e) {
+      console.error(e);
+      const message = e instanceof Error ? e.message : "No se pudo actualizar el legajo";
+      alert(message);
+    }
+  };
+
   if (isLoading) {
     return <div className="p-6">Cargando legajo…</div>;
   }
@@ -54,12 +69,22 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Editar legajo</h1>
-        <button
-          onClick={() => router.back()}
-          className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
-        >
-          Cancelar
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="legajo-form"
+            disabled={mutation.isPending}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {mutation.isPending ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
       </div>
       
       <DynamicForm
@@ -68,20 +93,8 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
         meta={{ legajoId: params.id, plantillaId: data?.plantilla }}
         mode="edit"
         legajoId={params.id}
-        onSubmit={async (values) => {
-          if (mutation.isPending) return;
-          try {
-            await mutation.mutateAsync(values);
-            await queryClient.invalidateQueries({ queryKey: ["legajo", params.id] });
-            await queryClient.invalidateQueries({ queryKey: ["legajos"] });
-            alert("Legajo actualizado exitosamente");
-            router.push(`/legajos/${params.id}`);
-          } catch (e) {
-            console.error(e);
-            const message = e instanceof Error ? e.message : "No se pudo actualizar el legajo";
-            alert(message);
-          }
-        }}
+        formId="legajo-form"
+        onSubmit={handleSubmit}
       />
     </div>
   );
