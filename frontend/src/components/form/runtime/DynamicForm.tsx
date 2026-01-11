@@ -117,36 +117,59 @@ export default function DynamicForm({
 
   return (
     <div className="space-y-6">
-      {/* Renderizar UI nodes no-paginator primero */}
-      {uiNodes.filter(n => n.type !== 'ui:paginator').map((node) => renderUiNode(node, methods.watch(), meta, legajoId, mode))}
-      
-      {/* Formulario */}
-      <FormProvider {...methods}>
-        <form
-          id={formId}
-          onSubmit={methods.handleSubmit(onSubmit)}
-          className="space-y-4"
-          noValidate
-        >
-          {hasPaginator ? (
-            // Si hay paginador, usarlo
-            <PaginatorRuntime
-              config={paginatorNode.config}
-              allNodes={dataNodes}
-              mode={mode}
-              onValidatePage={validatePage}
-            />
-          ) : (
-            // Sin paginador, renderizar campos normalmente
-            <>
-              {dataNodes.map((n:any)=> <DynamicNode key={n.id} node={n} />)}
-              <div className="pt-2">
-                <Button type="submit">Guardar</Button>
+      {/* Renderizar todos los UI nodes en un grid */}
+      {uiNodes.length > 0 && (
+        <div className="grid grid-cols-12 gap-4">
+          {uiNodes.map((node) => {
+            const colSpan = node.colSpan || 12;
+            
+            if (node.type === 'ui:paginator') {
+              return (
+                <div key={node.id} style={{ gridColumn: `span ${colSpan} / span ${colSpan}` }}>
+                  <FormProvider {...methods}>
+                    <form
+                      id={formId}
+                      onSubmit={methods.handleSubmit(onSubmit)}
+                      className="space-y-4"
+                      noValidate
+                    >
+                      <PaginatorRuntime
+                        config={node.config}
+                        allNodes={dataNodes}
+                        mode={mode}
+                        onValidatePage={validatePage}
+                      />
+                    </form>
+                  </FormProvider>
+                </div>
+              );
+            }
+            
+            return (
+              <div key={node.id} style={{ gridColumn: `span ${colSpan} / span ${colSpan}` }}>
+                {renderUiNode(node, methods.watch(), meta, legajoId, mode)}
               </div>
-            </>
-          )}
-        </form>
-      </FormProvider>
+            );
+          })}
+        </div>
+      )}
+      
+      {/* Si no hay paginador, renderizar form normal */}
+      {!hasPaginator && dataNodes.length > 0 && (
+        <FormProvider {...methods}>
+          <form
+            id={formId}
+            onSubmit={methods.handleSubmit(onSubmit)}
+            className="space-y-4"
+            noValidate
+          >
+            {dataNodes.map((n:any)=> <DynamicNode key={n.id} node={n} />)}
+            <div className="pt-2">
+              <Button type="submit">Guardar</Button>
+            </div>
+          </form>
+        </FormProvider>
+      )}
     </div>
   );
 }

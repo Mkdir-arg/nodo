@@ -22,7 +22,7 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
   const [isResizing, setIsResizing] = useState(false);
   const startX = useRef(0);
   const startColSpan = useRef(0);
-  const colSpan = field.colSpan || 6; // Default a 6 columnas
+  const colSpan = field.colSpan || 6;
 
   const {
     attributes,
@@ -40,12 +40,12 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     }
   });
 
-  const style = {
+  const baseStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-  // Renderizar UI nodes especiales
+  // UI nodes
   if (field.kind === 'ui' && field.type === 'ui:header') {
     const uiColSpan = field.colSpan || 12;
     
@@ -80,8 +80,8 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     return (
       <div
         ref={setNodeRef}
-        style={style}
-        className={`col-span-${uiColSpan} relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        style={{ ...baseStyle, gridColumn: `span ${uiColSpan} / span ${uiColSpan}` }}
+        className={`relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -163,8 +163,8 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     return (
       <div
         ref={setNodeRef}
-        style={style}
-        className={`col-span-${uiColSpan} relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        style={{ ...baseStyle, gridColumn: `span ${uiColSpan} / span ${uiColSpan}` }}
+        className={`relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -231,8 +231,8 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
     return (
       <div
         ref={setNodeRef}
-        style={style}
-        className={`col-span-${uiColSpan} relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
+        style={{ ...baseStyle, gridColumn: `span ${uiColSpan} / span ${uiColSpan}` }}
+        className={`relative group ${isDragging ? 'opacity-50' : ''} ${isSelected ? 'ring-2 ring-sky-500' : ''}`}
         onClick={() => setSelected({ type: 'field', id: field.id })}
       >
         <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -273,7 +273,7 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startX.current;
-      const columnWidth = 60; // Aproximado
+      const columnWidth = 60;
       const deltaColumns = Math.round(deltaX / columnWidth);
       const newColSpan = Math.max(1, Math.min(12, startColSpan.current + deltaColumns));
       
@@ -307,8 +307,8 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`relative bg-gray-50 border-2 rounded-lg p-3 group cursor-pointer col-span-${colSpan} ${
+      style={{ ...baseStyle, gridColumn: `span ${colSpan} / span ${colSpan}` }}
+      className={`relative bg-gray-50 border-2 rounded-lg p-3 group cursor-pointer ${
         isDragging ? 'opacity-50' : ''
       } ${
         isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
@@ -336,7 +336,6 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
             {field.type} • key: {field.key}
           </div>
           
-          {/* Preview del campo */}
           <div className="text-xs">
             {field.type === 'text' && (
               <input className="w-full px-2 py-1 border rounded text-xs" placeholder="Texto..." disabled />
@@ -369,7 +368,6 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
         </div>
       </div>
 
-      {/* Resize handle */}
       <div
         className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize opacity-0 group-hover:opacity-100 hover:bg-blue-500 transition-all"
         onMouseDown={handleResizeStart}

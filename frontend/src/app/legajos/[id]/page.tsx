@@ -118,26 +118,38 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
 
   return (
     <div className="space-y-6">
-      {/* Renderizar nodos UI no-paginator */}
-      {uiNodes.filter(n => n.type !== 'ui:paginator').length > 0 && (
-        <div className="space-y-4">
-          {uiNodes.filter(n => n.type !== 'ui:paginator').map((node: any) => renderNode(node, ctx))}
+      {/* Renderizar todos los nodos UI (incluyendo paginador) en un grid */}
+      {uiNodes.length > 0 && (
+        <div className="grid grid-cols-12 gap-4">
+          {uiNodes.map((node: any) => {
+            const colSpan = node.colSpan || 12;
+            
+            if (node.type === 'ui:paginator') {
+              return (
+                <div key={node.id} style={{ gridColumn: `span ${colSpan} / span ${colSpan}` }}>
+                  <FormProvider {...methods}>
+                    <PaginatorRuntime
+                      config={node.config}
+                      allNodes={dataNodes}
+                      mode="view"
+                    />
+                  </FormProvider>
+                </div>
+              );
+            }
+            
+            return (
+              <div key={node.id} style={{ gridColumn: `span ${colSpan} / span ${colSpan}` }}>
+                {renderNode(node, ctx)}
+              </div>
+            );
+          })}
         </div>
       )}
       
-      {hasPaginator ? (
-        // Si hay paginador, usarlo en modo view (sections)
-        <FormProvider {...methods}>
-          <PaginatorRuntime
-            config={paginatorNode.config}
-            allNodes={dataNodes}
-            mode="view"
-          />
-        </FormProvider>
-      ) : (
-        // Sin paginador, renderizado normal
+      {/* Fallback si no hay paginador ni UI nodes */}
+      {uiNodes.length === 0 && (
         <>
-          {/* Renderizar secciones si existen */}
           {sections.length > 0 && (
             <div className="space-y-8">
               {sections.map((s: any) => (
@@ -146,7 +158,6 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
             </div>
           )}
           
-          {/* Fallback si no hay nada */}
           {sections.length === 0 && dataNodes.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               No hay datos para mostrar
