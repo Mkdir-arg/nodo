@@ -178,17 +178,33 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
   };
 
   const renderLegajoDisplay = (legajo: any) => {
-    const template = config.search?.display_template || '{{ id }}';
-    try {
-      return template.replace(/\{\{\s*(\w+(?:\.\w+)*)\s*\}\}/g, (_, path) => {
-        const keys = path.split('.');
-        let val = legajo;
-        for (const k of keys) val = val?.[k];
-        return val ?? '';
-      });
-    } catch {
-      return legajo.id;
+    // Si hay display_template configurado, usarlo
+    if (config.search?.display_template) {
+      const template = config.search.display_template;
+      try {
+        return template.replace(/\{\{\s*(\w+(?:\.\w+)*)\s*\}\}/g, (_, path) => {
+          const keys = path.split('.');
+          let val = legajo;
+          for (const k of keys) val = val?.[k];
+          return val ?? '';
+        });
+      } catch {
+        // Fallback si falla el template
+      }
     }
+    
+    // Fallback inteligente: buscar nombre y apellido
+    const nombre = legajo?.nombre || legajo?.Nombre || '';
+    const apellido = legajo?.apellido || legajo?.Apellido || '';
+    
+    if (nombre && apellido) {
+      return `${nombre} ${apellido}`;
+    }
+    if (nombre) return nombre;
+    if (apellido) return apellido;
+    
+    // Último fallback: ID
+    return legajo?.id || 'Sin nombre';
   };
 
   if (relations.length === 0) {
@@ -368,7 +384,16 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
-                        {renderLegajoDisplay(targetData)}
+                        {(() => {
+                          // targetData ya es el objeto data del legajo
+                          const nombre = targetData?.nombre || targetData?.Nombre || '';
+                          const apellido = targetData?.apellido || targetData?.Apellido || '';
+                          
+                          if (nombre && apellido) return `${nombre} ${apellido}`;
+                          if (nombre) return nombre;
+                          if (apellido) return apellido;
+                          return targetId;
+                        })()}
                       </h3>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <span>{relType}</span>
