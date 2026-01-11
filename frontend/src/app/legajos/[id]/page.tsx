@@ -6,7 +6,7 @@ import SectionRenderer from "@/components/legajo/SectionRenderer";
 import { HeaderNodeRuntime } from "@/components/form/builder/ui-nodes/HeaderNode/HeaderNodeRuntime";
 import PaginatorRuntime from "@/components/form/runtime/ui/paginator/PaginatorRuntime";
 import { getJSON } from "@/lib/api";
-import { RelationsService } from "@/lib/services/relations";
+import RelationRuntime from "@/components/form/runtime/ui/relation/RelationRuntime";
 import { FormProvider, useForm } from "react-hook-form";
 
 type LegajoResponse = {
@@ -36,59 +36,13 @@ function renderNode(node: any, ctx: any) {
   }
   
   if (node.type === 'ui:relation') {
-    const relations = node.config?.relations || [];
     return (
-      <div key={node.id} className="mb-6 space-y-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-medium text-gray-700">{node.config?.title || 'Relaciones'}</span>
-        </div>
-        {relations.length === 0 ? (
-          <span className="text-sm text-gray-500">Sin relaciones configuradas</span>
-        ) : (
-          <div className="space-y-4">
-            {relations.map((rel: any) => {
-              const outgoing = ctx.relationsData?.outgoing?.filter((r: any) => r.relation_type === rel.relation_label) || [];
-              const incoming = ctx.relationsData?.incoming?.filter((r: any) => r.relation_type === rel.relation_label) || [];
-              return (
-                <div key={rel.id} className="border border-gray-200 rounded-lg p-3">
-                  <div className="text-sm font-medium text-gray-700 mb-2">{rel.relation_label}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {outgoing.length === 0 ? (
-                      <span className="text-sm text-gray-500">Sin vínculos</span>
-                    ) : (
-                      outgoing.map((r: any) => (
-                        <a
-                          key={r.id}
-                          href={`/legajos/${r.target_legajo_id}`}
-                          className="px-3 py-1.5 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200"
-                        >
-                          {r.target_data?.nombre || r.target_legajo_id}
-                        </a>
-                      ))
-                    )}
-                  </div>
-                  {incoming.length > 0 && (
-                    <div className="mt-3 pt-3 border-t">
-                      <div className="text-xs text-gray-600 mb-2">{rel.inverse_relation_label} (inversa)</div>
-                      <div className="flex flex-wrap gap-2">
-                        {incoming.map((r: any) => (
-                          <a
-                            key={r.id}
-                            href={`/legajos/${r.source_legajo_id}`}
-                            className="px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200"
-                          >
-                            {r.source_data?.nombre || r.source_legajo_id}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <RelationRuntime 
+        key={node.id}
+        config={node.config}
+        legajoId={ctx.legajoId}
+        mode="view"
+      />
     );
   }
   
@@ -120,7 +74,7 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
 
   const { data: relationsData } = useQuery({
     queryKey: ['legajo-relations', params.id],
-    queryFn: () => RelationsService.list(params.id)
+    queryFn: () => getJSON(`/api/legajos/${params.id}/relations/`)
   });
 
   const methods = useForm({

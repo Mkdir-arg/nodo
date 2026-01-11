@@ -329,8 +329,8 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
         {/* Relations list */}
         <div className="p-6">
           {displayRelations.length === 0 ? (
-            <div className="py-12 text-center">
-              <LinkIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <div className="py-12 text-center border-2 border-dashed border-gray-300 rounded-xl">
+              <LinkIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-sm text-gray-600">
                 No hay relaciones {isCreateMode ? 'pendientes' : 'vinculadas'}
               </p>
@@ -352,51 +352,58 @@ export default function RelationRuntime({ config, legajoId, mode = 'create' }: R
                 return (
                   <div 
                     key={relId} 
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="
+                      flex items-center gap-4 p-4 rounded-xl
+                      bg-white/90 backdrop-blur-lg
+                      border border-slate-200/60
+                      shadow-md hover:shadow-lg
+                      transition-all duration-200
+                    "
                   >
                     {/* Icon */}
-                    <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0">
                       <LinkIcon className="w-5 h-5 text-gray-600" />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                          {relType}
-                        </span>
-                        {!isCreateMode && rel.direction === 'incoming' && (
-                          <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                            Inversa
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-sm font-semibold text-gray-900 truncate">
+                      <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
                         {renderLegajoDisplay(targetData)}
                       </h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span>{relType}</span>
+                        {!isCreateMode && rel.direction === 'incoming' && (
+                          <>
+                            <span>•</span>
+                            <span className="text-purple-600">Inversa</span>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      {!isCreateMode && (
-                        <button
-                          onClick={() => router.push(`/legajos/${targetId}`)}
-                          className="w-9 h-9 rounded-lg bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center"
-                          title="Ver legajo"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </button>
-                      )}
-                      {canRemove && (
-                        <button
-                          onClick={() => handleRemove(isCreateMode ? targetId : relId)}
-                          className="w-9 h-9 rounded-lg bg-white hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors flex items-center justify-center"
-                          title="Eliminar vínculo"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
+                    {(canRemove || !isCreateMode) && (
+                      <div className="flex items-center gap-2">
+                        {!isCreateMode && (
+                          <button
+                            onClick={() => router.push(`/legajos/${targetId}`)}
+                            className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-600 transition-all duration-200 flex items-center justify-center shadow-sm"
+                            title="Ver legajo"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canRemove && (
+                          <button
+                            onClick={() => handleRemove(isCreateMode ? targetId : relId)}
+                            className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 transition-all duration-200 flex items-center justify-center shadow-sm"
+                            title="Eliminar vínculo"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}

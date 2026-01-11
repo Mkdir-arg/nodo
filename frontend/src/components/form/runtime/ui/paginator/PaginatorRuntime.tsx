@@ -256,20 +256,29 @@ export default function PaginatorRuntime({
                 // Grupo repetible (array)
                 const items = Array.isArray(value) ? value : (value ? [value] : []);
                 return (
-                  <div key={field.id} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {field.label || field.key}
+                  <div key={field.id} className="space-y-3">
+                    <label className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30">
+                        <span className="text-xs">📋</span>
+                      </span>
+                      <span>{field.label || field.key}</span>
                     </label>
                     {items.length === 0 ? (
-                      <div className="text-gray-500 text-sm italic">Sin datos</div>
+                      <div className="text-slate-400 text-sm italic px-4 py-3">Sin datos</div>
                     ) : (
                       <div className="space-y-3">
                         {items.map((item: any, idx: number) => (
-                          <div key={idx} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                          <div key={idx} className="
+                            rounded-2xl p-4
+                            bg-white/90 dark:bg-slate-900/70
+                            backdrop-blur-xl
+                            border border-slate-200/60 dark:border-slate-700/60
+                            shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50
+                          ">
                             {(field.children || []).map((child: any) => (
-                              <div key={child.id} className="mb-2 last:mb-0">
-                                <div className="text-xs font-medium text-gray-600">{child.label || child.key}</div>
-                                <div className="text-sm text-gray-900">{item[child.key] || '—'}</div>
+                              <div key={child.id} className="mb-3 last:mb-0">
+                                <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{child.label || child.key}</div>
+                                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{item[child.key] || <span className="text-slate-400 italic">—</span>}</div>
                               </div>
                             ))}
                           </div>
@@ -282,18 +291,27 @@ export default function PaginatorRuntime({
                 // Grupo simple (objeto)
                 const hasData = value && typeof value === 'object' && Object.values(value).some(v => v);
                 return (
-                  <div key={field.id} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {field.label || field.key}
+                  <div key={field.id} className="space-y-3">
+                    <label className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30">
+                        <span className="text-xs">📋</span>
+                      </span>
+                      <span>{field.label || field.key}</span>
                     </label>
                     {!hasData ? (
-                      <div className="text-gray-500 text-sm italic">Sin datos</div>
+                      <div className="text-slate-400 text-sm italic px-4 py-3">Sin datos</div>
                     ) : (
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <div className="
+                        rounded-2xl p-4
+                        bg-white/90 dark:bg-slate-900/70
+                        backdrop-blur-xl
+                        border border-slate-200/60 dark:border-slate-700/60
+                        shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50
+                      ">
                         {(field.children || []).map((child: any) => (
-                          <div key={child.id} className="mb-2 last:mb-0">
-                            <div className="text-xs font-medium text-gray-600">{child.label || child.key}</div>
-                            <div className="text-sm text-gray-900">{value[child.key] || '—'}</div>
+                          <div key={child.id} className="mb-3 last:mb-0">
+                            <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{child.label || child.key}</div>
+                            <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{value[child.key] || <span className="text-slate-400 italic">—</span>}</div>
                           </div>
                         ))}
                       </div>
@@ -305,12 +323,23 @@ export default function PaginatorRuntime({
             
             // Campo simple
             return (
-              <div key={field.id} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {field.label || field.key}
+              <div key={field.id} className="space-y-2.5">
+                <label className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30">
+                    <span className="text-xs">📄</span>
+                  </span>
+                  <span>{field.label || field.key}</span>
                 </label>
-                <div className="text-gray-900 px-3 py-2 bg-gray-50 rounded border border-gray-200">
-                  {value || '—'}
+                <div className="
+                  px-4 py-3 rounded-2xl
+                  bg-white/90 dark:bg-slate-900/70
+                  backdrop-blur-xl
+                  border border-slate-200/60 dark:border-slate-700/60
+                  shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50
+                  text-slate-900 dark:text-slate-100
+                  font-medium
+                ">
+                  {value || <span className="text-slate-400 italic">Sin información</span>}
                 </div>
               </div>
             );

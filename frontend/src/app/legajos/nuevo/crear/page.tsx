@@ -16,7 +16,7 @@ export default function Page({
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Nuevo legajo</h1>
       <Suspense fallback={<div className="rounded-md border p-4">Cargando…</div>}>
         <CreateView formId={formId} />

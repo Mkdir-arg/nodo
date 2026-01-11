@@ -23,7 +23,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const isFullWidthRoute =
   pathname.startsWith('/plantillas/crear') ||
   pathname.startsWith('/plantillas/editar') ||
-  pathname.startsWith('/plantillas/editor');
+  pathname.startsWith('/plantillas/editor') ||
+  pathname.startsWith('/legajos/');
 
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [isMini, setIsMini] = useState(false);
@@ -81,7 +82,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           theme={theme}
         />
 
-        <main className="flex-1">
+        <main className="flex-1 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
           <div
             className={clsx(
               'p-4 md:p-6',

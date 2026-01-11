@@ -66,7 +66,7 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
   const initialData = data?.data ?? {};
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Editar legajo</h1>
         <div className="flex gap-2">
