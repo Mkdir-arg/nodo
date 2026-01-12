@@ -9,7 +9,6 @@ export default function TextField({ field }:{field:any}) {
   const autoId = useId();
   const id = field.key ?? field.id ?? autoId;
   
-  const icon = field.type === 'email' ? <Mail size={16} /> : <Type size={16} />;
   const inputType = field.type === 'email' ? 'email' : 'text';
   
   if (field.type === 'textarea') {
@@ -19,7 +18,6 @@ export default function TextField({ field }:{field:any}) {
         label={field.label}
         required={field.required}
         helpText={field.help}
-        icon={<Type size={16} />}
         disabled={field.disabled}
         readonly={field.readOnly}
       >
@@ -41,7 +39,6 @@ export default function TextField({ field }:{field:any}) {
       label={field.label}
       required={field.required}
       helpText={field.help}
-      icon={icon}
       disabled={field.disabled}
       readonly={field.readOnly}
     >

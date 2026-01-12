@@ -17,6 +17,21 @@ import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
 import { nanoid } from "nanoid";
 import {
+  Type,
+  Hash,
+  Calendar,
+  CheckSquare,
+  List,
+  FileText,
+  Image,
+  AlignLeft,
+  Info,
+  Calculator,
+  Mail,
+  Phone,
+  Building2,
+} from "lucide-react";
+import {
   createContext,
   useCallback,
   useContext,
@@ -39,6 +54,31 @@ import type {
   LayoutRowNode,
   LayoutSectionNode,
 } from "@/lib/forms/types";
+
+const FIELD_ICONS: Record<string, any> = {
+  text: Type,
+  textarea: AlignLeft,
+  number: Hash,
+  email: Mail,
+  phone: Phone,
+  select: List,
+  dropdown: List,
+  multiselect: List,
+  select_with_filter: List,
+  checkbox: CheckSquare,
+  date: Calendar,
+  document: FileText,
+  file: FileText,
+  image: Image,
+  info: Info,
+  sum: Calculator,
+  cuit_razon_social: Building2,
+};
+
+function getFieldIcon(componentKey: string) {
+  const IconComponent = FIELD_ICONS[componentKey] || Type;
+  return <IconComponent className="h-4 w-4" />;
+}
 
 const GRID_COLUMNS = 12;
 const GRID_GAP = 16;
@@ -1226,6 +1266,7 @@ function CanvasNodeItem({ node, isSelected }: CanvasNodeItemProps) {
       <FieldDraggable
         label={node.label}
         description={node.description}
+        icon={getFieldIcon(node.componentKey)}
         variant="canvas"
         dragAttributes={attributes}
         dragListeners={listeners}

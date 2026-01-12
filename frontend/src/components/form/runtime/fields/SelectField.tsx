@@ -10,7 +10,6 @@ export default function SelectField({ field }:{field:any}) {
   const id = field.key ?? field.id ?? autoId;
   
   const isMulti = field.type === "multiselect";
-  const icon = isMulti ? <CheckSquare size={16} /> : <ChevronDown size={16} />;
   
   return (
     <FieldShell
@@ -18,7 +17,6 @@ export default function SelectField({ field }:{field:any}) {
       label={field.label}
       required={field.required}
       helpText={field.help}
-      icon={icon}
       disabled={field.disabled}
       readonly={field.readOnly}
     >

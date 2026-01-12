@@ -4,6 +4,7 @@ import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { HeaderNodeEditor } from './ui-nodes/HeaderNode/HeaderNodeEditor';
 import PaginatorProperties from './properties/PaginatorProperties';
 import RelationProperties from './properties/RelationProperties';
+import SumProperties from './properties/SumProperties';
 import type { HeaderNode } from './ui-nodes/HeaderNode/types';
 import type { UIPaginatorNode } from '../runtime/ui/paginator/types';
 import type { UIRelationNode } from '../shared/ui/relation/types';
@@ -146,7 +147,7 @@ export default function PropertiesPanel() {
           </>
         )}
 
-        {['select','dropdown','multiselect','select_with_filter'].includes(node.type) && (
+        {['select','dropdown','multiselect','select_with_filter','radio'].includes(node.type) && (
           <div className="space-y-2">
             <div className="text-sm font-medium">Opciones</div>
             {(node.options||[]).map((o:any, i:number)=>(
@@ -176,6 +177,80 @@ export default function PropertiesPanel() {
           </div>
         )}
 
+        {node.type==='slider' && (
+          <>
+            <Row label="Mínimo">
+              <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.min ?? 0} onChange={e=>updateNode(node.id, { min: Number(e.target.value) })}/>
+            </Row>
+            <Row label="Máximo">
+              <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.max ?? 100} onChange={e=>updateNode(node.id, { max: Number(e.target.value) })}/>
+            </Row>
+            <Row label="Step">
+              <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.step ?? 1} onChange={e=>updateNode(node.id, { step: Number(e.target.value) })}/>
+            </Row>
+            <Row label="Mostrar valor">
+              <input type="checkbox" checked={node.showValue !== false} onChange={e=>updateNode(node.id, { showValue: e.target.checked })}/>
+            </Row>
+          </>
+        )}
+
+        {node.type==='rating' && (
+          <Row label="Máximo rating">
+            <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.maxRating ?? 5} onChange={e=>updateNode(node.id, { maxRating: Number(e.target.value) })}/>
+          </Row>
+        )}
+
+        {node.type==='currency' && (
+          <>
+            <Row label="Moneda">
+              <select className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.currency ?? 'USD'} onChange={e=>updateNode(node.id, { currency: e.target.value })}>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="ARS">ARS</option>
+                <option value="MXN">MXN</option>
+              </select>
+            </Row>
+            <Row label="Locale">
+              <input className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.locale ?? 'en-US'} onChange={e=>updateNode(node.id, { locale: e.target.value })}/>
+            </Row>
+          </>
+        )}
+
+        {node.type==='password' && (
+          <Row label="Mostrar fortaleza">
+            <input type="checkbox" checked={node.showStrength !== false} onChange={e=>updateNode(node.id, { showStrength: e.target.checked })}/>
+          </Row>
+        )}
+
+        {node.type==='url' && (
+          <Row label="Mostrar preview">
+            <input type="checkbox" checked={node.showPreview !== false} onChange={e=>updateNode(node.id, { showPreview: e.target.checked })}/>
+          </Row>
+        )}
+
+        {node.type==='code' && (
+          <>
+            <Row label="Lenguaje">
+              <input className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.language ?? 'javascript'} onChange={e=>updateNode(node.id, { language: e.target.value })}/>
+            </Row>
+            <Row label="Mostrar líneas">
+              <input type="checkbox" checked={node.showLineNumbers !== false} onChange={e=>updateNode(node.id, { showLineNumbers: e.target.checked })}/>
+            </Row>
+          </>
+        )}
+
+        {node.type==='tags' && (
+          <Row label="Máx. tags">
+            <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.maxTags ?? ''} onChange={e=>updateNode(node.id, { maxTags: e.target.value===''?undefined:Number(e.target.value) })}/>
+          </Row>
+        )}
+
+        {node.type==='switch' && (
+          <Row label="Descripción">
+            <input className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.description||''} onChange={e=>updateNode(node.id, { description: e.target.value })}/>
+          </Row>
+        )}
+
         {node.type==='document' && (
           <>
             <Row label="Extensiones">
@@ -190,29 +265,11 @@ export default function PropertiesPanel() {
         )}
 
         {node.type==='sum' && (
-          <>
-            <Row label="Decimales">
-              <input type="number" className="w-full border rounded p-2 dark:bg-slate-900 dark:border-slate-700" value={node.decimals ?? 0}
-                     onChange={e=>updateNode(node.id, { decimals: Number(e.target.value)||0 })}/>
-            </Row>
-            <div>
-              <div className="text-sm opacity-70 mb-1">Fuentes (solo números)</div>
-              <div className="flex flex-wrap gap-2">
-                {numKeys.map(k=>{
-                  const active = (node.sources||[]).includes(k);
-                  return (
-                    <button key={k} type="button"
-                      className={`px-2 py-1 border rounded text-xs ${active?'bg-sky-100 border-sky-300 dark:bg-sky-900 dark:border-sky-600':''} dark:border-slate-700`}
-                      onClick={()=>{
-                        const set = new Set(node.sources||[]);
-                        if (active) set.delete(k); else set.add(k);
-                        updateNode(node.id, { sources: Array.from(set) });
-                      }}>{k}</button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
+          <SumProperties 
+            node={node}
+            numKeys={numKeys}
+            onUpdate={(updates) => updateNode(node.id, updates)}
+          />
         )}
 
         {node.type==='date' && (

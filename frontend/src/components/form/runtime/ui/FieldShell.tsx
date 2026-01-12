@@ -27,48 +27,30 @@ export default function FieldShell({
   const hasError = !!error;
 
   return (
-    <div className="space-y-2.5">
+    <div className="w-full">
       {label && (
         <label 
           htmlFor={fieldKey}
-          className="flex items-center gap-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100"
+          className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1.5"
         >
-          {icon && (
-            <span className="
-              flex items-center justify-center w-7 h-7 rounded-lg
-              bg-gradient-to-br from-blue-500 to-purple-600
-              text-white shadow-lg shadow-blue-500/30
-            ">
-              {icon}
-            </span>
-          )}
-          <span>{label}</span>
-          {required && <span className="text-red-500 text-base">*</span>}
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       
       <div className={`
-        relative transition-all duration-300
-        ${hasError ? 'ring-2 ring-red-500/50 rounded-2xl' : ''}
-        ${disabled ? 'opacity-60 cursor-not-allowed' : ''}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         ${readonly ? 'opacity-80' : ''}
       `}>
         {children}
       </div>
 
       {helpText && !hasError && (
-        <p className="text-xs text-slate-500 dark:text-slate-400 pl-1">{helpText}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">{helpText}</p>
       )}
       
       {hasError && (
-        <div className="
-          flex items-center gap-2 px-3 py-2 rounded-xl
-          bg-red-50/80 dark:bg-red-900/20
-          border border-red-200/50 dark:border-red-700/50
-        ">
-          <span className="text-red-500">⚠</span>
-          <p className="text-xs text-red-700 dark:text-red-300 font-medium">{error}</p>
-        </div>
+        <p className="text-sm text-red-600 dark:text-red-400 mt-1.5">{error}</p>
       )}
     </div>
   );

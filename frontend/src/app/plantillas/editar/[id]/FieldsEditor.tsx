@@ -115,18 +115,31 @@ export function FieldsEditor({ fields, onChange }: FieldsEditorProps) {
                 <select
                   value={field.type}
                   onChange={(e) => updateField(fieldIndex, { type: e.target.value as FieldDef['type'] })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="text">Texto</option>
-                  <option value="email">Email</option>
-                  <option value="number">Número</option>
-                  <option value="date">Fecha</option>
-                  <option value="select">Selección</option>
-                  <option value="multiselect">Selección múltiple</option>
-                  <option value="boolean">Verdadero/Falso</option>
-                  <option value="checkbox">Casilla</option>
-                  <option value="textarea">Área de texto</option>
-                  <option value="file">Archivo</option>
+                  <optgroup label="📝 Datos de Referencia">
+                    <option value="text">Texto</option>
+                    <option value="number">Número</option>
+                    <option value="select">Selección</option>
+                  </optgroup>
+                  <optgroup label="✉️ Campos Básicos">
+                    <option value="email">Email</option>
+                    <option value="textarea">Área de texto</option>
+                    <option value="checkbox">Casilla</option>
+                    <option value="info">Información</option>
+                    <option value="sum">Suma calculada</option>
+                  </optgroup>
+                  <optgroup label="☑️ Campos de Selección">
+                    <option value="multiselect">Selección múltiple</option>
+                    <option value="boolean">Verdadero/Falso</option>
+                  </optgroup>
+                  <optgroup label="📅 Campos Avanzados">
+                    <option value="date">Fecha</option>
+                    <option value="file">Archivo</option>
+                  </optgroup>
+                  <optgroup label="🎨 Visuales">
+                    <option value="calendar">Calendario</option>
+                  </optgroup>
                 </select>
               </div>
               <div className="flex items-center">

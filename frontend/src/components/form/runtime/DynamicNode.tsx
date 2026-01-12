@@ -15,6 +15,32 @@ import GroupField from "./fields/GroupField";
 import RelationRuntime from "./ui/relation/RelationRuntime";
 import { useController } from "react-hook-form";
 
+// Componentes avanzados
+import { SliderField } from "./fields/advanced/SliderField";
+import { RatingField } from "./fields/advanced/RatingField";
+import { ColorPickerField } from "./fields/advanced/ColorPickerField";
+import { TimeField } from "./fields/advanced/TimeField";
+import { CurrencyField } from "./fields/advanced/CurrencyField";
+import { URLField } from "./fields/advanced/URLField";
+import { PasswordField } from "./fields/advanced/PasswordField";
+import { CodeField } from "./fields/advanced/CodeField";
+import { TagField } from "./fields/advanced/TagField";
+import { SwitchField } from "./fields/advanced/SwitchField";
+
+// Componentes de selección
+import { RadioField } from "./fields/selection/RadioField";
+import { MultiSelectField } from "./fields/selection/MultiSelectField";
+import { SelectWithFilterField } from "./fields/selection/SelectWithFilterField";
+
+// Componentes especializados
+import { ImageUploadField } from "./fields/specialized/ImageUploadField";
+import { RelationField } from "./fields/specialized/RelationField";
+
+// Componentes UI
+import { HeaderUI } from "./ui/HeaderUI";
+import { DividerUI } from "./ui/DividerUI";
+import { BannerUI } from "./ui/BannerUI";
+
 type DynamicNodeProps = {
   node: any;
   prefix?: string;
@@ -192,8 +218,6 @@ function renderField(field: any) {
       return <NumberField field={field} />;
     case "select":
     case "dropdown":
-    case "multiselect":
-    case "select_with_filter":
       return <SelectField field={field} />;
     case "checkbox":
     case "boolean":
@@ -212,6 +236,51 @@ function renderField(field: any) {
       return <InfoField field={field} />;
     case "group":
       return <GroupField field={field} />;
+    
+    // Componentes avanzados
+    case "slider":
+      return <SliderField {...field} />;
+    case "rating":
+      return <RatingField {...field} />;
+    case "color":
+      return <ColorPickerField {...field} />;
+    case "time":
+      return <TimeField {...field} />;
+    case "currency":
+      return <CurrencyField {...field} />;
+    case "url":
+      return <URLField {...field} />;
+    case "password":
+      return <PasswordField {...field} />;
+    case "code":
+      return <CodeField {...field} />;
+    case "tags":
+      return <TagField {...field} />;
+    case "switch":
+      return <SwitchField {...field} />;
+    
+    // Componentes de selección
+    case "radio":
+      return <RadioField {...field} />;
+    case "multiselect":
+      return <MultiSelectField {...field} />;
+    case "select_with_filter":
+      return <SelectWithFilterField {...field} />;
+    
+    // Componentes especializados
+    case "image":
+      return <ImageUploadField {...field} />;
+    case "relation":
+      return <RelationField {...field} />;
+    
+    // Componentes UI
+    case "ui:header":
+      return <HeaderUI title={field.headerTitle || field.title || ''} description={field.headerDescription} image={field.headerImage} />;
+    case "ui:divider":
+      return <DividerUI label={field.label} />;
+    case "ui:banner":
+      return <BannerUI type={field.bannerType} message={field.bannerMessage || ''} />;
+    
     default:
       return null;
   }

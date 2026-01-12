@@ -7,19 +7,19 @@ const GROUPS: Record<string, [FieldType, string][]> = {
   "Datos referencia": [
     ["text", "Nombre"],
     ["text", "Apellido"],
+    ["email", "Email"],
     ["select", "Tipo Documento"],
     ["number", "Número Documento"],
     ["select", "Provincia"],
     ["select", "Municipio"],
     ["text", "Calle"],
     ["number", "Número"],
+    ["phone", "Teléfono"],
   ],
   "Básicos": [
     ["text", "Texto corto"],
-    ["email", "Email"],
     ["textarea", "Texto largo"],
     ["number", "Número"],
-    ["phone", "Teléfono"],
     ["checkbox", "Checkbox"],
     ["info", "Texto informativo"],
     ["sum", "Suma (readonly)"],
@@ -30,12 +30,26 @@ const GROUPS: Record<string, [FieldType, string][]> = {
     ["multiselect", "Selector múltiple"],
     ["select_with_filter", "Lista con filtro"],
   ],
-  "Avanzados": [
+  "Fecha y Archivos": [
     ["date", "Fecha"],
     ["document", "Archivo"],
     ["image", "Imagen"],
+  ],
+  "Especializados": [
     ["cuit_razon_social", "CUIT y Razón social"],
     ["group", "Grupo iterativo"],
+  ],
+  "Componentes Avanzados": [
+    ["slider", "Slider (rango)"],
+    ["rating", "Calificación (estrellas)"],
+    ["color", "Selector de color"],
+    ["time", "Hora"],
+    ["currency", "Moneda"],
+    ["url", "URL"],
+    ["password", "Contraseña"],
+    ["code", "Editor de código"],
+    ["tags", "Tags/Etiquetas"],
+    ["switch", "Switch (on/off)"],
   ],
 };
 

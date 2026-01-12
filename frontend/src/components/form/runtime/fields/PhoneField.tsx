@@ -15,7 +15,6 @@ export default function PhoneField({ field }:{field:any}) {
       label={field.label}
       required={field.required}
       helpText={field.help}
-      icon={<Phone size={16} />}
       disabled={field.disabled}
       readonly={field.readOnly}
     >

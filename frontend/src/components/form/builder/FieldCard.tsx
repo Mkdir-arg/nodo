@@ -338,15 +338,76 @@ export default function FieldCard({ field, sectionId }: FieldCardProps) {
           
           <div className="text-xs">
             {field.type === 'text' && (
-              <input className="w-full px-2 py-1 border rounded text-xs" placeholder="Texto..." disabled />
+              <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900" placeholder="Texto..." disabled />
+            )}
+            {field.type === 'textarea' && (
+              <textarea className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 resize-none" rows={3} placeholder="Escribe aquí..." disabled />
+            )}
+            {field.type === 'email' && (
+              <input type="email" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900" placeholder="ejemplo@correo.com" disabled />
+            )}
+            {field.type === 'phone' && (
+              <input type="tel" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900" placeholder="+54 9 11 1234-5678" disabled />
             )}
             {field.type === 'number' && (
-              <input type="number" className="w-full px-2 py-1 border rounded text-xs" placeholder="0" disabled />
+              <input type="number" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900" placeholder="0" disabled />
             )}
-            {field.type === 'select' && (
-              <select className="w-full px-2 py-1 border rounded text-xs" disabled>
+            {(field.type === 'select' || field.type === 'dropdown' || field.type === 'select_with_filter') && (
+              <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900" disabled>
                 <option>Seleccionar...</option>
+                {(field.options || []).slice(0, 3).map((opt: any, i: number) => (
+                  <option key={i}>{opt.label || opt.value}</option>
+                ))}
               </select>
+            )}
+            {field.type === 'multiselect' && (
+              <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900">
+                <div className="flex flex-wrap gap-1">
+                  {(field.options || []).slice(0, 2).map((opt: any, i: number) => (
+                    <span key={i} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded text-xs">
+                      {opt.label || opt.value}
+                    </span>
+                  ))}
+                  {(field.options || []).length > 2 && (
+                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-xs">
+                      +{(field.options || []).length - 2}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            {field.type === 'radio' && (
+              <div className="space-y-2">
+                {(field.options || []).slice(0, 3).map((opt: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input type="radio" name={field.id} className="w-3 h-3" disabled />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{opt.label || opt.value}</span>
+                  </div>
+                ))}
+                {(field.options || []).length > 3 && (
+                  <span className="text-xs text-gray-500">+{(field.options || []).length - 3} más</span>
+                )}
+              </div>
+            )}
+            {field.type === 'checkbox' && (
+              <div className="flex items-center gap-2 py-2">
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300" disabled />
+                <span className="text-sm text-gray-600">Acepto los términos</span>
+              </div>
+            )}
+            {field.type === 'info' && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5"></div>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">Texto informativo</p>
+                </div>
+              </div>
+            )}
+            {field.type === 'sum' && (
+              <div className="flex items-center gap-2 p-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+                <span className="text-sm font-mono text-gray-700 dark:text-gray-300">Σ = 0</span>
+                <span className="text-xs text-gray-500">(calculado)</span>
+              </div>
             )}
           </div>
         </div>

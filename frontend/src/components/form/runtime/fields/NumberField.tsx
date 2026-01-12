@@ -19,7 +19,6 @@ export default function NumberField({ field }: { field: any }) {
       label={field.label}
       required={field.required}
       helpText={field.help}
-      icon={<Hash size={16} />}
       disabled={field.disabled}
       readonly={field.readOnly}
     >
