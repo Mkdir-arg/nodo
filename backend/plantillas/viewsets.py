@@ -48,6 +48,13 @@ class PlantillaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @decorators.action(detail=True, methods=["patch"], url_path="toggle-estado")
+    def toggle_estado(self, request, pk=None):
+        inst = self.get_object()
+        inst.estado = Plantilla.Estado.ACTIVO if inst.estado == Plantilla.Estado.INACTIVO else Plantilla.Estado.INACTIVO
+        inst.save(update_fields=["estado"])
+        return response.Response({"estado": inst.estado})
+
     @decorators.action(detail=False, methods=["get"], url_path="exists")
     def exists(self, request):
         nombre = request.query_params.get("nombre", "")

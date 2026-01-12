@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PlantillasService } from '@/lib/services/plantillas';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
-import DeleteConfirm from './DeleteConfirm';
 import { HoverCard } from '@/components/ui/hover-card';
 import { FloatingButton } from '@/components/ui/floating-button';
 import { SkeletonCard } from '@/components/ui/skeleton';
@@ -23,7 +22,6 @@ export default function PlantillasPage() {
   const dq = useDebouncedValue(q, 300);
   const [estado, setEstado] = useState<Estado>('TODAS');
   const [page, setPage] = useState(1);
-  const [toDelete, setToDelete] = useState<{ id: string; nombre: string } | null>(null);
 
   useEffect(() => {
     if (params.get('created') === '1') {
@@ -50,15 +48,14 @@ export default function PlantillasPage() {
 
   const { showToast } = useToast();
 
-  const del = useMutation({
-    mutationFn: (id: string) => PlantillasService.deletePlantilla(id),
+  const toggle = useMutation({
+    mutationFn: (id: string) => PlantillasService.toggleEstado(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
-      setToDelete(null);
-      showToast('Plantilla eliminada correctamente', 'success');
+      showToast('Estado actualizado correctamente', 'success');
     },
     onError: () => {
-      showToast('Error al eliminar la plantilla', 'error');
+      showToast('Error al cambiar el estado', 'error');
     },
   });
 
@@ -157,7 +154,7 @@ export default function PlantillasPage() {
                   }}
                   onUsar={() => router.push(`/legajos/nuevo?formId=${p.id}`)}
                   onDuplicar={() => duplicar.mutate(p)}
-                  onEliminar={() => setToDelete({ id: p.id, nombre: p.nombre })}
+                  onToggleEstado={() => toggle.mutate(p.id)}
                 />
               </HoverCard>
             ))}
@@ -193,16 +190,6 @@ export default function PlantillasPage() {
       <FloatingButton 
         onClick={() => router.push('/plantillas/crear')}
       />
-
-      {/* Modal borrar */}
-      <DeleteConfirm
-        open={!!toDelete}
-        title="Eliminar plantilla"
-        message={`¿Eliminar "${toDelete?.nombre}"? Esto la desactivará para nuevos legajos.`}
-        onCancel={() => setToDelete(null)}
-        onConfirm={() => toDelete && del.mutate(toDelete.id)}
-        loading={del.isPending}
-      />
     </div>
   );
 }
@@ -213,17 +200,18 @@ function Row({
   onPreview,
   onUsar,
   onDuplicar,
-  onEliminar,
+  onToggleEstado,
 }: {
   data: any;
   onEditar: () => void;
   onPreview: () => void;
   onUsar: () => void;
   onDuplicar: () => void;
-  onEliminar: () => void;
+  onToggleEstado: () => void;
 }) {
   const fecha = formatDate(data.updated_at || data.updatedAt || data.updated || data.created_at);
   const estado = String(data.estado || 'ACTIVO').toUpperCase();
+  const isActivo = estado === 'ACTIVO';
   return (
     <div className={`px-6 py-5 ${cols}`}>
       <div className="flex items-center gap-3">
@@ -239,7 +227,7 @@ function Row({
       <div className="text-sm dark:text-gray-300">{fecha}</div>
       
       <div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${isActivo ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
           {estado}
         </span>
       </div>
@@ -254,8 +242,8 @@ function Row({
         <button onClick={onUsar} className="text-sm px-3 py-1.5 rounded border dark:border-slate-600 dark:hover:bg-slate-700 dark:text-gray-300 hover:bg-gray-50">
           Usar
         </button>
-        <button onClick={onEliminar} className="text-sm px-3 py-1.5 rounded border text-red-600 dark:border-slate-600 dark:hover:bg-slate-700 dark:text-red-400 hover:bg-red-50">
-          Eliminar
+        <button onClick={onToggleEstado} className={`text-sm px-3 py-1.5 rounded border dark:border-slate-600 dark:hover:bg-slate-700 hover:bg-gray-50 ${isActivo ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+          {isActivo ? 'Inactivar' : 'Activar'}
         </button>
       </div>
     </div>

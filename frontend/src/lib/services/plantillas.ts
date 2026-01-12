@@ -136,6 +136,9 @@ export const PlantillasService = {
   updatePlantilla: (id: string, payload: any) =>
     putJSON(`/api/plantillas/${id}/`, payload),
 
+  toggleEstado: (id: string) =>
+    patchJSON(`/api/plantillas/${id}/toggle-estado/`, {}),
+
   deletePlantilla: (id: string) =>
     deleteJSON(`/api/plantillas/${id}/`),
 };
