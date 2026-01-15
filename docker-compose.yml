@@ -40,7 +40,7 @@ services:
     image: nodo-frontend
     env_file: .env
     restart: unless-stopped
-    command: npm start
+    command: npm run dev -- -H 0.0.0.0
     depends_on:
       - backend
     ports:
