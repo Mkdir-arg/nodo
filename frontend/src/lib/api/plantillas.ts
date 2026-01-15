@@ -19,9 +19,13 @@ async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
   console.log('Response status:', response.status);
   
   if (!response.ok) {
-    const errorText = await response.text().catch(() => 'Sin detalles');
-    console.error('Error response:', errorText);
-    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Error response:', errorData);
+    throw { 
+      status: response.status, 
+      message: errorData.error || errorData.detail || `HTTP ${response.status}: ${response.statusText}`,
+      detail: errorData.detail 
+    };
   }
 
   return response.json();
@@ -54,14 +58,19 @@ export function getPlantillaLayoutQueryOptions(plantillaId: string) {
 }
 
 export async function createPlantilla(data: { nombre: string; descripcion?: string; schema?: any }) {
-  return fetchJSON('/plantillas/', {
-    method: 'POST',
-    body: JSON.stringify({
-      nombre: data.nombre,
-      descripcion: data.descripcion || '',
-      schema: data.schema || { type: 'object', properties: {} }
-    })
-  });
+  try {
+    return await fetchJSON('/plantillas/', {
+      method: 'POST',
+      body: JSON.stringify({
+        nombre: data.nombre,
+        descripcion: data.descripcion || '',
+        schema: data.schema || { type: 'object', properties: {} }
+      })
+    });
+  } catch (error: any) {
+    console.error('Error en createPlantilla:', error);
+    throw error;
+  }
 }
 
 export async function fetchPlantillas() {

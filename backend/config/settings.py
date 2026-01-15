@@ -179,6 +179,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3010",
     "http://127.0.0.1:3010",
+    "https://8gbpvhc0-3010.brs.devtunnels.ms",
+    "https://8gbpvhc0-8000.brs.devtunnels.ms",
 ]
 
 REST_FRAMEWORK = {
