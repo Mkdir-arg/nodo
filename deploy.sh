@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 # Configuración de la instancia
-EC2_IP="100.53.20.56"
+EC2_IP="34.229.138.83"
 EC2_USER="ec2-user"
 PEM_FILE="mkdir.pem"
 PROJECT_NAME="nodo"
