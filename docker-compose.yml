@@ -1,92 +1,29 @@
 services:
-  mysql:
-    image: mysql:8.0
-    restart: unless-stopped
-    pull_policy: if_not_present
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: nodo_db
-      MYSQL_USER: nodo_user
-      MYSQL_PASSWORD: nodo_password
-    ports:
-      - "3310:3306"
-    volumes:
-      - ./dbdata:/var/lib/mysql
-    command: >
-      --default-authentication-plugin=mysql_native_password
-      --max_connections=200
-      --innodb_buffer_pool_size=256M
-      --innodb_log_file_size=64M
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    pull_policy: if_not_present
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
     ports:
-      - "6380:6379"
+      - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1 --appendonly yes
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-  # adminer:
-  #   image: adminer:4.8.1
-  #   restart: unless-stopped
-  #   pull_policy: if_not_present
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    image: nodo-backend
     env_file: .env
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
     command: >
       sh -c "
       mkdir -p /app/logs &&
       pip install -r requirements.txt &&
-      python manage.py makemigrations --no-input &&
       python manage.py migrate --no-input &&
-      python create_test_data.py &&
       python manage.py collectstatic --no-input --clear &&
-      echo 'Starting Gunicorn server...' &&
-      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 60 --access-logfile - --error-logfile - --log-level info
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120 --access-logfile - --error-logfile -
       "
     ports:
       - "8000:8000"
@@ -96,27 +33,14 @@ services:
       - media_volume:/app/media
       - logs_volume:/app/logs
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - DATABASE_HOST=mysql
 
   frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: nodo-frontend
     env_file: .env
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    command: npm run dev -- -p 3000 -H 0.0.0.0
+    restart: unless-stopped
+    command: npm start
     depends_on:
       - backend
     ports:
@@ -124,16 +48,10 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - frontend_next:/app/.next
-    environment:
-      - NODE_ENV=development
-      - NEXT_TELEMETRY_DISABLED=1
-      - NEXT_PUBLIC_API_BASE=http://localhost:8000/api
-      - API_BASE_INTERNAL=http://backend:8000/api
+      - /app/.next
 
 volumes:
   static_volume:
   media_volume:
   logs_volume:
   redis_data:
-  frontend_next:
