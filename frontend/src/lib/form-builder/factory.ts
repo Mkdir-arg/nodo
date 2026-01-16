@@ -118,7 +118,7 @@ export function createNode(type: string) {
 
   const node = newField(type as FieldType);
   const { w, h } = defLayout(type);
-  const id = node.id ?? crypto.randomUUID();
+  const id = node.id ?? nanoid();
   return {
     ...node,
     id,
@@ -129,7 +129,7 @@ export function createNode(type: string) {
 }
 
 function createUiNode(type: string) {
-  const id = crypto.randomUUID();
+  const id = `ui_${nanoid()}`;
   const { w, h } = defLayout(type);
   const base = {
     id,
