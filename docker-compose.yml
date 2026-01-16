@@ -1,30 +1,20 @@
-services:
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+version: "3.9"
 
+name: nodo
+
+services:
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: nodo-backend
-    env_file: .env
+    container_name: nodo-backend
     restart: unless-stopped
-    command: >
-      sh -c "
-      mkdir -p /app/logs &&
-      pip install -r requirements.txt &&
-      python manage.py migrate --no-input &&
-      python manage.py collectstatic --no-input --clear &&
-      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120 --access-logfile - --error-logfile -
-      "
+    env_file: .env
+    command: ["sh","-lc","mkdir -p /app/logs && pip install -r requirements.txt && python manage.py migrate --no-input && python manage.py collectstatic --no-input --clear && exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 120 --access-logfile - --error-logfile -"]
+    depends_on:
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
     volumes:
@@ -32,23 +22,38 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - logs_volume:/app/logs
-    depends_on:
-      redis:
-        condition: service_healthy
 
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     image: nodo-frontend
-    env_file: .env
+    container_name: nodo-frontend
     restart: unless-stopped
-    command: npm run dev -- -H 0.0.0.0
+    env_file: .env
+    command: ["sh","-lc","npm ci && npm run build && npm run start -- -p 3000 -H 0.0.0.0"]
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     ports:
       - "3010:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
+
+  redis:
+    image: redis:7-alpine
+    container_name: nodo-redis
+    restart: unless-stopped
+    command: ["redis-server","--maxmemory","256mb","--maxmemory-policy","allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   static_volume:
