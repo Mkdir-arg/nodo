@@ -162,7 +162,10 @@ export function createNode(type: string) {
 }
 
 function createUiNode(type: string) {
-  const id = crypto.randomUUID();
+  import { v4 as uuidv4 } from "uuid";
+
+  const id = uuidv4();
+
   const { w, h } = defLayout(type);
   const base = {
     id,
