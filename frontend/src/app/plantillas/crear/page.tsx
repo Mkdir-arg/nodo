@@ -11,7 +11,6 @@ import { saveLayout } from '@/lib/api/plantillas';
 import { repo } from '@/lib/legajos/repo';
 import { saveTemplateSimple } from '@/lib/legajos/simple-repo';
 import { useNavStore } from '@/lib/store/useNavStore';
-import { useToast } from '@/lib/toast';
 
 export default function CrearPlantillaPage() {
   const router = useRouter();
@@ -19,11 +18,10 @@ export default function CrearPlantillaPage() {
   const [nombre, setNombre] = useState('');
   const { buildSchema, resetDirty, sections } = useBuilderStore();
   const { refreshPlantillas } = useNavStore();
-  const { showToast } = useToast();
 
   const handleSave = async () => {
     if (!nombre.trim()) {
-      showToast('Por favor ingresa un nombre para la plantilla', 'warning');
+      alert('Por favor ingresa un nombre para la plantilla');
       return;
     }
     
@@ -103,15 +101,14 @@ export default function CrearPlantillaPage() {
       resetDirty();
       await refreshPlantillas();
       
-      showToast(`Plantilla "${nombre}" guardada exitosamente`, 'success');
+      alert(`Plantilla "${nombre}" guardada exitosamente`);
       
       // Esperar un momento para asegurar que el estado se actualice
       await new Promise(resolve => setTimeout(resolve, 100));
       router.push('/plantillas');
     } catch (error: any) {
-      console.error('❌ Error al crear plantilla:', error);
-      const errorMsg = error?.message || error?.detail || 'Error desconocido al crear la plantilla';
-      showToast(errorMsg, 'error');
+      console.error('Error completo:', error);
+      alert(`Error al crear plantilla: ${error.message}`);
     } finally {
       setIsSaving(false);
     }

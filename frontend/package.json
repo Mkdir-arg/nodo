@@ -39,7 +39,6 @@
     "reactflow": "^11.11.4",
     "sonner": "^1.4.3",
     "tailwind-merge": "^2.6.0",
-    "uuid": "^13.0.0",
     "xstate": "^5.18.1",
     "zod": "^3.25.8",
     "zustand": "^4.5.2"

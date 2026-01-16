@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from users.views import CustomTokenObtainPairView, AuthMeView
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import api_root, system_settings, update_system_settings, system_info
@@ -19,7 +19,6 @@ urlpatterns = [
     # Schema & Docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-    path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 
     # Auth (JWT) — barra final opcional para evitar redirects de POST
     re_path(r"^api/token/?$", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
