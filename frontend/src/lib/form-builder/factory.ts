@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { v4 as uuidv4 } from "uuid";
 
 import type { FieldType } from "@/lib/forms/types";
 
@@ -162,8 +163,6 @@ export function createNode(type: string) {
 }
 
 function createUiNode(type: string) {
-  import { v4 as uuidv4 } from "uuid";
-
   const id = uuidv4();
 
   const { w, h } = defLayout(type);

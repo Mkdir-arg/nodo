@@ -1,0 +1,21 @@
+* [33m79fcdf9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Fix frontend crash: replace crypto.randomUUID with safe UUID + nginx proxy fix
+[31m|[m * [33m1965b8f[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: replace crypto randomUUID with uuid library for ID generation in createUiNode
+[31m|[m[31m/[m  
+* [33m10d1223[m feat: update frontend command to run in development mode with host binding
+* [33m9341a5c[m bn
+* [33mac0a99a[m feat: update environment configurations for production deployment
+* [33m69010cb[m feat: enhance plantilla management with error handling, new field types, and API updates
+* [33m70632d3[m feat: add toggle estado action for Plantilla and update UI to reflect state changes
+* [33m9ab39e7[m feat: add specialized form fields and UI components
+* [33m3983f41[m delete
+* [33mb5ab8ff[m Refactor form builder components: update layout, enhance field types, and improve resizing functionality
+* [33mee1af39[m Refactor form builder components: update layout, enhance field types, and improve resizing functionality
+* [33md195e78[m Enhance form handling and UI interactions in LegajoDetallePage and FieldCard components
+* [33m95013e5[m Enhance form handling and UI interactions in LegajoDetallePage and FieldCard components
+* [33m089466c[m Enhance form handling and UI interactions in LegajoDetallePage and FieldCard components
+* [33m52251d3[m Enhance form handling and UI interactions in LegajoDetallePage and FieldCard components
+* [33m4ffdabe[m dudoso paginador
+* [33m37fbca8[m pagiandor v2.2
+* [33m3cc6a7c[m pagiandor v2.2
+* [33m915c293[m pagiandor v2
+* [33m895f051[m PAginador V1
