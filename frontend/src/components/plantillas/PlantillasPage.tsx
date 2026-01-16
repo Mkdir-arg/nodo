@@ -54,9 +54,8 @@ export default function PlantillasPage() {
       qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
       showToast('Estado actualizado correctamente', 'success');
     },
-    onError: (error: any) => {
-      const errorMsg = error?.message || 'Error al cambiar el estado';
-      showToast(errorMsg, 'error');
+    onError: () => {
+      showToast('Error al cambiar el estado', 'error');
     },
   });
 
@@ -73,9 +72,8 @@ export default function PlantillasPage() {
       qc.invalidateQueries({ queryKey: ['plantillas', 'list'] });
       showToast('Plantilla duplicada correctamente', 'success');
     },
-    onError: (error: any) => {
-      const errorMsg = error?.message || 'Error al duplicar la plantilla';
-      showToast(errorMsg, 'error');
+    onError: () => {
+      showToast('Error al duplicar la plantilla', 'error');
     },
   });
 

@@ -130,23 +130,11 @@ export const PlantillasService = {
     return memoizedExists.get(key) as Promise<boolean>;
   },
 
-  savePlantilla: async (payload: any) => {
-    try {
-      return await postJSON(`/api/plantillas/`, payload);
-    } catch (error: any) {
-      console.error('Error en savePlantilla:', error);
-      throw error;
-    }
-  },
+  savePlantilla: (payload: any) =>
+    postJSON(`/api/plantillas/`, payload),
 
-  updatePlantilla: async (id: string, payload: any) => {
-    try {
-      return await putJSON(`/api/plantillas/${id}/`, payload);
-    } catch (error: any) {
-      console.error('Error en updatePlantilla:', error);
-      throw error;
-    }
-  },
+  updatePlantilla: (id: string, payload: any) =>
+    putJSON(`/api/plantillas/${id}/`, payload),
 
   toggleEstado: (id: string) =>
     patchJSON(`/api/plantillas/${id}/toggle-estado/`, {}),

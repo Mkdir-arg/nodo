@@ -82,39 +82,6 @@ export function newField(type: FieldType) {
   if (type === "date") {
     return { ...base, type, key:`fecha` };
   }
-  if (type === "time") {
-    return { ...base, type, key:`hora`, placeholder:"14:30" };
-  }
-  if (type === "slider") {
-    return { ...base, type, key:`slider_${nanoid(4)}`, min:0, max:100, step:1, showValue:true };
-  }
-  if (type === "rating") {
-    return { ...base, type, key:`rating_${nanoid(4)}`, maxRating:5 };
-  }
-  if (type === "color") {
-    return { ...base, type, key:`color`, placeholder:"#3B82F6" };
-  }
-  if (type === "currency") {
-    return { ...base, type, key:`monto`, currency:"USD", locale:"en-US", min:0 };
-  }
-  if (type === "url") {
-    return { ...base, type, key:`url`, placeholder:"https://ejemplo.com", showPreview:true };
-  }
-  if (type === "password") {
-    return { ...base, type, key:`password`, showStrength:true };
-  }
-  if (type === "code") {
-    return { ...base, type, key:`codigo_${nanoid(4)}`, language:"javascript", showLineNumbers:true, minRows:5, maxRows:15 };
-  }
-  if (type === "tags") {
-    return { ...base, type, key:`tags_${nanoid(4)}`, maxTags:10 };
-  }
-  if (type === "switch") {
-    return { ...base, type, key:`switch_${nanoid(4)}`, description:"" };
-  }
-  if (type === "date") {
-    return { ...base, type, key:`fecha` };
-  }
   if (type === "phone") {
     return { ...base, type, key:`telefono`, placeholder:"+54 11 1234-5678" };
   }
@@ -151,7 +118,7 @@ export function createNode(type: string) {
 
   const node = newField(type as FieldType);
   const { w, h } = defLayout(type);
-  const id = node.id ?? nanoid();
+  const id = node.id ?? crypto.randomUUID();
   return {
     ...node,
     id,
@@ -162,8 +129,7 @@ export function createNode(type: string) {
 }
 
 function createUiNode(type: string) {
-  const id = `ui_${nanoid()}`;
-
+  const id = crypto.randomUUID();
   const { w, h } = defLayout(type);
   const base = {
     id,

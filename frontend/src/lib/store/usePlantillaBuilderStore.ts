@@ -2,7 +2,6 @@
 import { create } from 'zustand';
 import { FieldType, createNode, defLayout } from '@/lib/form-builder/factory';
 import { arrayMove } from '@dnd-kit/sortable';
-import { nanoid } from 'nanoid';
 
 
 export type ValidationError = { code: string; message: string; path?: string[] };
@@ -35,7 +34,7 @@ export type SectionNode = {
 const isUiNode = (node: any) => node?.kind === 'ui' || String(node?.type || '').startsWith('ui:');
 
 function ensureLayout(node: any): FieldNode {
-  const id = node.id ?? `fld_${nanoid(6)}`;
+  const id = node.id ?? `fld_${crypto.randomUUID().slice(0, 6)}`;
   const kind = node.kind ?? (isUiNode(node) ? 'ui' : 'field');
   const baseLayout = node.layout ?? {};
   const layoutDefaults = defLayout(node.type ?? '');
@@ -56,7 +55,7 @@ function normalizeSection(section: any): SectionNode {
   const layout_mode: 'flow' | 'grid' = section?.layout_mode === 'grid' ? 'grid' : 'flow';
   const normalized: SectionNode = {
     ...section,
-    id: section?.id ?? `sec_${nanoid(6)}`,
+    id: section?.id ?? `sec_${crypto.randomUUID().slice(0, 6)}`,
     title: section?.title,
     layout_mode,
     nodes,
@@ -132,7 +131,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   addSection: () => {
     const n = (get().sections?.length || 0) + 1;
-    const id = `sec_${nanoid(6)}`;
+    const id = `sec_${crypto.randomUUID().slice(0, 6)}`;
     const section: SectionNode = { id, title: `Sección ${n}`, nodes: [], children: [], layout_mode: 'flow' };
     set((s) => {
       const sections = [...(s.sections || []), syncSection(section)];
@@ -169,20 +168,20 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const deep = (o: any) => JSON.parse(JSON.stringify(o));
       const source = syncSection(state.sections[idx]);
       const clone = deep(source);
-      clone.id = `sec_${nanoid(6)}`;
+      clone.id = `sec_${crypto.randomUUID().slice(0, 6)}`;
       clone.title = `${clone.title || 'Sección'} (copia)`;
 
       const ensure = state.ensureUniqueKey;
       const nodes = (clone.nodes || clone.children || []).map((n: any) => {
         const c = deep(n);
-        c.id = `fld_${nanoid(6)}`;
+        c.id = `fld_${crypto.randomUUID().slice(0, 6)}`;
         if (!isUiNode(c)) {
           c.key = ensure(c.key || c.type);
         }
         if (c.children)
           c.children = (c.children || []).map((nn: any) => {
             const cc = deep(nn);
-            cc.id = `fld_${nanoid(6)}`;
+            cc.id = `fld_${crypto.randomUUID().slice(0, 6)}`;
             if (!isUiNode(cc)) {
               cc.key = ensure(cc.key || cc.type);
             }
@@ -201,7 +200,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     set((state) => {
       const sections = (state.sections || []).filter((s: any) => s.id !== id);
       if (sections.length === 0) {
-        const fallbackId = `sec_${nanoid(6)}`;
+        const fallbackId = `sec_${crypto.randomUUID().slice(0, 6)}`;
         sections.push(syncSection({ id: fallbackId, title: 'Sección 1', nodes: [], layout_mode: 'flow' } as SectionNode));
         return { ...state, sections, selected: { type: 'section', id: fallbackId }, dirty: true };
       }
@@ -216,7 +215,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     const rawNode: FieldNode =
       typeof typeOrNode === 'string' ? (createNode(typeOrNode) as any) : ensureLayout({ ...(typeOrNode as any) });
 
-    const id = rawNode.id ?? `fld_${nanoid(6)}`;
+    const id = rawNode.id ?? `fld_${crypto.randomUUID().slice(0, 6)}`;
     const node = ensureLayout({ ...rawNode, id });
     if (!isUiNode(node)) {
       node.key = get().ensureUniqueKey(node.key || node.type || 'campo');
@@ -408,7 +407,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
       const sections = [...state.sections];
       const clone = (obj: any) => JSON.parse(JSON.stringify(obj));
       const rawNode = clone(hit.node);
-      rawNode.id = `fld_${nanoid(6)}`;
+      rawNode.id = `fld_${crypto.randomUUID().slice(0, 6)}`;
       if (!isUiNode(rawNode)) {
         rawNode.key = state.ensureUniqueKey(rawNode.key || rawNode.type);
       }

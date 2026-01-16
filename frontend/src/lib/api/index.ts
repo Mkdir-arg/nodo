@@ -120,48 +120,33 @@ export async function api(path: string, init: RequestInit = {}) {
 /** Helpers JSON */
 export async function getJSON<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await api(path, init);
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw { status: res.status, message: errorData.error || errorData.detail || `HTTP ${res.status}`, detail: errorData.detail };
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
 export async function postJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   const res = await api(path, { ...init, method: init?.method ?? "POST", headers, body: JSON.stringify(body) });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw { status: res.status, message: errorData.error || errorData.detail || `HTTP ${res.status}`, detail: errorData.detail };
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
 export async function putJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   const res = await api(path, { ...init, method: "PUT", headers, body: JSON.stringify(body) });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw { status: res.status, message: errorData.error || errorData.detail || `HTTP ${res.status}`, detail: errorData.detail };
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
 export async function patchJSON<T = unknown>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   const res = await api(path, { ...init, method: "PATCH", headers, body: JSON.stringify(body) });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw { status: res.status, message: errorData.error || errorData.detail || `HTTP ${res.status}`, detail: errorData.detail };
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
 export async function deleteJSON<T = unknown>(path: string, init?: RequestInit): Promise<T> {
   const res = await api(path, { ...(init || {}), method: "DELETE" });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw { status: res.status, message: errorData.error || errorData.detail || `HTTP ${res.status}`, detail: errorData.detail };
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   return (text ? JSON.parse(text) : ({} as T)) as T;
 }
