@@ -31,7 +31,7 @@ services:
     container_name: nodo-frontend
     restart: unless-stopped
     env_file: .env
-    command: ["sh","-lc","npm ci && npm run dev -- -p 3000 -H 0.0.0.0"]
+    command: ["sh","-lc","npm ci && npm run build && npm run start"]
     depends_on:
       backend:
         condition: service_started
