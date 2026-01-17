@@ -1,35 +1,4 @@
 services:
-  mysql:
-    image: mysql:8.0
-    restart: unless-stopped
-    pull_policy: if_not_present
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-root}
-      MYSQL_DATABASE: ${DATABASE_NAME:-nodo_db}
-      MYSQL_USER: ${DATABASE_USER:-root}
-      MYSQL_PASSWORD: ${DATABASE_PASSWORD:-root}
-    ports:
-      - "3310:3306"
-    volumes:
-      - ./dbdata:/var/lib/mysql
-    command: >
-      --default-authentication-plugin=mysql_native_password
-      --max_connections=200
-      --innodb_buffer_pool_size=256M
-      --innodb_log_file_size=64M
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -52,16 +21,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-
-  # adminer:
-  #   image: adminer:4.8.1
-  #   restart: unless-stopped
-  #   pull_policy: if_not_present
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
 
   backend:
     build: 
@@ -96,8 +55,6 @@ services:
       - media_volume:/app/media
       - logs_volume:/app/logs
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
