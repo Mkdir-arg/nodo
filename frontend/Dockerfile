@@ -9,7 +9,7 @@ COPY package*.json ./
 RUN npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-timeout 300000 && \
-    npm install --no-audit
+    npm install --no-audit --legacy-peer-deps
 
 # Copy source code (node_modules excluded by .dockerignore)
 COPY . .
