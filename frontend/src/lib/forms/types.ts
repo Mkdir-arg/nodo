@@ -15,6 +15,7 @@ export type FieldType =
   | 'document'
   | 'image'
   | 'cuit_razon_social'
+  | 'calendar'
   | 'ref:nombre'
   | 'ref:apellido'
   | 'ref:documento'
