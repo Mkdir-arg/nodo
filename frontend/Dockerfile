@@ -4,7 +4,12 @@ WORKDIR /app
 
 # Copy package files first for better caching
 COPY package*.json ./
-RUN npm ci
+
+# Configure npm for better network handling and install
+RUN npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 300000 && \
+    npm install --no-audit
 
 # Copy source code (node_modules excluded by .dockerignore)
 COPY . .

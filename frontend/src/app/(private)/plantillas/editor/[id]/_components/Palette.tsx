@@ -24,18 +24,26 @@ const FIELD_GROUPS = [
   {
     title: "📝 Datos de Referencia",
     fields: [
-      { type: "text" as FieldType, label: "Texto", icon: Type },
-      { type: "number" as FieldType, label: "Número", icon: Hash },
-      { type: "select" as FieldType, label: "Selección", icon: List },
+      { type: "ref:nombre" as FieldType, label: "Nombre", icon: Type },
+      { type: "ref:apellido" as FieldType, label: "Apellido", icon: Type },
+      { type: "ref:documento" as FieldType, label: "Número Documento", icon: Hash },
+      { type: "ref:documento_tipo" as FieldType, label: "Tipo Documento", icon: List },
+      { type: "ref:direccion" as FieldType, label: "Calle", icon: Building2 },
+      { type: "ref:direccion_numero" as FieldType, label: "Número", icon: Hash },
+      { type: "ref:direccion_provincia" as FieldType, label: "Provincia", icon: Building2 },
+      { type: "ref:direccion_municipio" as FieldType, label: "Municipio", icon: Building2 },
+      { type: "phone" as FieldType, label: "Teléfono", icon: Phone },
+      { type: "email" as FieldType, label: "Email", icon: Mail },
     ]
   },
   {
     title: "✉️ Campos Básicos",
     fields: [
-      { type: "email" as FieldType, label: "Email", icon: Mail },
+      { type: "text" as FieldType, label: "Texto", icon: Type },
+      { type: "number" as FieldType, label: "Número", icon: Hash },
       { type: "textarea" as FieldType, label: "Área de texto", icon: AlignLeft },
-      { type: "phone" as FieldType, label: "Teléfono", icon: Phone },
       { type: "checkbox" as FieldType, label: "Checkbox", icon: CheckSquare },
+      { type: "select" as FieldType, label: "Selección", icon: List },
       { type: "info" as FieldType, label: "Información", icon: Info },
       { type: "sum" as FieldType, label: "Suma", icon: Calculator },
     ]
