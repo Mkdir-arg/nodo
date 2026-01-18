@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { getJSON, postJSON } from '@/lib/api';
+import { apiUrl } from '@/services/api';
 
 interface Flow {
   id: string;
@@ -56,7 +57,7 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
     mutationFn: async ({ flowId, legajoId }: { flowId: string; legajoId: string }) => {
       try {
         // Intentar crear en DB real
-        const response = await fetch('http://localhost:8000/api/create-instance/', {
+        const response = await fetch(apiUrl('create-instance/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -106,7 +107,7 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
     
     // Crear instancia después en background (opcional)
     setTimeout(() => {
-      fetch('http://localhost:8000/api/create-instance/', {
+      fetch(apiUrl('create-instance/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

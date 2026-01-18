@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { apiUrl } from "@/services/api";
 
 export async function saveTemplateSimple(templateData: any) {
   const token = localStorage.getItem('access_token');
@@ -23,7 +24,7 @@ export async function saveTemplateSimple(templateData: any) {
   console.log('📦 PAYLOAD SIMPLE con nodos UI:', payload);
   console.log('📦 Nodos en payload:', payload.schema.nodes.map(n => ({ type: n.type, kind: n.kind })));
 
-  const response = await fetch('http://localhost:8000/api/plantillas/', {
+  const response = await fetch(apiUrl("plantillas/"), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

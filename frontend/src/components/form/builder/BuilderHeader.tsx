@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Save, Plus, FolderPlus } from 'lucide-react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { saveLayout } from '@/lib/api/plantillas';
+import { resolveApiUrl } from '@/lib/api';
 
 // Importar fetchJSON helper
 const fetchJSON = async (url: string, options?: RequestInit) => {
   const token = localStorage.getItem('access_token');
-  const response = await fetch(`http://localhost:8000${url}`, {
+  const response = await fetch(resolveApiUrl(url), {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),

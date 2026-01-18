@@ -18,7 +18,7 @@ export interface ITemplatesRepo {
 
 async function fetchWithAuth<T>(path: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  const url = `http://localhost:8000/api/${path}`;
+  const url = apiUrl(path);
   
   console.log('Fetching:', url);
   

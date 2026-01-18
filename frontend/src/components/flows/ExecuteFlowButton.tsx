@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { apiUrl } from '@/services/api';
 import { flowsApi } from '@/lib/api/flows';
 import type { Flow } from '@/lib/flows/types';
 
@@ -18,7 +19,7 @@ export default function ExecuteFlowButton({ flow, onExecutionComplete }: Execute
     setIsExecuting(true);
     try {
       // Crear instancia real en DB
-      const response = await fetch('http://localhost:8000/api/create-instance/', {
+      const response = await fetch(apiUrl('create-instance/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

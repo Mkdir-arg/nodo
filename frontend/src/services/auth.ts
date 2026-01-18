@@ -4,13 +4,19 @@ import { apiUrl } from "./api";
 
 export interface TokenPair { access: string; refresh: string }
 
-function base(): string { return apiUrl(""); }
+function guessPublicBase(): string {
+  if (typeof window === "undefined") return "http://backend:8000/api";
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  const port = process.env.NEXT_PUBLIC_API_PORT ?? "8000";
+  return `${protocol}//${hostname}:${port}/api`;
+}
 
 function ensurePublic(url: string, suffix: string) {
-  // Si en navegador y quedó apuntando a backend, rehace con la base pública
+  // Si en navegador y quedo apuntando a backend, rehacer con base publica
   if (typeof window !== "undefined" && /\/\/backend(:\d+)?\//.test(url)) {
-    const pub = (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/").replace(/\/+$/, "") + "/";
-    return pub + suffix.replace(/^\/+/, "");
+    const pubBase = (process.env.NEXT_PUBLIC_API_BASE ?? guessPublicBase()).replace(/\/+$/, "") + "/";
+    return pubBase + suffix.replace(/^\/+/, "");
   }
   return url;
 }
@@ -18,7 +24,7 @@ function ensurePublic(url: string, suffix: string) {
 export async function login(username: string, password: string): Promise<TokenPair> {
   const raw = apiUrl("token/");
   const url = ensurePublic(raw, "token/");
-  console.log("[auth] BASE =", base(), "LOGIN URL =", url);
+  console.log("[auth] LOGIN URL =", url);
 
   const res = await fetch(url, {
     method: "POST",

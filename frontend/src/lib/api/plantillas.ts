@@ -1,13 +1,13 @@
 import type { FormLayout, PlantillaLayoutResponse } from '@/lib/forms/types';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+import { apiUrl } from '@/services/api';
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
   console.log('Token disponible:', !!token);
-  console.log('URL completa:', `${API_BASE}${url}`);
-  
-  const response = await fetch(`${API_BASE}${url}`, {
+  const fullUrl = apiUrl(url);
+  console.log('URL completa:', fullUrl);
+
+  const response = await fetch(fullUrl, {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
