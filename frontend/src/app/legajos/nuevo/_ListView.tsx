@@ -61,7 +61,7 @@ function formatDate(iso?: string) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const cols = 'grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center';
+const cols = 'grid grid-cols-[1fr_120px_160px_120px_40px] gap-[20px] items-center';
 
 export default function ListView({ formId }: { formId: string }) {
   const router = useRouter();
@@ -99,15 +99,15 @@ export default function ListView({ formId }: { formId: string }) {
               setSearch(e.target.value);
             }}
             placeholder="Buscar por nombre…"
-            className="w-full border rounded-xl pl-9 pr-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            className="w-full border border-nodo-border rounded-xl pl-9 pr-3 py-2 bg-white text-nodo-text placeholder:text-nodo-legajo-subtitle"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">🔎</span>
         </div>
       </div>
 
       {/* Tabla */}
-      <div className="rounded-2xl border bg-white overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-gray-50 dark:bg-slate-700 ${cols}`}>
+      <div className="rounded-2xl border border-nodo-border bg-white overflow-hidden shadow-md">
+        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-slate-50 text-nodo-legajo-subtitle ${cols}`}>
           <div>Nombre</div>
           <div>Estado</div>
           <div>Creado</div>
@@ -136,13 +136,13 @@ export default function ListView({ formId }: { formId: string }) {
       </div>
 
       {/* Footer paginación */}
-      <div className="flex items-center justify-between text-sm">
-        <div className="opacity-70">{isFetching ? 'Actualizando…' : `${total} resultados`}</div>
+      <div className="flex items-center justify-between text-sm text-nodo-text">
+        <div className="text-nodo-legajo-subtitle">{isFetching ? 'Actualizando…' : `${total} resultados`}</div>
         <div className="flex gap-2">
           <button
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
+            className="px-3 py-1 rounded border border-nodo-border text-nodo-text disabled:opacity-50"
           >
             Anterior
           </button>
@@ -152,7 +152,7 @@ export default function ListView({ formId }: { formId: string }) {
           <button
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
+            className="px-3 py-1 rounded border border-nodo-border text-nodo-text disabled:opacity-50"
           >
             Siguiente
           </button>
@@ -179,15 +179,15 @@ function Row({
   return (
     <div className={`px-4 py-3 ${cols}`}>
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 grid place-items-center rounded-lg bg-emerald-100 dark:bg-emerald-900">👤</div>
+        <div className="w-8 h-8 grid place-items-center rounded-lg bg-primary-pink/10">👤</div>
         <div>
-          <div className="font-medium">{nombre}</div>
-          <div className="text-xs opacity-60">ID: {data.id}</div>
+          <div className="font-bold text-nodo-legajo-name">{nombre}</div>
+          <div className="text-xs text-nodo-legajo-subtitle">ID: {data.id}</div>
           <div className="mt-2 flex gap-2">
-            <button onClick={onVer} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
+            <button onClick={onVer} className="text-xs px-2 py-1 rounded border border-nodo-border text-nodo-text hover:bg-slate-50">
               Ver
             </button>
-            <button onClick={onEditar} className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700">
+            <button onClick={onEditar} className="text-xs px-2 py-1 rounded border border-nodo-border text-nodo-text hover:bg-slate-50">
               Editar
             </button>
             <SendToFlowButton legajoId={data.id} />
@@ -195,12 +195,12 @@ function Row({
         </div>
       </div>
       <div>
-        <span className={`px-2 py-1 rounded-full text-xs ${estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
+        <span className={`px-2 py-1 rounded-full text-xs ${estado === 'ACTIVO' ? 'bg-primary-pink/10 text-primary-pink' : 'bg-gray-200 text-gray-700'}`}>
           {estado}
         </span>
       </div>
-      <div className="text-sm">{creado}</div>
-      <div className="text-sm">{actualizado}</div>
+      <div className="text-sm text-nodo-text">{creado}</div>
+      <div className="text-sm text-nodo-text">{actualizado}</div>
       <div></div>
     </div>
   );
@@ -212,7 +212,7 @@ function SkeletonRows() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="px-4 py-3 animate-pulse grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center"
+          className="px-4 py-3 animate-pulse grid grid-cols-[1fr_120px_160px_120px_40px] gap-[20px] items-center"
         >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-slate-200" />
@@ -235,8 +235,8 @@ function ErrorState() {
   return (
     <div className="px-6 py-12 text-center">
       <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-red-100">❌</div>
-      <h3 className="text-lg font-semibold mb-1">Error al cargar</h3>
-      <p className="text-sm opacity-70">No se pudieron cargar los legajos. Intenta nuevamente.</p>
+      <h3 className="text-lg font-semibold text-nodo-title mb-1">Error al cargar</h3>
+      <p className="text-sm text-nodo-legajo-subtitle">No se pudieron cargar los legajos. Intenta nuevamente.</p>
     </div>
   );
 }
@@ -244,10 +244,10 @@ function ErrorState() {
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="px-6 py-12 text-center">
-      <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-emerald-100">📋</div>
-      <h3 className="text-lg font-semibold mb-1">No hay legajos</h3>
+      <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-primary-pink/10">📋</div>
+      <h3 className="text-lg font-semibold text-nodo-title mb-1">No hay legajos</h3>
       <p className="text-sm opacity-70 mb-4">Crea el primer legajo con esta plantilla.</p>
-      <button onClick={onCreate} className="px-4 py-2 rounded-xl bg-emerald-600 text-white">
+      <button onClick={onCreate} className="px-5 py-2 rounded-xl bg-primary-gradient text-white font-medium text-lg hover:brightness-110">
         + Crear legajo
       </button>
     </div>

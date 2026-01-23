@@ -13,18 +13,18 @@ function FieldReadOnly({ node, ctx }:{ node:any; ctx:any }) {
   const value = ctx.data?.[node.key];
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-nodo-legajo-subtitle mb-1">
         {node.label || node.key}
       </label>
-      <div className="text-gray-900">
+      <div className="text-nodo-legajo-name">
         {value || '—'}
       </div>
     </div>
   );
 }
-const AttachmentsCard = (props:any)=> <div className="text-sm text-slate-500">Archivos</div>;
-const Timeline = (props:any)=> <div className="text-sm text-slate-500">Timeline</div>;
-const SummaryPinned = ({cfg, ctx}:{cfg:any; ctx:any})=> <div className="text-sm text-slate-500">Resumen</div>;
+const AttachmentsCard = (props:any)=> <div className="text-sm text-nodo-legajo-subtitle">Archivos</div>;
+const Timeline = (props:any)=> <div className="text-sm text-nodo-legajo-subtitle">Timeline</div>;
+const SummaryPinned = ({cfg, ctx}:{cfg:any; ctx:any})=> <div className="text-sm text-nodo-legajo-subtitle">Resumen</div>;
 
 export default function SectionRenderer({ section, ctx, skipUiNodes = false }:{ section:any; ctx:any; skipUiNodes?: boolean }) {
   const allNodes = section?.nodes || section?.children || [];
@@ -70,17 +70,17 @@ function UiBlock({ node, ctx }:{ node:any; ctx:any }) {
     return (
       <div className="grid gap-3" style={{gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))"}}>
         {items.map((it:any)=>(
-          <div key={it.id} className="rounded-lg border p-4">
-            <div className="text-sm text-slate-500">{it.label}</div>
-            <div className="text-2xl font-semibold">{tpl(it.value, ctx)}</div>
-            {it.trend && <div className="text-xs text-slate-500">{it.trend}</div>}
+          <div key={it.id} className="rounded-lg border border-nodo-border bg-white p-4 shadow-md">
+            <div className="text-sm text-nodo-legajo-subtitle">{it.label}</div>
+            <div className="text-2xl font-semibold text-nodo-title">{tpl(it.value, ctx)}</div>
+            {it.trend && <div className="text-xs text-nodo-legajo-subtitle">{it.trend}</div>}
           </div>
         ))}
       </div>
     );
   }
-  if (node.type === "ui:divider") return <hr className="my-6 border-slate-200" />;
-  if (node.type === "ui:banner") return <div className="rounded-md border p-4 bg-sky-50 text-sky-900">{cfg.text}</div>;
+  if (node.type === "ui:divider") return <hr className="my-6 border-nodo-border" />;
+  if (node.type === "ui:banner") return <div className="rounded-md border border-nodo-border p-4 bg-primary-pink/5 text-nodo-title">{cfg.text}</div>;
   if (node.type === "ui:attachments") return <AttachmentsCard />;
   if (node.type === "ui:timeline") return <Timeline />;
   if (node.type === "ui:summary-pinned") return <SummaryPinned cfg={cfg} ctx={ctx} />;

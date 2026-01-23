@@ -2,13 +2,12 @@
 
 import clsx from 'clsx';
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, FileText, FolderOpen, Search, User, Utensils, Home, MessageSquare, HelpCircle, Settings } from 'lucide-react';
+import Image from 'next/image';
 
-import { NAV_ITEMS } from './constants';
 import ActiveLink from './ActiveLink';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
 import { useFlowsMin } from '@/lib/hooks/useFlowsMin';
-import LegajosMenu from './LegajosMenu';
 import { useAuth } from '@/lib/AuthContext';
 import { canManageUsers, canEditTemplates } from '@/lib/permissions';
 
@@ -18,17 +17,9 @@ interface SideNavProps {
   onToggleMini: () => void;
 }
 
-// Pequeño helper para evitar crash si algún icono llega undefined por cualquier motivo
-function Safe({ Comp, className, size, 'aria-hidden': ariaHidden }: { Comp: any; className?: string; size?: number; 'aria-hidden'?: boolean }) {
-  if (Comp) return <Comp className={className} size={size} aria-hidden={ariaHidden} />;
-  // fallback invisible (no cuadrado negro)
-  return <span aria-hidden className={className} style={{ width: size, height: size, display: 'inline-block' }} />;
-}
-
 export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
   const { user } = useAuth();
-  const dashboardItem = NAV_ITEMS.find((i) => i.href === '/');
-  const configuracionesItem = NAV_ITEMS.find((i) => i.label === 'Configuraciones');
+  const [isLegajosExpanded, setIsLegajosExpanded] = useState(true);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const { data } = usePlantillasMin();
   const { data: flowsData } = useFlowsMin();
@@ -41,116 +32,146 @@ export default function SideNav({ open, mini, onToggleMini }: SideNavProps) {
         label: p.nombre,
         href: `/legajos/nuevo?formId=${p.id}`,
       }));
-    return [ ...plantillas];
+    return [...plantillas];
   }, [data]);
 
-  const flowItems = useMemo(() => {
-    const flows = (flowsData ?? []).map((f: any) => ({
-      id: `flow-${f.id}`,
-      label: f.name,
-      href: `/flujos/runtime/flow-${f.id}`,
-      icon: 'Workflow' as const,
-      steps: Array.isArray(f.steps)
-        ? f.steps.map((step: any, index: number) => ({
-            id: step.id ?? `${f.id}-${index}`,
-            name: step.name,
-            type: step.type,
-            title:
-              (step.config && (step.config.title || step.config.name)) ||
-              step.name ||
-              step.type,
-            order: index,
-          }))
-        : [],
-    }));
-    return flows;
-  }, [flowsData]);
+  if (mini) return null;
 
   return (
     <aside
       className={clsx(
-        'bg-white dark:bg-slate-950 shadow-md fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 md:static',
-        mini ? 'md:w-16' : 'md:w-64',
+        'bg-white shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 md:static',
         open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       )}
       role="navigation"
       aria-label="Sidebar"
     >
-      <nav className="flex h-full flex-col p-4 space-y-1">
-        <div className="flex-1 space-y-1">
-          {dashboardItem && (
-            <ActiveLink
-              href={dashboardItem.href}
-              className={clsx(mini && 'justify-center')}
-              title={dashboardItem.label}
-            >
-              {/* dashboardItem.icon viene de constants.ts. Si por alguna razón está undefined, evita crash */}
-              <Safe Comp={dashboardItem.icon} className="h-5 w-5" aria-hidden />
-              {mini ? <span className="sr-only">{dashboardItem.label}</span> : <span>{dashboardItem.label}</span>}
-            </ActiveLink>
-          )}
+      <nav className="flex h-full flex-col p-5 gap-10 overflow-hidden">
+        {/* Logo */}
+        <ActiveLink href="/dashboard" className="flex justify-center">
+          <Image
+            src="/logo.png"
+            alt="Nodo"
+            width={180}
+            height={60}
+            className="object-contain"
+          />
+        </ActiveLink>
 
-          <LegajosMenu items={legajoItems} flowItems={flowItems} compact={mini} />
-
-          {configuracionesItem && (
-            <div>
-              <button
-                onClick={() => setIsConfigExpanded(!isConfigExpanded)}
-                className={clsx(
-                  'w-full flex items-center px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md',
-                  mini && 'justify-center'
-                )}
-              >
-                <Safe Comp={configuracionesItem.icon} className="h-5 w-5" aria-hidden />
-                {!mini && (
-                  <>
-                    <span className="ml-3 flex-1 text-left">{configuracionesItem.label}</span>
-                    <ChevronDown className={clsx(
-                      'h-4 w-4 transition-transform',
-                      isConfigExpanded && 'rotate-180'
-                    )} />
-                  </>
-                )}
-              </button>
-              {!mini && isConfigExpanded && configuracionesItem.submenu && (
-                <div className="ml-6 space-y-1 mt-1">
-                  {configuracionesItem.submenu.map((item) => {
-                    // Filtrar por permisos
-                    if (item.href === '/configuraciones' && !canManageUsers(user)) return null;
-                    if (item.href === '/plantillas' && !canEditTemplates(user)) return null;
-                    
-                    return (
-                      <ActiveLink
-                        key={item.href}
-                        href={item.href}
-                        className="text-sm flex items-center gap-2"
-                      >
-                        {item.icon && <Safe Comp={item.icon} className="h-4 w-4" aria-hidden />}
-                        {item.label}
-                      </ActiveLink>
-                    );
-                  })}
-                </div>
-              )}
+        <div className="flex-1 flex flex-col gap-6">
+          {/* Tableros */}
+          <button className="flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-gray-50">
+            <div className="flex items-center gap-1.5">
+              <LayoutDashboard className="w-5 h-5 text-[#4A5565]" />
+              <span className="text-base font-medium text-[#4A5565]">Tableros</span>
             </div>
-          )}
+            <ChevronDown className="w-4 h-4 text-[#4A5565]" />
+          </button>
+
+          {/* Reportes */}
+          <button className="flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-gray-50">
+            <div className="flex items-center gap-1.5">
+              <FileText className="w-5 h-5 text-[#4A5565]" />
+              <span className="text-base font-medium text-[#4A5565]">Reportes</span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#4A5565]" />
+          </button>
+
+          {/* Legajos */}
+          <div className="flex flex-col gap-6">
+            <button
+              onClick={() => setIsLegajosExpanded(!isLegajosExpanded)}
+              className="flex items-center justify-between px-2 py-1.5 bg-[#F9FAFB] rounded-xl shadow-[0px_4px_8px_0px_rgba(0,0,0,0.10)]"
+            >
+              <div className="flex items-center gap-1.5">
+                <FolderOpen className="w-5 h-5 text-[#FF0080]" />
+                <span className="text-base font-medium text-[#FF0080]">Legajos</span>
+              </div>
+              <ChevronDown className={clsx('w-4 h-4 text-[#FF0080] transition-transform', isLegajosExpanded && 'rotate-180')} />
+            </button>
+
+            {isLegajosExpanded && (
+              <div className="flex flex-col gap-6">
+                {/* Buscar */}
+                <ActiveLink href="/legajos" className="flex items-center gap-1.5 pl-8 pr-2 py-1.5 rounded-xl hover:bg-gray-50">
+                  <Search className="w-5 h-5 text-[#4A5565]" />
+                  <span className="text-base font-medium text-[#4A5565]">Buscar</span>
+                </ActiveLink>
+
+                {/* Plantillas dinámicas */}
+                {legajoItems.map((item) => (
+                  <ActiveLink
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center gap-1.5 pl-8 pr-2 py-1.5 rounded-xl hover:bg-gray-50"
+                  >
+                    <span className="text-base font-medium text-[#4A5565]">{item.label}</span>
+                  </ActiveLink>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Configuración */}
+          <div className="flex flex-col gap-6">
+            <button
+              onClick={() => setIsConfigExpanded(!isConfigExpanded)}
+              className="flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-1.5">
+                <Settings className="w-5 h-5 text-[#4A5565]" />
+                <span className="text-base font-medium text-[#4A5565]">Configuración</span>
+              </div>
+              <ChevronDown className={clsx('w-4 h-4 text-[#4A5565] transition-transform', isConfigExpanded && 'rotate-180')} />
+            </button>
+
+            {isConfigExpanded && (
+              <div className="flex flex-col gap-6">
+                {/* Flujos */}
+                {canEditTemplates(user) && (
+                  <ActiveLink href="/flujos" className="flex items-center gap-1.5 pl-8 pr-2 py-1.5 rounded-xl hover:bg-gray-50">
+                    <span className="text-base font-medium text-[#4A5565]">Flujos</span>
+                  </ActiveLink>
+                )}
+
+                {/* Plantillas */}
+                {canEditTemplates(user) && (
+                  <ActiveLink href="/plantillas" className="flex items-center gap-1.5 pl-8 pr-2 py-1.5 rounded-xl hover:bg-gray-50">
+                    <span className="text-base font-medium text-[#4A5565]">Plantillas</span>
+                  </ActiveLink>
+                )}
+
+                {/* Usuarios */}
+                {canManageUsers(user) && (
+                  <ActiveLink href="/configuraciones" className="flex items-center gap-1.5 pl-8 pr-2 py-1.5 rounded-xl hover:bg-gray-50">
+                    <span className="text-base font-medium text-[#4A5565]">Usuarios</span>
+                  </ActiveLink>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Mensajes */}
+          <button className="flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-gray-50">
+            <div className="flex items-center gap-1.5">
+              <MessageSquare className="w-5 h-5 text-[#4A5565]" />
+              <span className="text-base font-medium text-[#4A5565]">Mensajes</span>
+            </div>
+            <div className="w-5 h-5 bg-[#FEF2F2] rounded-full border border-[#FECACA] flex items-center justify-center">
+              <span className="text-xs font-medium text-[#DC2626]">4</span>
+            </div>
+          </button>
+
+          {/* Ayuda */}
+          <button className="flex items-center justify-between px-2 py-1.5 rounded-xl hover:bg-gray-50">
+            <div className="flex items-center gap-1.5">
+              <HelpCircle className="w-5 h-5 text-[#4A5565]" />
+              <span className="text-base font-medium text-[#4A5565]">Ayuda</span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-[#4A5565]" />
+          </button>
         </div>
-
-        <button
-          onClick={onToggleMini}
-          className="mt-2 flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-          aria-label="Compactar menú"
-        >
-
-          {mini ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-
-        </button>
       </nav>
     </aside>
   );
 }
-

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { login, getTokens } from "@/lib/auth";
 import type { LoginSettings } from "@/lib/loginSettings";
+import { Mail, Lock } from "lucide-react";
 
 interface LoginPageClientProps {
   initialSettings: LoginSettings;
@@ -51,108 +52,133 @@ export default function LoginPageClient({ initialSettings }: LoginPageClientProp
   };
 
   return (
-    <main className="min-h-screen grid grid-cols-1 lg:grid-cols-[60%_40%] xl:grid-cols-[60%_40%] bg-[#F6F7FB]">
-      {/* Seccion de ilustracion */}
-      <section className="relative flex items-center justify-center p-16 lg:p-16 order-2 lg:order-1">
-        <div className="absolute inset-0 opacity-25">
-          <svg width="100%" height="100%" viewBox="0 0 800 600" className="w-full h-full">
-            <path d="M0 200C100 150 200 250 300 200C400 150 500 250 600 200C700 150 800 250 800 200V0H0V200Z" fill="none" stroke="#9CA3AF" strokeWidth="1" opacity="0.25" />
-            <path d="M0 350C150 300 250 400 400 350C550 300 650 400 800 350V150C650 200 550 100 400 150C250 200 150 100 0 150V350Z" fill="none" stroke="#9CA3AF" strokeWidth="1" opacity="0.25" />
-            <path d="M0 500C200 450 300 550 500 500C700 450 800 550 800 500V300C600 350 500 250 300 300C100 350 0 250 0 300V500Z" fill="none" stroke="#9CA3AF" strokeWidth="1" opacity="0.25" />
-          </svg>
+    <main className="min-h-screen flex bg-[#F3F4F6] relative overflow-hidden">
+      {/* Sección izquierda - Ilustración con ondas de fondo */}
+      <section className="flex-1 flex items-center justify-center p-8 lg:p-16 relative">
+        {/* Ondas azules de fondo - a la derecha */}
+        <div className="absolute top-0 right-0 w-[calc(100%+300px)] h-full overflow-hidden">
+          <Image
+            src="/pattern-lines.png"
+            alt=""
+            width={1000}
+            height={1080}
+            className="object-cover object-right h-full ml-auto"
+            priority
+          />
         </div>
+        
+        {/* Ilustración de personas */}
         <Image
-          src={loginSettings.loginImage}
-          alt="Imagen de login"
-          width={700}
-          height={500}
-          className="max-w-full h-auto object-contain z-10 max-w-[90vw] lg:max-w-[700px]"
-          loading="lazy"
+          src="/login-illustration.png"
+          alt="Ilustración de login"
+          width={869}
+          height={692}
+          className="max-w-full h-auto object-contain z-10 relative"
+          priority
         />
       </section>
 
-      {/* Seccion del formulario */}
-      <section className="flex flex-col items-center justify-center p-8 lg:p-8 order-1 lg:order-2">
-        <h1 className="text-[32px] lg:text-[40px] leading-[40px] lg:leading-[48px] font-bold text-[#2B2F38] mb-6 text-left w-full max-w-[420px]">
-          {loginSettings.loginTitle}<br />
-          {loginSettings.loginSubtitle}
-        </h1>
+      {/* Sección derecha - Formulario */}
+      <section className="w-[616px] h-screen bg-white flex flex-col items-center justify-center gap-[45px] p-8 relative">
+        <div className="flex flex-col items-center w-full max-w-[384px]">
+          {/* Título con imágenes */}
+          <div className="flex flex-col items-center mb-[45px]">
+            <Image
+              src="/Bienvenido a Nodo,.png"
+              alt="Bienvenido a Nodo,"
+              width={500}
+              height={60}
+              className="object-contain"
+              priority
+            />
+            <Image
+              src="/tu Sistema Social.png"
+              alt="tu Sistema Social"
+              width={400}
+              height={50}
+              className="object-contain"
+              priority
+            />
+          </div>
 
-        <div className="bg-white rounded-2xl lg:rounded-2xl p-7 lg:p-8 shadow-[0_10px_30px_rgba(17,24,39,0.07)] w-full max-w-[420px] animate-in fade-in duration-200">
-          {error && (
-            <div className="bg-[#FEF2F2] border border-[#FCA5A5] text-[#991B1B] p-3 rounded-xl mb-4 flex items-center text-sm">
-              <span className="text-[#DC2626] mr-2">!</span>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={onSubmit}>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm leading-5 font-semibold tracking-[0.2px] text-[#2B2F38] mb-1.5">
-                Tu correo electronico *
-              </label>
-              <input
-                type="text"
-                id="email"
-                name="email"
-                className="w-full h-12 border border-[#E5E7EB] rounded-xl px-4 text-[15px] leading-[22px] transition-all duration-[120ms] placeholder:text-[#9CA3AF] hover:border-[#D1D5DB] focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#93C5FD]"
-                placeholder="Ingresa tu correo electronico"
-                required
-                aria-required="true"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="password" className="block text-sm leading-5 font-semibold tracking-[0.2px] text-[#2B2F38] mb-1.5">
-                Tu contrasena *
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  className="w-full h-12 border border-[#E5E7EB] rounded-xl px-4 pr-16 text-[15px] leading-[22px] transition-all duration-[120ms] placeholder:text-[#9CA3AF] hover:border-[#D1D5DB] focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#93C5FD]"
-                  placeholder="********"
-                  required
-                  aria-required="true"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-sm px-1 py-1"
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? 'Ocultar' : 'Mostrar'}
-                </button>
+          {/* Formulario */}
+          <div className="w-full p-6 bg-white rounded-xl border border-[#E5E7EB] shadow-[0px_1px_0.5px_0.05px_rgba(29,41,61,0.02)] flex flex-col gap-6 mb-[45px]">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-lg text-sm">
+                {error}
               </div>
-            </div>
+            )}
 
-            <div className="flex items-center mb-4">
-              <input
-                type="checkbox"
-                id="remember"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="w-4 h-4 border border-[#E5E7EB] rounded text-[#2563EB] focus:ring-2 focus:ring-[#93C5FD] focus:ring-offset-2"
-              />
-              <label htmlFor="remember" className="ml-2 text-sm leading-5 text-[#2B2F38] cursor-pointer">
-                Recordarme
-              </label>
-            </div>
+            <form onSubmit={onSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2.5">
+                <label htmlFor="email" className="flex items-center gap-0.5 text-sm font-medium leading-5 text-[#101828]">
+                  Tu correo electronico
+                  <span className="text-[#C70036]">*</span>
+                </label>
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl shadow-[0px_1px_0.5px_0.05px_rgba(29,41,61,0.02)]">
+                  <Mail className="w-4 h-4 text-[#4A5565]" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="flex-1 bg-transparent text-sm leading-5 text-[#4A5565] placeholder:text-[#4A5565] outline-none"
+                    placeholder="Ingresa tu correo electronico"
+                    required
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-12 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-[#93C5FD] text-white font-semibold text-[15px] leading-[22px] tracking-[0.2px] rounded-xl transition-all duration-[120ms] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(37,99,235,0.3)] disabled:transform-none disabled:shadow-none disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Ingresando...' : 'Ingresar'}
-            </button>
-          </form>
-        </div>
+              <div className="flex flex-col gap-2.5">
+                <label htmlFor="password" className="flex items-center gap-0.5 text-sm font-medium leading-5 text-[#101828]">
+                  Tu contraseña
+                  <span className="text-[#C70036]">*</span>
+                </label>
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl shadow-[0px_1px_0.5px_0.05px_rgba(29,41,61,0.02)]">
+                  <Lock className="w-4 h-4 text-[#4A5565]" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    className="flex-1 bg-transparent text-sm leading-5 text-[#4A5565] outline-none"
+                    placeholder="••••••••••"
+                    required
+                  />
+                </div>
+              </div>
 
-        <div className="mt-6 text-right w-full max-w-[420px]">
-          <div className="text-base font-bold text-[#2563EB] mb-1">{loginSettings.loginFooterTitle}</div>
-          <div className="text-xs leading-4 font-medium text-[#6B7280] opacity-70">{loginSettings.loginFooterSubtitle}</div>
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="w-4 h-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded"
+                />
+                <label htmlFor="remember" className="text-sm font-medium leading-4 text-[#101828]">
+                  Recordarme
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 bg-primary-gradient text-white text-sm font-medium leading-5 rounded-xl shadow-[0px_1px_0.5px_0.05px_rgba(29,41,61,0.02)] hover:brightness-110 disabled:opacity-50 transition-all"
+              >
+                {isSubmitting ? 'Ingresando...' : 'Ingresar'}
+              </button>
+            </form>
+          </div>
+
+          {/* Logo */}
+          <div className="flex flex-col items-center">
+            <Image
+              src="/nodo-logo.png"
+              alt="Nodo"
+              width={220}
+              height={80}
+              className="object-contain"
+            />
+          </div>
         </div>
       </section>
     </main>

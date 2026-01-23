@@ -10,7 +10,7 @@ import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
 import { SendToFlowButton } from './SendToFlowButton';
 import { buildQueryOptions } from '@/lib/queryDefaults';
 
-const cols = 'grid grid-cols-[1fr_200px_160px_120px_40px] gap-4 items-center';
+const cols = 'grid grid-cols-[1fr_200px_160px_120px_40px] gap-[20px] items-center';
 const PAGE_SIZE = 10;
 const ALL_PLANTILLAS = 'ALL';
 
@@ -169,18 +169,18 @@ export default function LegajosListPage() {
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Legajos</h1>
-          <p className="text-sm opacity-70">Gestioná y revisá los legajos cargados.</p>
+          <h1 className="text-2xl font-bold text-nodo-title">Legajos</h1>
+          <p className="text-sm text-nodo-legajo-subtitle">Gestioná y revisá los legajos cargados.</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleCreate}
             disabled={!canCreate}
             title={canCreate ? undefined : 'Seleccioná una plantilla para crear un legajo'}
-            className={`px-4 py-2 rounded-xl text-white transition ${
+            className={`px-5 py-2 rounded-xl text-white font-medium text-lg transition ${
               canCreate
-                ? 'bg-sky-600 hover:brightness-110'
-                : 'bg-slate-300 cursor-not-allowed dark:bg-slate-700 dark:text-slate-300'
+                ? 'bg-primary-gradient hover:brightness-110'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
             + Crear legajo
@@ -194,7 +194,7 @@ export default function LegajosListPage() {
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Buscar por nombre…"
-            className="w-full border rounded-xl pl-9 pr-3 py-2 dark:bg-slate-900 dark:border-slate-700"
+            className="w-full border border-nodo-border rounded-xl pl-9 pr-3 py-2 bg-white text-nodo-text placeholder:text-nodo-legajo-subtitle"
             type="search"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">🔎</span>
@@ -202,7 +202,7 @@ export default function LegajosListPage() {
         <select
           value={plantillaId}
           onChange={(e) => handlePlantillaChange(e.target.value)}
-          className="border rounded-xl px-3 py-2 w-full md:w-56 dark:bg-slate-900 dark:border-slate-700"
+          className="border border-nodo-border rounded-xl px-3 py-2 w-full md:w-56 bg-white text-nodo-text"
         >
           <option value={ALL_PLANTILLAS}>Todas las plantillas</option>
           {plantillas.map((p) => (
@@ -213,8 +213,8 @@ export default function LegajosListPage() {
         </select>
       </div>
 
-      <div className="rounded-2xl border bg-white overflow-hidden dark:bg-slate-800 dark:border-slate-700">
-        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-gray-50 dark:bg-slate-700 ${cols}`}>
+      <div className="rounded-2xl border border-nodo-border bg-white overflow-hidden shadow-nodo">
+        <div className={`px-4 py-3 text-xs uppercase tracking-wide bg-slate-50 text-nodo-legajo-subtitle ${cols}`}>
           <div>Legajo</div>
           <div>Plantilla</div>
           <div>Actualizado</div>
@@ -243,14 +243,14 @@ export default function LegajosListPage() {
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <div className="opacity-70">
+        <div className="text-nodo-legajo-subtitle">
           {hasError ? 'No se pudieron cargar los resultados' : isFetching ? 'Actualizando…' : `${total} resultados`}
         </div>
         <div className="flex gap-2">
           <button
             disabled={page <= 1 || hasError}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
+            className="px-3 py-1 rounded border border-nodo-border text-nodo-text disabled:opacity-50"
           >
             Anterior
           </button>
@@ -260,7 +260,7 @@ export default function LegajosListPage() {
           <button
             disabled={page >= totalPages || hasError}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="px-3 py-1 rounded border disabled:opacity-50 dark:border-slate-700"
+            className="px-3 py-1 rounded border border-nodo-border text-nodo-text disabled:opacity-50"
           >
             Siguiente
           </button>
@@ -288,20 +288,20 @@ function Row({
   return (
     <div className={`px-4 py-3 ${cols}`}>
       <div className="flex items-start gap-2">
-        <div className="w-9 h-9 grid place-items-center rounded-lg bg-indigo-100 dark:bg-indigo-900">🗂️</div>
+        <div className="w-9 h-9 grid place-items-center rounded-lg bg-primary-pink/10">🗂️</div>
         <div>
-          <div className="font-medium leading-tight">{display}</div>
-          <div className="text-xs opacity-60">Creado {creado}</div>
+          <div className="font-bold text-nodo-legajo-name leading-tight">{display}</div>
+          <div className="text-xs text-nodo-legajo-subtitle">Creado {creado}</div>
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               onClick={onVer}
-              className="text-xs px-2 py-1 rounded border dark:border-slate-700 dark:hover:bg-slate-700"
+              className="text-xs px-2 py-1 rounded border border-nodo-border text-nodo-text hover:bg-slate-50"
             >
               Ver detalle
             </button>
             <button
               onClick={() => router.push(`/legajos/${data.id}/editar`)}
-              className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+              className="text-xs px-2 py-1 rounded bg-primary-pink/10 text-primary-pink hover:bg-primary-pink/20"
             >
               ✏️ Editar
             </button>
@@ -309,8 +309,8 @@ function Row({
           </div>
         </div>
       </div>
-      <div className="text-sm text-slate-600 dark:text-slate-300">{plantillaNombre}</div>
-      <div className="text-sm">{actualizado}</div>
+      <div className="text-sm text-nodo-text">{plantillaNombre}</div>
+      <div className="text-sm text-nodo-text">{actualizado}</div>
       <div>
         <span className={`px-2 py-1 rounded-full text-xs ${estadoBadgeClass(estado)}`}>
           {estado}
@@ -327,7 +327,7 @@ function SkeletonRows() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="px-4 py-3 animate-pulse grid grid-cols-[1fr_200px_160px_120px_40px] gap-4 items-center"
+          className="px-4 py-3 animate-pulse grid grid-cols-[1fr_200px_160px_120px_40px] gap-[20px] items-center"
         >
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-slate-200" />
@@ -349,9 +349,9 @@ function SkeletonRows() {
 function EmptyState({ onCreate, canCreate }: { onCreate: () => void; canCreate: boolean }) {
   return (
     <div className="px-6 py-12 text-center">
-      <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-indigo-100">🗂️</div>
-      <h3 className="text-lg font-semibold mb-1">No hay legajos</h3>
-      <p className="text-sm opacity-70 mb-4">
+      <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-primary-pink/10">🗂️</div>
+      <h3 className="text-lg font-semibold text-nodo-title mb-1">No hay legajos</h3>
+      <p className="text-sm text-nodo-legajo-subtitle mb-4">
         {canCreate
           ? 'Crea tu primer legajo para empezar a gestionar la información.'
           : 'Seleccioná una plantilla para comenzar a crear legajos.'}
@@ -359,10 +359,10 @@ function EmptyState({ onCreate, canCreate }: { onCreate: () => void; canCreate: 
       <button
         onClick={onCreate}
         disabled={!canCreate}
-        className={`px-4 py-2 rounded-xl text-white ${
+        className={`px-5 py-2 rounded-xl text-white font-medium text-lg ${
           canCreate
-            ? 'bg-sky-600 hover:brightness-110'
-            : 'bg-slate-300 cursor-not-allowed dark:bg-slate-700 dark:text-slate-300'
+            ? 'bg-primary-gradient hover:brightness-110'
+            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
         }`}
       >
         + Crear legajo
@@ -375,11 +375,11 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="px-6 py-12 text-center">
       <div className="mx-auto mb-3 w-14 h-14 rounded-2xl grid place-items-center bg-red-100 text-red-600">⚠️</div>
-      <h3 className="text-lg font-semibold mb-1">No se pudieron cargar los legajos</h3>
-      <p className="text-sm opacity-70 mb-4">{message}</p>
+      <h3 className="text-lg font-semibold text-nodo-title mb-1">No se pudieron cargar los legajos</h3>
+      <p className="text-sm text-nodo-legajo-subtitle mb-4">{message}</p>
       <button
         onClick={onRetry}
-        className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+        className="px-4 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50"
       >
         Reintentar
       </button>

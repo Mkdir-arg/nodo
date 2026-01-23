@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { me, logout } from "@/lib/auth";
 
 export default function DashboardPage() {
@@ -19,20 +20,15 @@ export default function DashboardPage() {
 
   return (
     <main className="p-6">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Hola, {user.username || user.email}</h1>
-          <button
-            onClick={() => {
-              logout();
-              router.replace("/login");
-            }}
-            className="rounded-lg border px-3 py-1.5"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-        <p className="text-gray-600 mt-2">Home básico. Acá va el contenido.</p>
+      <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[600px]">
+        <Image
+          src="/login-illustration.png"
+          alt="Ilustración"
+          width={869}
+          height={692}
+          className="max-w-full h-auto object-contain"
+          priority
+        />
       </div>
     </main>
   );

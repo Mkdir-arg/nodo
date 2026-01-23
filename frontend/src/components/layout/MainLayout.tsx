@@ -49,8 +49,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-nodo-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-pink"></div>
       </div>
     );
   }
@@ -82,11 +82,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
           theme={theme}
         />
 
-        <main className="flex-1 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20">
+        <main className="flex-1 bg-[#F3F4F6]">
           <div
             className={clsx(
-              'p-4 md:p-6',
-              isFullWidthRoute ? 'w-full max-w-none' : 'mx-auto max-w-screen-2xl'
+              'p-4 md:px-[33px] md:py-6',
+              isFullWidthRoute ? 'w-full max-w-none' : 'mx-auto max-w-[1558px]'
             )}
           >
             {children}
