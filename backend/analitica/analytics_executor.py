@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from django.db.models import Q
 from django.db.models import F
+from django.db.models import Count
 from django.db.models.fields.json import KeyTextTransform
 from django.db.models.functions import Cast
 from django.db.models import FloatField
@@ -62,6 +63,82 @@ def apply_list_query(
         queryset = queryset[offset : offset + limit]
 
     return queryset, total
+
+
+def apply_aggregate_query(
+    queryset,
+    dsl: Mapping[str, Any],
+    allowed_fields: Mapping[str, Dict[str, Any]],
+    *,
+    default_order: Optional[Sequence[str]] = None,
+) -> Tuple[List[Dict[str, Any]], int]:
+    """Aplica DSL aggregate; sirve para devolver grupos y metricas."""
+    if dsl.get("mode") != "aggregate":
+        raise DSLValidationError("only aggregate mode is supported in executor v0")
+
+    filters = dsl.get("filters")
+    if filters is not None:
+        queryset = queryset.filter(build_filter_q(filters, allowed_fields))
+
+    group_by = dsl.get("group_by") or []
+    if not group_by:
+        raise DSLValidationError("group_by is required for aggregate mode")
+
+    group_annotations: Dict[str, Any] = {}
+    group_keys: List[str] = []
+    group_aliases: Dict[str, str] = {}
+
+    for idx, field in enumerate(group_by):
+        resolved = resolve_field(field, allowed_fields)
+        if resolved.field_type == "list":
+            raise DSLValidationError("group_by does not support list fields in v0")
+        if resolved.is_system:
+            group_keys.append(resolved.lookup)
+            group_aliases[field] = resolved.lookup
+            continue
+
+        alias = f"_group_{idx}"
+        group_annotations[alias] = build_group_expr(resolved)
+        group_keys.append(alias)
+        group_aliases[field] = alias
+
+    metric_annotations: Dict[str, Any] = {}
+    metric_aliases: List[str] = []
+    reserved_names = set(group_by) | set(group_aliases.values())
+    for idx, metric in enumerate(dsl.get("metrics") or []):
+        op = metric.get("op")
+        if op != "count":
+            raise DSLValidationError("metric.op only supports count in v0")
+        field = metric.get("field")
+        if field not in (None, "*"):
+            raise DSLValidationError("metric.field not supported in executor v0")
+        alias = metric.get("as") or "count"
+        if alias in metric_annotations or alias in reserved_names:
+            raise DSLValidationError("metric.as must be unique and not collide with group_by")
+        metric_annotations[alias] = Count("id")
+        metric_aliases.append(alias)
+
+    if group_annotations:
+        queryset = queryset.annotate(**group_annotations)
+    queryset = queryset.values(*group_keys).annotate(**metric_annotations)
+
+    order = dsl.get("order")
+    if order:
+        queryset = apply_aggregate_ordering(queryset, order, group_aliases, metric_aliases)
+    else:
+        order_fields = list(default_order or group_keys[:1])
+        if order_fields:
+            queryset = queryset.order_by(*order_fields)
+
+    total = queryset.count()
+    limit = dsl.get("limit")
+    offset = dsl.get("offset", 0)
+    if limit is not None:
+        queryset = queryset[offset : offset + limit]
+
+    raw_results = list(queryset)
+    results = [_rename_group_keys(row, group_aliases) for row in raw_results]
+    return results, total
 
 
 def build_filter_q(expr: Mapping[str, Any], allowed_fields: Mapping[str, Dict[str, Any]]) -> Q:
@@ -144,6 +221,14 @@ def build_json_order_expr(resolved: ResolvedField):
     return transform
 
 
+def build_group_expr(resolved: ResolvedField):
+    """Crea expresion de grupo para JSON; sirve para agrupar por campos dinamicos."""
+    transform = _build_json_transform(resolved.json_path)
+    if resolved.field_type == "numeric":
+        return Cast(transform, output_field=FloatField())
+    return transform
+
+
 def resolve_field(
     field: Any, allowed_fields: Mapping[str, Dict[str, Any]]
 ) -> ResolvedField:
@@ -211,3 +296,40 @@ def _build_contains_filter(resolved: ResolvedField, value: Any) -> Q:
     if resolved.field_type == "list":
         return Q(**{f"{resolved.lookup}__contains": [value]})
     return Q(**{f"{resolved.lookup}__icontains": value})
+
+
+def apply_aggregate_ordering(
+    queryset,
+    order: Iterable[Mapping[str, Any]],
+    group_aliases: Mapping[str, str],
+    metric_aliases: Iterable[str],
+) -> Any:
+    """Aplica ordenamiento en aggregate; sirve para ordenar grupos/metricas."""
+    metric_set = set(metric_aliases)
+    order_by_fields: List[str] = []
+
+    for item in order:
+        field = item.get("field")
+        direction = item.get("dir", "asc")
+
+        if field in group_aliases:
+            alias = group_aliases[field]
+        elif field in metric_set:
+            alias = field
+        else:
+            raise DSLValidationError(f"order field not allowed in aggregate: {field}")
+
+        order_by_fields.append(f"-{alias}" if direction == "desc" else alias)
+
+    return queryset.order_by(*order_by_fields)
+
+
+def _rename_group_keys(row: Mapping[str, Any], group_aliases: Mapping[str, str]) -> Dict[str, Any]:
+    """Renombra claves de grupo; sirve para devolver keys originales en respuesta."""
+    result = dict(row)
+    for original, alias in group_aliases.items():
+        if alias == original:
+            continue
+        if alias in result:
+            result[original] = result.pop(alias)
+    return result

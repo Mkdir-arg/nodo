@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from plantillas.models import Plantilla
 
 from .analytics_dsl import DSLValidationError, normalize_dsl, validate_query_dsl
-from .analytics_executor import apply_list_query
+from .analytics_executor import apply_aggregate_query, apply_list_query
 from .analytics_serializers import AnalyticsLegajoSerializer
 from .analytics_services import get_catalog_for_plantilla
 from legajos.models import Legajo
@@ -141,27 +141,40 @@ class AnalyticsQueryView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        if normalized.get("mode") != "list":
+        queryset = Legajo.objects.filter(plantilla_id=plantilla.id)
+
+        if normalized.get("mode") == "list":
+            queryset = queryset.only(
+                "id", "plantilla_id", "grid_values", "created_at", "updated_at"
+            )
+            queryset, total = apply_list_query(queryset, normalized, allowed_fields)
+            serializer = AnalyticsLegajoSerializer(queryset, many=True)
             return Response(
-                {"error": "unsupported_mode", "detail": "only list mode is supported"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {
+                    "ok": True,
+                    "count": total,
+                    "limit": normalized.get("limit"),
+                    "offset": normalized.get("offset"),
+                    "results": serializer.data,
+                }
             )
 
-        queryset = (
-            Legajo.objects.filter(plantilla_id=plantilla.id)
-            .only("id", "plantilla_id", "grid_values", "created_at", "updated_at")
-        )
-        queryset, total = apply_list_query(queryset, normalized, allowed_fields)
-        serializer = AnalyticsLegajoSerializer(queryset, many=True)
+        if normalized.get("mode") == "aggregate":
+            groups, total = apply_aggregate_query(queryset, normalized, allowed_fields)
+            return Response(
+                {
+                    "ok": True,
+                    "mode": "aggregate",
+                    "count": total,
+                    "limit": normalized.get("limit"),
+                    "offset": normalized.get("offset"),
+                    "groups": groups,
+                }
+            )
 
         return Response(
-            {
-                "ok": True,
-                "count": total,
-                "limit": normalized.get("limit"),
-                "offset": normalized.get("offset"),
-                "results": serializer.data,
-            }
+            {"error": "unsupported_mode", "detail": "mode not supported"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 

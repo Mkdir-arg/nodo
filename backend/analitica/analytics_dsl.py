@@ -251,7 +251,14 @@ def validate_query_dsl(
     metrics = payload.get("metrics")
     if metrics is None:
         raise DSLValidationError("dsl.metrics required for aggregate mode")
-    _validate_metrics(metrics, allowed_fields, max_metrics, allow_unlisted_fields)
+    reserved_names = group_by if isinstance(group_by, list) else None
+    _validate_metrics(
+        metrics,
+        allowed_fields,
+        max_metrics,
+        allow_unlisted_fields,
+        reserved_names=reserved_names,
+    )
 
 
 def _normalize_allowed_fields(
@@ -506,12 +513,16 @@ def _validate_metrics(
     allowed_fields: Mapping[str, Dict[str, Any]],
     max_metrics: int,
     allow_unlisted_fields: bool,
+    *,
+    reserved_names: Optional[Sequence[str]] = None,
 ) -> None:
     """Valida metrics; sirve para limitar agregaciones soportadas."""
     if not isinstance(metrics, list) or not metrics:
         raise DSLValidationError("dsl.metrics must be a non-empty list")
     if len(metrics) > max_metrics:
         raise DSLValidationError("too many metrics")
+    seen_aliases = set()
+    reserved = set(reserved_names or [])
     for metric in metrics:
         if not isinstance(metric, Mapping):
             raise DSLValidationError("metric must be an object")
@@ -521,10 +532,11 @@ def _validate_metrics(
         field = metric.get("field")
         if field is not None:
             if field != "*":
-                if not isinstance(field, str):
-                    raise DSLValidationError("metric.field must be a string")
-                if not allow_unlisted_fields and field not in allowed_fields:
-                    raise DSLValidationError(f"metric.field not allowed: {field}")
+                raise DSLValidationError("metric.field not supported in v0")
         alias = metric.get("as")
         if alias is not None and (not isinstance(alias, str) or not alias):
             raise DSLValidationError("metric.as must be a non-empty string")
+        alias_name = alias or "count"
+        if alias_name in seen_aliases or alias_name in reserved:
+            raise DSLValidationError("metric.as must be unique and not collide with group_by")
+        seen_aliases.add(alias_name)

@@ -187,3 +187,66 @@ def test_query_filters_by_grid_values():
     assert response.data["count"] == 1
     assert len(response.data["results"]) == 1
     assert response.data["results"][0]["display"] == "Ana"
+
+
+@pytest.mark.django_db
+def test_query_aggregate_group_by():
+    """Consulta aggregate con group_by; sirve para validar agrupaciones basicas."""
+    plantilla = Plantilla.objects.create(
+        nombre="Aggregate",
+        schema={
+            "nodes": [
+                {
+                    "type": "section",
+                    "id": "sec",
+                    "children": [
+                        {
+                            "type": "text",
+                            "id": "n1",
+                            "key": "nombre",
+                            "seMuestraEnGrilla": True,
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    Legajo.objects.create(
+        plantilla=plantilla,
+        data={},
+        grid_values={"nombre": "Ana"},
+    )
+    Legajo.objects.create(
+        plantilla=plantilla,
+        data={},
+        grid_values={"nombre": "Ana"},
+    )
+    Legajo.objects.create(
+        plantilla=plantilla,
+        data={},
+        grid_values={"nombre": "Luis"},
+    )
+
+    payload = {
+        "plantilla_id": str(plantilla.id),
+        "dsl": {
+            "entity": "legajos",
+            "mode": "aggregate",
+            "group_by": ["nombre"],
+            "metrics": [{"op": "count", "as": "total"}],
+        },
+    }
+
+    factory = APIRequestFactory()
+    request = factory.post("/api/legajos/analytics/query/", payload, format="json")
+    user = _create_user_with_perm()
+    force_authenticate(request, user=user)
+
+    response = AnalyticsQueryView.as_view()(request)
+
+    assert response.status_code == 200
+    assert response.data["count"] == 2
+    groups = {row["nombre"]: row["total"] for row in response.data["groups"]}
+    assert groups["Ana"] == 2
+    assert groups["Luis"] == 1
