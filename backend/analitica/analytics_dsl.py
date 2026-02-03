@@ -1,4 +1,4 @@
-"""Analytics DSL validation and catalog helpers."""
+"""Validadores y utilidades del DSL analitico; sirven para asegurar contratos seguros."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Seque
 
 
 class DSLValidationError(ValueError):
-    """Raised when the analytics query DSL is invalid."""
+    """Error del DSL; sirve para reportar validaciones fallidas de manera consistente."""
 
 
 VALID_OPS = {"eq", "ne", "in", "nin", "gt", "gte", "lt", "lte", "contains"}
@@ -57,8 +57,8 @@ DEFAULT_OFFSET = 0
 
 
 def allowed_ops_for_type(field_type: Optional[str]) -> Sequence[str]:
-    """Return the allowed operators for a given field type."""
-    normalized = _normalize_field_type(field_type)
+    """Devuelve operadores permitidos por tipo; sirve para alinear catalogo y validacion."""
+    normalized = normalize_field_type(field_type)
     if normalized == "numeric":
         return ("eq", "ne", "gt", "gte", "lt", "lte", "in", "nin")
     if normalized == "date":
@@ -77,7 +77,7 @@ def collect_queryable_fields(
     include_groups: bool = False,
     include_system_fields: bool = True,
 ) -> Dict[str, Dict[str, Any]]:
-    """Collect queryable fields from a plantilla schema."""
+    """Recolecta campos consultables del schema; sirve para construir el catalogo permitido."""
     fields: Dict[str, Dict[str, Any]] = {}
     if include_system_fields:
         fields.update(SYSTEM_FIELDS)
@@ -86,7 +86,7 @@ def collect_queryable_fields(
         return fields
 
     def should_include(node: Mapping[str, Any]) -> bool:
-        """Decide whether a schema node should be exposed as a queryable field."""
+        """Decide si un nodo es consultable; sirve para excluir UI y campos no visibles."""
         if node.get("type") in UI_ONLY_TYPES:
             return False
         if isinstance(node.get("type"), str) and node.get("type").startswith("ui:"):
@@ -96,7 +96,7 @@ def collect_queryable_fields(
         return True
 
     def visit(nodes: Iterable[Any], parent_group: Optional[str] = None) -> None:
-        """Recursively traverse nodes collecting allowed fields."""
+        """Recorre nodos y recolecta campos; sirve para armar el set consultable."""
         for node in nodes or []:
             if not isinstance(node, Mapping):
                 continue
@@ -136,7 +136,7 @@ def normalize_dsl(
     default_offset: int = DEFAULT_OFFSET,
     max_limit: int = DEFAULT_MAX_LIMIT,
 ) -> Dict[str, Any]:
-    """Return a normalized DSL payload with defaults applied."""
+    """Normaliza el DSL con defaults; sirve para ejecucion consistente."""
     if not isinstance(payload, Mapping):
         raise DSLValidationError("dsl must be an object")
 
@@ -177,7 +177,7 @@ def validate_query_dsl(
     allow_unlisted_fields: bool = False,
     strict: bool = True,
 ) -> None:
-    """Validate an analytics query DSL payload."""
+    """Valida un DSL analitico; sirve para bloquear consultas invalidas o peligrosas."""
     if not isinstance(payload, Mapping):
         raise DSLValidationError("dsl must be an object")
 
@@ -257,7 +257,7 @@ def validate_query_dsl(
 def _normalize_allowed_fields(
     allowed_fields: Optional[Mapping[str, Dict[str, Any]]]
 ) -> Dict[str, Dict[str, Any]]:
-    """Ensure allowed_fields is a mutable dictionary."""
+    """Normaliza allowed_fields; sirve para evitar tipos inesperados."""
     if allowed_fields is None:
         return {}
     if isinstance(allowed_fields, Mapping):
@@ -277,7 +277,7 @@ def _validate_filter_expr(
     max_string_length: int,
     allow_unlisted_fields: bool,
 ) -> None:
-    """Validate a filter expression tree."""
+    """Valida el arbol de filtros; sirve para controlar profundidad y forma."""
     if depth > max_depth:
         raise DSLValidationError("filters nested too deep")
     if not isinstance(expr, Mapping):
@@ -339,7 +339,7 @@ def _validate_leaf_filter(
     max_string_length: int,
     allow_unlisted_fields: bool,
 ) -> None:
-    """Validate a leaf filter (field/op/value)."""
+    """Valida un filtro hoja; sirve para asegurar campo/op/valor coherentes."""
     field = expr.get("field")
     op = expr.get("op")
 
@@ -356,7 +356,7 @@ def _validate_leaf_filter(
 
     value = expr.get("value", None)
     field_meta = allowed_fields.get(field, {})
-    field_type = _normalize_field_type(field_meta.get("type"))
+    field_type = normalize_field_type(field_meta.get("type"))
     if op not in allowed_ops_for_type(field_meta.get("type")):
         raise DSLValidationError("filter.op not supported for field type")
 
@@ -377,7 +377,7 @@ def _validate_value_for_op(
     max_list_length: int,
     max_string_length: int,
 ) -> None:
-    """Validate a filter value according to operator and field type."""
+    """Valida un valor segun operador y tipo; sirve para evitar coerciones peligrosas."""
     if op in {"in", "nin"}:
         if not isinstance(value, list) or not value:
             raise DSLValidationError("filter.value must be a non-empty list for in/nin")
@@ -409,7 +409,7 @@ def _validate_value_for_op(
 
 
 def _validate_scalar_value(value: Any, field_type: str, max_string_length: int) -> None:
-    """Validate a scalar filter value."""
+    """Valida un valor escalar; sirve para restringir tipos y tamanos."""
     if field_type == "boolean":
         if not isinstance(value, bool):
             raise DSLValidationError("filter.value must be boolean")
@@ -443,8 +443,8 @@ def _validate_scalar_value(value: Any, field_type: str, max_string_length: int) 
     raise DSLValidationError("filter.value invalid")
 
 
-def _normalize_field_type(field_type: Optional[str]) -> str:
-    """Map a raw field type to a normalized category."""
+def normalize_field_type(field_type: Optional[str]) -> str:
+    """Normaliza el tipo de campo; sirve para reglas uniformes de validacion."""
     if not field_type:
         return "string"
     field_type = str(field_type).lower()
@@ -465,7 +465,7 @@ def _validate_order(
     max_order_fields: int,
     allow_unlisted_fields: bool,
 ) -> None:
-    """Validate the order clause."""
+    """Valida el ordenamiento; sirve para evitar campos no permitidos."""
     if not isinstance(order, list) or not order:
         raise DSLValidationError("dsl.order must be a non-empty list")
     if len(order) > max_order_fields:
@@ -489,7 +489,7 @@ def _validate_group_by(
     max_group_by_fields: int,
     allow_unlisted_fields: bool,
 ) -> None:
-    """Validate the group_by clause."""
+    """Valida group_by; sirve para limitar dimensiones permitidas."""
     if not isinstance(group_by, list) or not group_by:
         raise DSLValidationError("dsl.group_by must be a non-empty list")
     if len(group_by) > max_group_by_fields:
@@ -507,7 +507,7 @@ def _validate_metrics(
     max_metrics: int,
     allow_unlisted_fields: bool,
 ) -> None:
-    """Validate the metrics clause."""
+    """Valida metrics; sirve para limitar agregaciones soportadas."""
     if not isinstance(metrics, list) or not metrics:
         raise DSLValidationError("dsl.metrics must be a non-empty list")
     if len(metrics) > max_metrics:

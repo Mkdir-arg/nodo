@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'templates_app',
     'plantillas',
     'legajos',
+    'analitica',
     'flows',
 ]
 

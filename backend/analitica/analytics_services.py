@@ -1,4 +1,4 @@
-"""Services for analytics catalog generation and caching."""
+"""Servicios para catalogo analitico y cache; sirven para evitar recomputar esquemas."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def build_catalog(
     include_system_fields: bool = True,
     include_sensitive: bool = False,
 ) -> Dict[str, Any]:
-    """Build a queryable fields catalog from a plantilla schema."""
+    """Construye el catalogo consultable; sirve para exponer campos y operadores permitidos."""
     fields = collect_queryable_fields(
         schema,
         only_grid=only_grid,
@@ -68,7 +68,7 @@ def get_catalog_for_plantilla(
     include_system_fields: bool = True,
     include_sensitive: bool = False,
 ) -> Dict[str, Any]:
-    """Return a cached catalog for a plantilla, rebuilding when needed."""
+    """Devuelve catalogo cacheado por plantilla; sirve para eficiencia y consistencia."""
     cache_key = _catalog_cache_key(
         plantilla,
         only_grid=only_grid,
@@ -96,8 +96,8 @@ def _catalog_cache_key(
     include_system_fields: bool,
     include_sensitive: bool,
 ) -> str:
-    """Build a cache key that invalidates when plantilla metadata changes."""
+    """Construye la clave de cache; sirve para invalidar cuando cambia la plantilla."""
     updated_at = plantilla.updated_at.isoformat() if plantilla.updated_at else ""
     flags = f"og{int(only_grid)}-is{int(include_system_fields)}-sen{int(include_sensitive)}"
-    # updated_at ensures the catalog invalidates whenever the plantilla changes.
+    # updated_at fuerza invalidacion cuando cambia la plantilla; sirve para coherencia.
     return f"analytics:catalog:{plantilla.id}:{updated_at}:{flags}"

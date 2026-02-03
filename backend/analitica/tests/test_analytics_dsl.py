@@ -1,10 +1,10 @@
 import pytest
 
-from legajos.analytics_dsl import collect_queryable_fields, validate_query_dsl
+from analitica.analytics_dsl import collect_queryable_fields, validate_query_dsl
 
 
 def _schema():
-    """Return a minimal plantilla schema for DSL tests."""
+    """Crea schema minimo; sirve para probar validaciones del DSL."""
     return {
         "nodes": [
             {
@@ -54,7 +54,7 @@ def _schema():
 
 
 def test_validate_query_dsl_list_ok():
-    """Accept a valid list-mode DSL payload."""
+    """Acepta list valido; sirve para asegurar el caso feliz."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -74,7 +74,7 @@ def test_validate_query_dsl_list_ok():
 
 
 def test_validate_query_dsl_rejects_unknown_field():
-    """Reject filters that reference non-allowed fields."""
+    """Rechaza campos no permitidos; sirve para garantizar whitelist."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -87,7 +87,7 @@ def test_validate_query_dsl_rejects_unknown_field():
 
 
 def test_validate_query_dsl_rejects_bad_op():
-    """Reject filters that use unsupported operators."""
+    """Rechaza operadores invalidos; sirve para endurecer el contrato."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -100,7 +100,7 @@ def test_validate_query_dsl_rejects_bad_op():
 
 
 def test_validate_query_dsl_rejects_limit_out_of_range():
-    """Reject a DSL payload with limit above configured maximum."""
+    """Rechaza limite fuera de rango; sirve para proteger performance."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -113,7 +113,7 @@ def test_validate_query_dsl_rejects_limit_out_of_range():
 
 
 def test_validate_query_dsl_aggregate_ok():
-    """Accept a valid aggregate-mode DSL payload."""
+    """Acepta aggregate valido; sirve para validar estructura futura."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",

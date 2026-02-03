@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/", include("templates_app.urls")),
     path("api/", include("plantillas.urls")),
     path("api/", include("legajos.urls")),
+    path("api/", include("analitica.urls")),
     path("api/", include("flows.urls")),
     
     # System settings
