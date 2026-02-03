@@ -4,6 +4,7 @@ from legajos.analytics_dsl import collect_queryable_fields, validate_query_dsl
 
 
 def _schema():
+    """Return a minimal plantilla schema for DSL tests."""
     return {
         "nodes": [
             {
@@ -53,6 +54,7 @@ def _schema():
 
 
 def test_validate_query_dsl_list_ok():
+    """Accept a valid list-mode DSL payload."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -72,6 +74,7 @@ def test_validate_query_dsl_list_ok():
 
 
 def test_validate_query_dsl_rejects_unknown_field():
+    """Reject filters that reference non-allowed fields."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -84,6 +87,7 @@ def test_validate_query_dsl_rejects_unknown_field():
 
 
 def test_validate_query_dsl_rejects_bad_op():
+    """Reject filters that use unsupported operators."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -96,6 +100,7 @@ def test_validate_query_dsl_rejects_bad_op():
 
 
 def test_validate_query_dsl_rejects_limit_out_of_range():
+    """Reject a DSL payload with limit above configured maximum."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
@@ -108,6 +113,7 @@ def test_validate_query_dsl_rejects_limit_out_of_range():
 
 
 def test_validate_query_dsl_aggregate_ok():
+    """Accept a valid aggregate-mode DSL payload."""
     allowed = collect_queryable_fields(_schema())
     payload = {
         "entity": "legajos",
