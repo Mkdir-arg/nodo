@@ -271,6 +271,17 @@ class LegajoViewSet(viewsets.ModelViewSet):
 | POST | `/api/legajos/bulk_create/` | Creación masiva |
 | GET | `/api/legajos/statistics/` | Estadísticas |
 
+### Analitica DSL (nuevo)
+
+La capa analitica expone un DSL de solo lectura para consultas seguras sobre legajos.
+Ver especificacion completa en [Analitica DSL](./12-analitica-dsl.md).
+
+| Método | URL | Descripción |
+|--------|-----|-------------|
+| GET | `/api/legajos/analytics/catalog/` | Catálogo de campos y ejemplos |
+| POST | `/api/legajos/analytics/validate/` | Validación de DSL |
+| POST | `/api/legajos/analytics/query/` | Consulta list/aggregate |
+
 ## Funcionalidades de Búsqueda
 
 ### 1. Búsqueda Full-Text

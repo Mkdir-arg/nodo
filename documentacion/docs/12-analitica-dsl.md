@@ -157,6 +157,17 @@ Sugerencia de flujo:
 - Paso 3: POST validate.
 - Paso 4: POST query.
 
+## Validacion local con dsl_schema
+
+El catalogo incluye `meta.dsl_schema`, un JSON Schema que permite validar el DSL en cliente antes de llamar a la API.
+
+Recomendacion de uso:
+- Obtener el catalogo (`GET /api/legajos/analytics/catalog/`).
+- Validar el DSL contra `meta.dsl_schema` en el cliente.
+- Si pasa, enviar a `/api/legajos/analytics/validate/` y luego a `/api/legajos/analytics/query/`.
+
+Nota: el schema **no se versiona**. Los cambios se reflejan en caliente en el catalogo y el cliente debe recargarlo periodicamente.
+
 ## Errores comunes
 
 - Campo no permitido (no esta en catalogo).
