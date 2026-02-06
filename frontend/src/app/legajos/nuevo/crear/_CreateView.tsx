@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import DynamicForm from "@/components/form/runtime/DynamicForm";
@@ -7,6 +8,7 @@ import { RelationProvider, useRelationContext } from "@/components/form/runtime/
 import { RelationsService } from "@/lib/services/relations";
 
 import { getJSON, postJSON } from "@/lib/api";
+import { useAnalyticsContextStore } from "@/lib/store/useAnalyticsContextStore";
 
 type PlantillaResponse = {
   schema?: unknown;
@@ -24,6 +26,7 @@ function CreateViewInner({ formId }: { formId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { pendingRelations } = useRelationContext();
+  const { setContext } = useAnalyticsContextStore();
 
   const { data, isLoading, error } = useQuery<PlantillaResponse>({
     queryKey: ["plantilla", formId],
@@ -33,6 +36,12 @@ function CreateViewInner({ formId }: { formId: string }) {
   const mutation = useMutation({
     mutationFn: createLegajo,
   });
+
+  useEffect(() => {
+    if (formId) {
+      setContext({ plantillaId: formId, source: 'Legajos / Crear' });
+    }
+  }, [formId, setContext]);
 
   if (isLoading) {
     return <div>Cargando plantilla...</div>;

@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import TopNavBar from './TopNavBar';
 import SideNav from './SideNav';
 import ControlSidebar from './ControlSidebar';
+import AnalyticsChatPanel from '@/components/analitica/AnalyticsChatPanel';
 import { useAuth } from '@/lib/AuthContext';
 
 interface MainLayoutProps {
@@ -15,6 +16,9 @@ interface MainLayoutProps {
 /**
  * NOTA: Este componente NO debe importarse en las paginas.
  * Se monta una sola vez desde app/layout.tsx.
+ */
+/**
+ * Layout principal; sirve para montar navegacion global y contenedores compartidos en todas las rutas privadas.
  */
 export default function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
@@ -102,6 +106,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         onToggleMini={() => setIsMini((value) => !value)}
         onToggleTheme={() => setTheme((value) => (value === 'dark' ? 'light' : 'dark'))}
       />
+      <AnalyticsChatPanel />
     </div>
   );
 }

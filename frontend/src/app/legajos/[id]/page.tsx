@@ -8,6 +8,7 @@ import PaginatorRuntime from "@/components/form/runtime/ui/paginator/PaginatorRu
 import { getJSON } from "@/lib/api";
 import RelationRuntime from "@/components/form/runtime/ui/relation/RelationRuntime";
 import { FormProvider, useForm } from "react-hook-form";
+import { useAnalyticsContextStore } from "@/lib/store/useAnalyticsContextStore";
 
 type LegajoResponse = {
   data?: Record<string, unknown>;
@@ -16,6 +17,7 @@ type LegajoResponse = {
     sections?: unknown[];
   };
   meta?: Record<string, unknown>;
+  plantilla?: string;
 };
 
 function isUiNode(n: any) { 
@@ -67,6 +69,7 @@ function renderNode(node: any, ctx: any) {
 }
 
 export default function LegajoDetallePage({ params }: { params: { id: string } }) {
+  const { setContext } = useAnalyticsContextStore();
   const { data: response, isLoading } = useQuery({
     queryKey: ['legajo', params.id],
     queryFn: () => getJSON<LegajoResponse>(`/api/legajos/${params.id}`)
@@ -88,6 +91,12 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
       methods.reset(response.data);
     }
   }, [response?.data]);
+
+  useEffect(() => {
+    if (response?.plantilla) {
+      setContext({ plantillaId: response.plantilla, source: 'Legajos / Detalle' });
+    }
+  }, [response?.plantilla, setContext]);
 
   if (isLoading) {
     return <div className="p-6">Cargando legajo...</div>;

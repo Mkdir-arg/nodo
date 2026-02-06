@@ -2,7 +2,8 @@ export const ROLES = {
   ADMIN: 'Administradores',
   EDITOR: 'Editores', 
   VIEWER: 'Visualizadores',
-  OPERATOR: 'Operadores'
+  OPERATOR: 'Operadores',
+  ANALYTICS: 'Analitica',
 } as const;
 
 export interface User {
@@ -37,4 +38,8 @@ export function canCreateLegajos(user: User | null): boolean {
 
 export function canViewLegajos(user: User | null): boolean {
   return user !== null; // Todos los usuarios autenticados pueden ver
+}
+
+export function canUseAnalytics(user: User | null): boolean {
+  return hasRole(user, ROLES.ANALYTICS);
 }

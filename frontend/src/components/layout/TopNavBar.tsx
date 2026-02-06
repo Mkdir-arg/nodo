@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Menu, PanelRightOpen, Search, Sun, Moon, User } from 'lucide-react';
+import { Bell, Menu, PanelRightOpen, Search, Sun, Moon, User, MessageSquareText } from 'lucide-react';
 import { logout } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
+import { canUseAnalytics } from '@/lib/permissions';
+import { useAnalyticsChatStore } from '@/lib/store/useAnalyticsChatStore';
 
 interface TopNavBarProps {
   onToggleSideNav: () => void;
@@ -12,6 +15,9 @@ interface TopNavBarProps {
   theme: string;
 }
 
+/**
+ * Barra superior global; sirve para mostrar accesos rapidos y acciones comunes de la app.
+ */
 export default function TopNavBar({
   onToggleSideNav,
   onToggleControl,
@@ -20,8 +26,11 @@ export default function TopNavBar({
 }: TopNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
+  const { open, togglePanel } = useAnalyticsChatStore();
   const section = pathname.split('/').filter(Boolean)[0];
   const [menuOpen, setMenuOpen] = useState(false);
+  const showAnalytics = canUseAnalytics(user);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur shadow-sm">
@@ -56,6 +65,15 @@ export default function TopNavBar({
           >
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
+          {showAnalytics && (
+            <button
+              onClick={togglePanel}
+              aria-label="Abrir chat analitico"
+              className={`rounded-md p-2 hover:bg-muted text-foreground ${open ? 'bg-muted' : ''}`}
+            >
+              <MessageSquareText className="h-5 w-5" />
+            </button>
+          )}
           <button
             aria-label="Ver notificaciones"
             className="rounded-md p-2 hover:bg-muted text-foreground"

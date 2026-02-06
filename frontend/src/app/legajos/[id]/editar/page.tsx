@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import DynamicForm from "@/components/form/runtime/DynamicForm";
 import { getJSON, putJSON } from "@/lib/api";
+import { useAnalyticsContextStore } from "@/lib/store/useAnalyticsContextStore";
 
 type LegajoResponse = {
   data?: Record<string, unknown>;
@@ -26,6 +28,7 @@ async function updateLegajo(id: string, payload: { data: any; plantilla_id: stri
 export default function EditLegajoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { setContext } = useAnalyticsContextStore();
 
   const { data, isLoading, error } = useQuery<LegajoResponse>({
     queryKey: ["legajo", params.id],
@@ -38,6 +41,12 @@ export default function EditLegajoPage({ params }: { params: { id: string } }) {
       plantilla_id: data?.plantilla || ''
     }),
   });
+
+  useEffect(() => {
+    if (data?.plantilla) {
+      setContext({ plantillaId: data.plantilla, source: 'Legajos / Editar' });
+    }
+  }, [data?.plantilla, setContext]);
 
   const handleSubmit = async (values: any) => {
     if (mutation.isPending) return;

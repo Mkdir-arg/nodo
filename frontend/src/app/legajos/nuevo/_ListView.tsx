@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getJSON } from "@/lib/api";
 import { SendToFlowButton } from "@/components/legajos/SendToFlowButton";
 import { buildQueryOptions } from "@/lib/queryDefaults";
+import { useAnalyticsContextStore } from "@/lib/store/useAnalyticsContextStore";
 
 type ListResponse = {
   results: Array<Record<string, any>>;
@@ -65,6 +66,7 @@ const cols = 'grid grid-cols-[1fr_120px_160px_120px_40px] gap-4 items-center';
 
 export default function ListView({ formId }: { formId: string }) {
   const router = useRouter();
+  const { setContext } = useAnalyticsContextStore();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
@@ -72,6 +74,12 @@ export default function ListView({ formId }: { formId: string }) {
     setPage(1);
     setSearch("");
   }, [formId]);
+
+  useEffect(() => {
+    if (formId) {
+      setContext({ plantillaId: formId, source: 'Legajos / Nuevo' });
+    }
+  }, [formId, setContext]);
 
   const { data, error, isLoading, isFetching } = useQuery({
     queryKey: ["legajos", formId, page, search],

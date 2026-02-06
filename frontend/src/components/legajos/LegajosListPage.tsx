@@ -9,6 +9,7 @@ import { LegajosService } from '@/lib/services/legajos';
 import { usePlantillasMin } from '@/lib/hooks/usePlantillasMin';
 import { SendToFlowButton } from './SendToFlowButton';
 import { buildQueryOptions } from '@/lib/queryDefaults';
+import { useAnalyticsContextStore } from '@/lib/store/useAnalyticsContextStore';
 
 const cols = 'grid grid-cols-[1fr_200px_160px_120px_40px] gap-4 items-center';
 const PAGE_SIZE = 10;
@@ -43,6 +44,7 @@ export default function LegajosListPage() {
   const [page, setPage] = useState(1);
   const [plantillaId, setPlantillaId] = useState<string>(ALL_PLANTILLAS);
   const debouncedSearch = useDebouncedValue(search, 300);
+  const { setContext, clearContext } = useAnalyticsContextStore();
 
   useEffect(() => {
     const formId = params.get('formId');
@@ -54,6 +56,14 @@ export default function LegajosListPage() {
       return next;
     });
   }, [params]);
+
+  useEffect(() => {
+    if (plantillaId && plantillaId !== ALL_PLANTILLAS) {
+      setContext({ plantillaId, source: 'Legajos / Lista' });
+      return;
+    }
+    clearContext();
+  }, [plantillaId, setContext, clearContext]);
 
   const {
     data,
