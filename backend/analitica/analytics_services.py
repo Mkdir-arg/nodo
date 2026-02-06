@@ -57,6 +57,34 @@ def build_catalog(
             "only_grid": only_grid,
             "include_system_fields": include_system_fields,
             "include_sensitive": include_sensitive,
+            "aggregate": {
+                "metrics": ["count"],
+                "order_supports_metrics": True,
+            },
+            "examples": {
+                "list": {
+                    "entity": "legajos",
+                    "mode": "list",
+                    "filters": {
+                        "and": [
+                            {"field": "edad", "op": "gte", "value": 18},
+                            {"field": "nombre", "op": "contains", "value": "Ana"},
+                        ]
+                    },
+                    "order": [{"field": "created_at", "dir": "desc"}],
+                    "limit": 10,
+                    "offset": 0,
+                },
+                "aggregate": {
+                    "entity": "legajos",
+                    "mode": "aggregate",
+                    "group_by": ["nombre"],
+                    "metrics": [{"op": "count", "as": "total"}],
+                    "order": [{"field": "total", "dir": "desc"}],
+                    "limit": 10,
+                    "offset": 0,
+                },
+            },
         },
     }
 

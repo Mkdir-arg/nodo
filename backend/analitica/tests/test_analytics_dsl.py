@@ -123,3 +123,17 @@ def test_validate_query_dsl_aggregate_ok():
     }
 
     validate_query_dsl(payload, allowed_fields=allowed)
+
+
+def test_validate_query_dsl_aggregate_order_by_metric():
+    """Acepta order por metrica; sirve para habilitar ranking de agregados."""
+    allowed = collect_queryable_fields(_schema())
+    payload = {
+        "entity": "legajos",
+        "mode": "aggregate",
+        "group_by": ["nombre"],
+        "metrics": [{"op": "count", "as": "total"}],
+        "order": [{"field": "total", "dir": "desc"}],
+    }
+
+    validate_query_dsl(payload, allowed_fields=allowed)

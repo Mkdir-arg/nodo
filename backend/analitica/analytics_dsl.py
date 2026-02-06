@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
 
 
 class DSLValidationError(ValueError):
@@ -236,10 +236,15 @@ def validate_query_dsl(
             raise DSLValidationError("dsl.offset must be >= 0")
 
     order = payload.get("order")
-    if order is not None:
-        _validate_order(order, allowed_fields, max_order_fields, allow_unlisted_fields)
 
     if mode == "list":
+        if order is not None:
+            _validate_order(
+                order,
+                allowed_fields,
+                max_order_fields,
+                allow_unlisted_fields,
+            )
         if payload.get("group_by") is not None or payload.get("metrics") is not None:
             raise DSLValidationError("dsl.group_by/metrics only allowed in aggregate mode")
         return
@@ -259,6 +264,15 @@ def validate_query_dsl(
         allow_unlisted_fields,
         reserved_names=reserved_names,
     )
+    metric_aliases = _collect_metric_aliases(metrics)
+    if order is not None:
+        _validate_order(
+            order,
+            allowed_fields,
+            max_order_fields,
+            allow_unlisted_fields,
+            allowed_metric_aliases=metric_aliases,
+        )
 
 
 def _normalize_allowed_fields(
@@ -471,23 +485,42 @@ def _validate_order(
     allowed_fields: Mapping[str, Dict[str, Any]],
     max_order_fields: int,
     allow_unlisted_fields: bool,
+    *,
+    allowed_metric_aliases: Optional[Sequence[str]] = None,
 ) -> None:
     """Valida el ordenamiento; sirve para evitar campos no permitidos."""
     if not isinstance(order, list) or not order:
         raise DSLValidationError("dsl.order must be a non-empty list")
     if len(order) > max_order_fields:
         raise DSLValidationError("too many order fields")
+    metric_aliases = set(allowed_metric_aliases or [])
     for item in order:
         if not isinstance(item, Mapping):
             raise DSLValidationError("dsl.order items must be objects")
         field = item.get("field")
         if not isinstance(field, str) or not field:
             raise DSLValidationError("dsl.order.field must be a string")
-        if not allow_unlisted_fields and field not in allowed_fields:
+        if (
+            not allow_unlisted_fields
+            and field not in allowed_fields
+            and field not in metric_aliases
+        ):
             raise DSLValidationError(f"dsl.order.field not allowed: {field}")
         direction = item.get("dir", "asc")
         if direction not in {"asc", "desc"}:
             raise DSLValidationError("dsl.order.dir must be asc or desc")
+
+
+def _collect_metric_aliases(metrics: Any) -> List[str]:
+    """Recolecta aliases de metrics; sirve para habilitar orden por metricas."""
+    if not isinstance(metrics, list):
+        return []
+    aliases = []
+    for metric in metrics:
+        if not isinstance(metric, Mapping):
+            continue
+        aliases.append(metric.get("as") or "count")
+    return aliases
 
 
 def _validate_group_by(
