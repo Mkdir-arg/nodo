@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .analytics_views import AnalyticsCatalogView, AnalyticsQueryView, AnalyticsValidateView
+from .chat_views import AnalyticsChatView
 
 urlpatterns = [
     path(
@@ -19,5 +20,10 @@ urlpatterns = [
         "legajos/analytics/query/",
         AnalyticsQueryView.as_view(),
         name="legajos-analytics-query",
+    ),
+    path(
+        "legajos/analytics/chat/",
+        AnalyticsChatView.as_view(),
+        name="legajos-analytics-chat",
     ),
 ]

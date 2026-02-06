@@ -7,30 +7,13 @@ import { useAuth } from '@/lib/AuthContext';
 import { canUseAnalytics } from '@/lib/permissions';
 import { useAnalyticsChatStore } from '@/lib/store/useAnalyticsChatStore';
 import { useAnalyticsContextStore } from '@/lib/store/useAnalyticsContextStore';
+import { sendAnalyticsChat } from '@/lib/api/analitica';
 
 type ChatMessage = {
   id: string;
   role: 'system' | 'user' | 'assistant' | 'error';
   content: string;
 };
-
-type LLMRequestPayload = {
-  message: string;
-  context: {
-    plantillaId: string | null;
-    source: string | null;
-  };
-};
-
-/**
- * Construye el payload para el LLM; sirve para unificar texto libre y contexto de la app.
- */
-function buildLLMPayload(
-  message: string,
-  context: { plantillaId: string | null; source: string | null }
-): LLMRequestPayload {
-  return { message, context };
-}
 
 /**
  * Panel flotante del chat analitico; sirve para mostrar el input libre sin depender de una URL.
@@ -40,7 +23,10 @@ export default function AnalyticsChatPanel() {
   const { user, isLoading } = useAuth();
   const hasAccess = canUseAnalytics(user);
   const { plantillaId: contextPlantillaId, source: contextSource } = useAnalyticsContextStore();
-  const lastPayloadRef = useRef<LLMRequestPayload | null>(null);
+  const lastPayloadRef = useRef<{
+    message: string;
+    context: { plantillaId: string | null; source: string | null };
+  } | null>(null);
   const [inputText, setInputText] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -91,14 +77,30 @@ export default function AnalyticsChatPanel() {
     appendMessage('user', trimmed);
     setInputText('');
 
-    const payload = buildLLMPayload(trimmed, {
-      plantillaId: contextPlantillaId ?? null,
-      source: contextSource ?? null,
-    });
+    const payload = {
+      message: trimmed,
+      context: {
+        plantillaId: contextPlantillaId ?? null,
+        source: contextSource ?? null,
+      },
+    };
     lastPayloadRef.current = payload;
 
-    appendMessage('assistant', 'LLM no integrado aun. Tu mensaje quedo listo para procesar.');
-    setIsBusy(false);
+    try {
+      const response = await sendAnalyticsChat(payload);
+      if (response.ok && response.reply) {
+        appendMessage('assistant', response.reply);
+      } else if (response.detail || response.error) {
+        appendMessage('assistant', response.detail || response.error || 'Respuesta sin detalle.');
+      } else {
+        appendMessage('assistant', 'Respuesta recibida.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error inesperado en el chat.';
+      appendMessage('error', message);
+    } finally {
+      setIsBusy(false);
+    }
   };
 
   /**

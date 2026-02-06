@@ -90,6 +90,25 @@ export type AnalyticsAggregateResponse = {
 
 export type AnalyticsQueryResponse = AnalyticsListResponse | AnalyticsAggregateResponse;
 
+export type AnalyticsChatContext = {
+  plantillaId?: string | null;
+  source?: string | null;
+};
+
+export type AnalyticsChatRequest = {
+  message: string;
+  context?: AnalyticsChatContext;
+};
+
+export type AnalyticsChatResponse = {
+  ok: boolean;
+  reply?: string;
+  error?: string;
+  detail?: string;
+  dsl?: unknown;
+  results?: unknown;
+};
+
 export type AnalyticsCatalogParams = {
   plantillaId: string;
   onlyGrid?: boolean;
@@ -185,4 +204,13 @@ export async function runAnalyticsQuery(
   payload: AnalyticsQueryPayload
 ): Promise<AnalyticsQueryResponse> {
   return postAnalyticsJSON<AnalyticsQueryResponse>('legajos/analytics/query/', payload);
+}
+
+/**
+ * Envia un mensaje al chat analitico; sirve para orquestar LLM + DSL en backend.
+ */
+export async function sendAnalyticsChat(
+  payload: AnalyticsChatRequest
+): Promise<AnalyticsChatResponse> {
+  return postAnalyticsJSON<AnalyticsChatResponse>('legajos/analytics/chat/', payload);
 }
