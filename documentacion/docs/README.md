@@ -21,6 +21,7 @@ Sistema de gestión de legajos con flujos de trabajo dinámicos y plantillas con
 ### ⚙️ Funcionalidades Avanzadas
 - [Implementación Dinámica de Módulos](./09-modulos-dinamicos.md)
 - [Datos Extras y Configuraciones](./10-datos-extras.md)
+- [Analitica DSL](./12-analitica-dsl.md)
 
 ## Tecnologías Principales
 

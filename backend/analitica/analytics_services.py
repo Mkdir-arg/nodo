@@ -61,6 +61,111 @@ def build_catalog(
                 "metrics": ["count"],
                 "order_supports_metrics": True,
             },
+            "dsl_schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "title": "Analitica DSL v0",
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["entity", "mode"],
+                "properties": {
+                    "entity": {"const": "legajos"},
+                    "mode": {"enum": ["list", "aggregate"]},
+                    "filters": {"$ref": "#/$defs/filterExpr"},
+                    "order": {
+                        "type": "array",
+                        "maxItems": 3,
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["field"],
+                            "properties": {
+                                "field": {"type": "string"},
+                                "dir": {"enum": ["asc", "desc"]},
+                            },
+                        },
+                    },
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+                    "offset": {"type": "integer", "minimum": 0},
+                    "group_by": {
+                        "type": "array",
+                        "maxItems": 3,
+                        "items": {"type": "string"},
+                    },
+                    "metrics": {
+                        "type": "array",
+                        "maxItems": 5,
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "required": ["op"],
+                            "properties": {
+                                "op": {"const": "count"},
+                                "as": {"type": "string"},
+                                "field": {"enum": ["*"]},
+                            },
+                        },
+                    },
+                },
+                "$defs": {
+                    "filterExpr": {
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "required": ["and"],
+                                "properties": {
+                                    "and": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {"$ref": "#/$defs/filterExpr"},
+                                    }
+                                },
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "required": ["or"],
+                                "properties": {
+                                    "or": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {"$ref": "#/$defs/filterExpr"},
+                                    }
+                                },
+                            },
+                            {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "required": ["not"],
+                                "properties": {"not": {"$ref": "#/$defs/filterExpr"}},
+                            },
+                            {"$ref": "#/$defs/filterLeaf"},
+                        ]
+                    },
+                    "filterLeaf": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "required": ["field", "op"],
+                        "properties": {
+                            "field": {"type": "string"},
+                            "op": {
+                                "enum": [
+                                    "eq",
+                                    "ne",
+                                    "in",
+                                    "nin",
+                                    "gt",
+                                    "gte",
+                                    "lt",
+                                    "lte",
+                                    "contains",
+                                ]
+                            },
+                            "value": {},
+                        },
+                    },
+                },
+            },
             "examples": {
                 "list": {
                     "entity": "legajos",

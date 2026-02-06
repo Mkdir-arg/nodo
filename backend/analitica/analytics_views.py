@@ -8,6 +8,7 @@ from typing import Any, Dict, Mapping, Optional
 
 from django.http import Http404
 from rest_framework import status
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -23,12 +24,81 @@ from legajos.models import Legajo
 
 logger = logging.getLogger(__name__)
 
+EXAMPLE_LIST_DSL = {
+    "entity": "legajos",
+    "mode": "list",
+    "filters": {
+        "and": [
+            {"field": "edad", "op": "gte", "value": 18},
+            {"field": "nombre", "op": "contains", "value": "Ana"},
+        ]
+    },
+    "order": [{"field": "created_at", "dir": "desc"}],
+    "limit": 10,
+    "offset": 0,
+}
+
+EXAMPLE_AGG_DSL = {
+    "entity": "legajos",
+    "mode": "aggregate",
+    "group_by": ["nombre"],
+    "metrics": [{"op": "count", "as": "total"}],
+    "order": [{"field": "total", "dir": "desc"}],
+    "limit": 10,
+    "offset": 0,
+}
+
 
 class AnalyticsCatalogView(APIView):
     """Devuelve el catalogo de campos; sirve para que el cliente sepa que consultar."""
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Analitica"],
+        parameters=[
+            OpenApiParameter(
+                name="plantilla_id",
+                type=OpenApiTypes.UUID,
+                required=True,
+                description="ID de plantilla para resolver el catalogo.",
+            ),
+            OpenApiParameter(
+                name="only_grid",
+                type=OpenApiTypes.BOOL,
+                required=False,
+                description="True para exponer solo campos seMuestraEnGrilla.",
+            ),
+            OpenApiParameter(
+                name="include_system_fields",
+                type=OpenApiTypes.BOOL,
+                required=False,
+                description="True para incluir campos de sistema.",
+            ),
+            OpenApiParameter(
+                name="include_sensitive",
+                type=OpenApiTypes.BOOL,
+                required=False,
+                description="Solo superuser; incluye campos sensibles.",
+            ),
+        ],
+        responses=OpenApiTypes.OBJECT,
+        examples=[
+            OpenApiExample(
+                "Catalogo",
+                value={
+                    "ok": True,
+                    "catalog": {
+                        "entity": "legajos",
+                        "fields": [
+                            {"key": "nombre", "type": "text", "ops": ["contains", "eq"]}
+                        ],
+                        "meta": {"aggregate": {"metrics": ["count"]}},
+                    },
+                },
+            )
+        ],
+    )
     def get(self, request, *args, **kwargs):
         """Responde el catalogo de campos; sirve para discovery seguro del DSL."""
         _require_legajo_view_perm(request)
@@ -45,6 +115,20 @@ class AnalyticsValidateView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Analitica"],
+        request=OpenApiTypes.OBJECT,
+        responses=OpenApiTypes.OBJECT,
+        examples=[
+            OpenApiExample(
+                "Validacion list",
+                value={
+                    "plantilla_id": "00000000-0000-0000-0000-000000000000",
+                    "dsl": EXAMPLE_LIST_DSL,
+                },
+            )
+        ],
+    )
     def post(self, request, *args, **kwargs):
         """Valida un DSL enviado; sirve para obtener errores tempranos."""
         _require_legajo_view_perm(request)
@@ -103,6 +187,27 @@ class AnalyticsQueryView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Analitica"],
+        request=OpenApiTypes.OBJECT,
+        responses=OpenApiTypes.OBJECT,
+        examples=[
+            OpenApiExample(
+                "Query list",
+                value={
+                    "plantilla_id": "00000000-0000-0000-0000-000000000000",
+                    "dsl": EXAMPLE_LIST_DSL,
+                },
+            ),
+            OpenApiExample(
+                "Query aggregate",
+                value={
+                    "plantilla_id": "00000000-0000-0000-0000-000000000000",
+                    "dsl": EXAMPLE_AGG_DSL,
+                },
+            ),
+        ],
+    )
     def post(self, request, *args, **kwargs):
         """Ejecuta una consulta list; sirve para obtener filas seguras y paginadas."""
         _require_legajo_view_perm(request)
