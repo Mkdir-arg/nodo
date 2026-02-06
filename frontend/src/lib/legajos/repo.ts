@@ -1,4 +1,5 @@
 import { ApiRepo, ITemplatesRepo } from "./api-repo";
+import { apiUrl } from "@/services/api";
 
 class SimpleRepo implements ITemplatesRepo {
   private apiRepo = new ApiRepo();
@@ -88,7 +89,7 @@ if (typeof window !== 'undefined') {
       const token = localStorage.getItem('access_token');
       if (!token) return 'No token';
       try {
-        const res = await fetch('http://localhost:8000/api/plantillas/', {
+        const res = await fetch(apiUrl("plantillas/"), {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         return res.ok ? 'API OK' : `Error ${res.status}`;

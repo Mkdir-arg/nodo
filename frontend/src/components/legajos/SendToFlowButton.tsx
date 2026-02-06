@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { getJSON, postJSON } from '@/lib/api';
+import { apiUrl } from '@/services/api';
 
 interface Flow {
   id: string;
@@ -56,7 +57,7 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
     mutationFn: async ({ flowId, legajoId }: { flowId: string; legajoId: string }) => {
       try {
         // Intentar crear en DB real
-        const response = await fetch('http://localhost:8000/api/create-instance/', {
+        const response = await fetch(apiUrl('create-instance/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -106,7 +107,7 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
     
     // Crear instancia después en background (opcional)
     setTimeout(() => {
-      fetch('http://localhost:8000/api/create-instance/', {
+      fetch(apiUrl('create-instance/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -123,24 +124,24 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="text-xs px-2 py-1 rounded bg-green-100 text-green-800 hover:bg-green-200"
+        className="text-xs px-2 py-1 rounded bg-primary-pink/10 text-primary-pink hover:bg-primary-pink/20"
       >
         🚀 Enviar a flujo
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-full">
-            <h3 className="text-lg font-semibold mb-4">Enviar legajo a flujo</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-nodo-border p-6 w-96 max-w-full shadow-md">
+            <h3 className="text-lg font-semibold text-nodo-title mb-4">Enviar legajo a flujo</h3>
             
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium text-nodo-legajo-subtitle mb-2">
                 Seleccionar flujo:
               </label>
               <select
                 value={selectedFlowId}
                 onChange={(e) => setSelectedFlowId(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-nodo-border rounded px-3 py-2 text-nodo-text"
               >
                 <option value="">-- Selecciona un flujo --</option>
                 {flows.map((flow) => (
@@ -154,14 +155,14 @@ export function SendToFlowButton({ legajoId }: SendToFlowButtonProps) {
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 border rounded hover:bg-gray-50"
+                className="px-4 py-2 border border-nodo-border rounded text-nodo-text hover:bg-gray-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSendToFlow}
                 disabled={!selectedFlowId}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+                className="px-4 py-2 bg-primary-gradient text-white rounded font-medium hover:brightness-110 disabled:bg-gray-300"
               >
                 Enviar
               </button>

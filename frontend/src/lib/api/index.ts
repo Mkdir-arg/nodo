@@ -1,13 +1,24 @@
-// frontend/src/lib/api/index.ts
 import { clearStoredTokens, getAccessToken } from "@/lib/tokens";
-// Función para obtener la base de la API
+
+const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
+const isServer = typeof window === "undefined";
+
+function guessPublicBase(): string {
+  if (typeof window === "undefined") return "http://backend:8000/api";
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  const port = process.env.NEXT_PUBLIC_API_PORT ?? "8000";
+  return `${protocol}//${hostname}:${port}/api`;
+}
+
+// Funcion para obtener la base de la API
 function getApiBase(): string {
-  if (typeof window !== 'undefined') {
-    // Cliente: usar localhost para acceso desde navegador
-    return process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+  if (typeof window !== "undefined") {
+    // Cliente: usar la base publica o inferida
+    return process.env.NEXT_PUBLIC_API_BASE || guessPublicBase();
   }
-  // Servidor (SSR): usar URL interna de Docker si está disponible
-  return process.env.API_BASE_INTERNAL || process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/api';
+  // Servidor (SSR): usar URL interna de Docker si esta disponible
+  return process.env.API_BASE_INTERNAL || process.env.NEXT_PUBLIC_API_BASE || "http://backend:8000/api";
 }
 
 /** Construye URL de API */
@@ -17,15 +28,12 @@ function apiUrl(path = ""): string {
   return trimmedPath ? `${base.replace(/\/+$/, "")}/${trimmedPath}` : base;
 }
 
-const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
-const isServer = typeof window === "undefined";
-
-/** Normaliza método a MAYÚSCULAS */
+/** Normaliza metodo a MAYUSCULAS */
 function normalizeMethod(method?: string): string {
   return (method || "GET").toUpperCase();
 }
 
-/** Forzamos slash final en métodos no-seguros para evitar redirects de Django */
+/** Forzamos slash final en metodos no-seguros para evitar redirects de Django */
 function shouldForceTrailingSlash(method: string) {
   return method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
 }
@@ -48,8 +56,8 @@ function ensureTrailingSlash(url: string): string {
 /** Quita slashes iniciales y un prefijo 'api/' si viene en el path */
 function normalizeIncomingPath(path: string): string {
   const p = String(path ?? "");
-  if (ABSOLUTE_URL_REGEX.test(p)) return p;                // ya es absoluta
-  const noLead = p.replace(/^\/+/, "");                    // quita "/" inicial
+  if (ABSOLUTE_URL_REGEX.test(p)) return p; // ya es absoluta
+  const noLead = p.replace(/^\/+/, ""); // quita "/" inicial
   return noLead.startsWith("api/") ? noLead.slice(4) : noLead; // quita "api/"
 }
 
@@ -59,7 +67,7 @@ export function resolveApiUrl(path: string): string {
   return ABSOLUTE_URL_REGEX.test(normalized) ? normalized : apiUrl(normalized);
 }
 
-/** Construye la URL final y aplica slash según método */
+/** Construye la URL final y aplica slash segun metodo */
 export function buildApiUrl(path: string, method?: string): string {
   const resolved = resolveApiUrl(path);
   const normalizedMethod = normalizeMethod(method);
@@ -90,14 +98,14 @@ export async function api(path: string, init: RequestInit = {}) {
     // Verificar si es error de inactividad o token expirado
     try {
       const errorData = await res.clone().json();
-      if (errorData.code === 'INACTIVITY_TIMEOUT') {
+      if (errorData.code === "INACTIVITY_TIMEOUT") {
         if (!isServer) {
           clearStoredTokens?.();
           window.location.href = "/login";
         }
         throw new Error("INACTIVITY_TIMEOUT");
       }
-      if (errorData.code === 'TOKEN_EXPIRED') {
+      if (errorData.code === "TOKEN_EXPIRED") {
         if (!isServer) {
           clearStoredTokens?.();
           window.location.href = "/login";
@@ -107,7 +115,7 @@ export async function api(path: string, init: RequestInit = {}) {
     } catch (e) {
       // Si no se puede parsear el JSON, continuar con el manejo normal
     }
-    
+
     if (!isServer) {
       clearStoredTokens?.();
       window.location.href = "/login";

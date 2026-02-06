@@ -3,11 +3,18 @@ export const designTokens = {
   // Colors
   colors: {
     primary: {
-      50: '#eff6ff',
-      100: '#dbeafe', 
-      500: '#3b82f6',
-      600: '#2563eb',
-      700: '#1d4ed8',
+      50: '#fff0f7',
+      100: '#ffd6ea',
+      500: '#FF0080',
+      600: '#e10071',
+      700: '#c00061',
+    },
+    secondary: {
+      50: '#f4e9ff',
+      100: '#e6d4ff',
+      500: '#7928CA',
+      600: '#6b22b5',
+      700: '#5a1e99',
     },
     success: {
       50: '#f0fdf4',
@@ -46,14 +53,14 @@ export const designTokens = {
 
   // Component variants
   card: {
-    default: 'bg-white border border-gray-200 rounded-lg shadow-sm',
-    elevated: 'bg-white border border-gray-200 rounded-lg shadow-md',
-    gradient: 'bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-1',
+    default: 'bg-white border border-nodo-border rounded-lg shadow-md',
+    elevated: 'bg-white border border-nodo-border rounded-lg shadow-md',
+    gradient: 'bg-primary-gradient rounded-xl p-1',
   },
   
   button: {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600',
-    secondary: 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300',
+    primary: 'bg-primary-gradient text-white font-medium hover:brightness-110',
+    secondary: 'bg-white hover:bg-gray-50 text-nodo-text border-nodo-border',
     success: 'bg-green-600 hover:bg-green-700 text-white border-green-600',
     danger: 'bg-red-600 hover:bg-red-700 text-white border-red-600',
   },
@@ -62,7 +69,7 @@ export const designTokens = {
     success: 'bg-green-100 text-green-700 border-green-200',
     warning: 'bg-yellow-100 text-yellow-700 border-yellow-200', 
     error: 'bg-red-100 text-red-700 border-red-200',
-    info: 'bg-blue-100 text-blue-700 border-blue-200',
+    info: 'bg-primary-pink/10 text-primary-pink border-primary-pink/20',
     neutral: 'bg-gray-100 text-gray-700 border-gray-200',
   }
 };

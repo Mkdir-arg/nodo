@@ -53,10 +53,10 @@ function renderNode(node: any, ctx: any) {
     const value = ctx.data?.[node.key];
     return (
       <div key={node.id} className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-nodo-legajo-subtitle mb-1">
           {node.label || node.key}
         </label>
-        <div className="text-gray-900">
+        <div className="text-nodo-legajo-name">
           {value || '—'}
         </div>
       </div>
@@ -90,11 +90,11 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
   }, [response?.data]);
 
   if (isLoading) {
-    return <div className="p-6">Cargando legajo...</div>;
+    return <div className="p-6 text-nodo-text">Cargando legajo...</div>;
   }
 
   if (!response) {
-    return <div className="p-6">Error al cargar el legajo.</div>;
+    return <div className="p-6 text-nodo-text">Error al cargar el legajo.</div>;
   }
 
   const data = response.data ?? {};
@@ -159,7 +159,7 @@ export default function LegajoDetallePage({ params }: { params: { id: string } }
           )}
           
           {sections.length === 0 && dataNodes.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-nodo-legajo-subtitle">
               No hay datos para mostrar
             </div>
           )}

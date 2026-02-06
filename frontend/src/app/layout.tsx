@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
+import { Inter } from 'next/font/google';
 import '../styles/globals.css';
 import Providers from './providers';
 import MainLayout from '@/components/layout/MainLayout';
@@ -11,10 +12,12 @@ export const metadata: Metadata = {
   description: 'Next.js frontend',
 };
 
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${inter.className} antialiased`}>
         <Providers>
           <AuthProvider>
             <ToastProvider>

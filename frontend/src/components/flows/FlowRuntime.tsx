@@ -7,6 +7,7 @@ import { FormRenderer } from './FormRenderer'
 import { StartTable } from './StartTable'
 import { EvaluationRenderer } from './renderers/EvaluationRenderer'
 import { toast } from '@/lib/toast'
+import { apiUrl } from '@/services/api'
 
 interface FlowRuntimeProps {
   instanceId: string
@@ -59,7 +60,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
   }, [onMetadataChange])
   const loadLegajos = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/legajos/')
+      const response = await fetch(apiUrl('legajos/'))
       
       if (!response.ok) {
         throw new Error('Error cargando legajos')
@@ -98,7 +99,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
       
       if (instanceId.startsWith('flow-')) {
         const flowId = instanceId.replace('flow-', '')
-        const flowResponse = await fetch(`http://localhost:8000/api/flows/${flowId}/`)
+        const flowResponse = await fetch(apiUrl(`flows/${flowId}/`))
         
         if (!flowResponse.ok) {
           throw new Error('No se pudo cargar el flujo')
@@ -144,7 +145,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
       }
       
       // Solo para instancias reales (no flow-X)
-      const response = await fetch(`http://localhost:8000/api/instances/${instanceId}/current_step/`)
+      const response = await fetch(apiUrl(`instances/${instanceId}/current_step/`))
       console.log('Current step response status:', response.status)
       
       if (!response.ok) {
@@ -185,7 +186,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
         const flowId = instanceId.replace('flow-', '')
         
         // Primero verificar si ya existe una instancia para este legajo
-        const instancesResponse = await fetch(`http://localhost:8000/api/instances/?flow=${flowId}`)
+        const instancesResponse = await fetch(apiUrl(`instances/?flow=${flowId}`))
         if (instancesResponse.ok) {
           const instances = await instancesResponse.json()
           const existingInstance = instances.find((inst: any) => inst.legajo_id === interactionData.legajo_id)
@@ -198,7 +199,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
         }
         
         // Si no existe, crear nueva instancia
-        const createResponse = await fetch(`http://localhost:8000/api/instances/create_from_legajo/`, {
+        const createResponse = await fetch(apiUrl('instances/create_from_legajo/'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -227,7 +228,7 @@ export function FlowRuntime({ instanceId, onMetadataChange }: FlowRuntimeProps) 
         throw new Error('Debe seleccionar un legajo primero')
       }
       
-      const response = await fetch(`http://localhost:8000/api/instances/${instanceId}/interact/`, {
+      const response = await fetch(apiUrl(`instances/${instanceId}/interact/`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

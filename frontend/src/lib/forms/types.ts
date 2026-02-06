@@ -1,6 +1,29 @@
 export type NodeKind = 'section' | 'field';
 export type ColumnSpan = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-export type FieldType = 'text' | 'number' | 'select' | 'date' | 'checkbox' | 'file';
+export type FieldType = 
+  | 'text' 
+  | 'number' 
+  | 'select' 
+  | 'date' 
+  | 'checkbox' 
+  | 'file'
+  | 'email'
+  | 'textarea'
+  | 'phone'
+  | 'info'
+  | 'sum'
+  | 'document'
+  | 'image'
+  | 'cuit_razon_social'
+  | 'calendar'
+  | 'ref:nombre'
+  | 'ref:apellido'
+  | 'ref:documento'
+  | 'ref:documento_tipo'
+  | 'ref:direccion'
+  | 'ref:direccion_numero'
+  | 'ref:direccion_provincia'
+  | 'ref:direccion_municipio';
 
 export interface BaseNode {
   id: string;

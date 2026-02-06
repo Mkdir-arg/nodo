@@ -18,13 +18,13 @@ export default function CounterGrid({ cfg, data, meta }: Props) {
   return (
     <div className={`grid ${cols} gap-4`}>
       {(cfg.items || []).map((it: any) => (
-        <div key={it.id} className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">{it.label}</div>
-          <div className="text-xl font-semibold">
+        <div key={it.id} className="p-4 bg-white rounded border border-nodo-border shadow-md">
+          <div className="text-sm text-nodo-legajo-subtitle">{it.label}</div>
+          <div className="text-xl font-semibold text-nodo-title">
             {renderTpl(it.value, ctx)}
           </div>
           {it.trend && (
-            <div className="text-xs text-gray-400">{renderTpl(it.trend, ctx)}</div>
+            <div className="text-xs text-nodo-legajo-subtitle">{renderTpl(it.trend, ctx)}</div>
           )}
         </div>
       ))}

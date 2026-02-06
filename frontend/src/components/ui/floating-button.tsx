@@ -16,7 +16,7 @@ export function FloatingButton({
   return (
     <button
       onClick={onClick}
-      className={`fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 z-50 flex items-center justify-center ${className}`}
+      className={`fixed bottom-6 right-6 w-14 h-14 bg-primary-gradient text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 z-50 flex items-center justify-center ${className}`}
     >
       {icon}
     </button>

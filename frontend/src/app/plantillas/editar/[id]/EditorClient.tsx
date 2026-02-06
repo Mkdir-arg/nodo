@@ -178,7 +178,7 @@ export default function EditorClient({ plantillaId }: { plantillaId: string }) {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-[#F3F4F6]">
       <div className="p-4 border-b bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

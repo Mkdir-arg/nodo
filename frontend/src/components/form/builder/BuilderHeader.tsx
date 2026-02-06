@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Save, Plus, FolderPlus } from 'lucide-react';
 import { useBuilderStore } from '@/lib/store/usePlantillaBuilderStore';
 import { saveLayout } from '@/lib/api/plantillas';
+import { resolveApiUrl } from '@/lib/api';
 
 // Importar fetchJSON helper
 const fetchJSON = async (url: string, options?: RequestInit) => {
   const token = localStorage.getItem('access_token');
-  const response = await fetch(`http://localhost:8000${url}`, {
+  const response = await fetch(resolveApiUrl(url), {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -87,15 +88,31 @@ export default function BuilderHeader({ plantillaId, plantillaNombre }: BuilderH
   };
 
   const handleFieldTypeSelect = (fieldType: any) => {
+    if (!fieldType) return;
+
     if (fieldType.category === 'section') {
       addSection(fieldType.config.title);
-    } else {
-      addField(firstSectionId!, {
-        type: fieldType.id,
-        colSpan: fieldType.defaultColSpan,
-        props: fieldType.config
-      });
+      return;
     }
+
+    if (typeof fieldType === 'string') {
+      addField(firstSectionId!, fieldType);
+      return;
+    }
+
+    const typeId = fieldType.id;
+    if (!typeId) return;
+
+    if (String(typeId).startsWith('ui:') || !fieldType.config) {
+      addField(firstSectionId!, typeId);
+      return;
+    }
+
+    addField(firstSectionId!, {
+      type: typeId,
+      colSpan: fieldType.defaultColSpan,
+      props: fieldType.config
+    });
   };
 
   return (

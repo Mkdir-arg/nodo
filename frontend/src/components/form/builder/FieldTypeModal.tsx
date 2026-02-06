@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
@@ -10,56 +9,56 @@ interface FieldType {
 }
 
 const FIELD_GROUPS = {
-  "Datos referencia": [
-    { id: 'text', label: 'Nombre' },
-    { id: 'text', label: 'Apellido' },
+  'Datos referencia': [
+    { id: 'ref:nombre', label: 'Nombre' },
+    { id: 'ref:apellido', label: 'Apellido' },
     { id: 'email', label: 'Email' },
-    { id: 'select', label: 'Tipo Documento' },
-    { id: 'number', label: 'Número Documento' },
-    { id: 'select', label: 'Provincia' },
-    { id: 'select', label: 'Municipio' },
-    { id: 'text', label: 'Calle' },
-    { id: 'number', label: 'Número' },
-    { id: 'phone', label: 'Teléfono' },
+    { id: 'ref:documento_tipo', label: 'Tipo Documento' },
+    { id: 'ref:documento', label: 'Numero Documento' },
+    { id: 'ref:direccion_provincia', label: 'Provincia' },
+    { id: 'ref:direccion_municipio', label: 'Municipio' },
+    { id: 'ref:direccion', label: 'Calle' },
+    { id: 'ref:direccion_numero', label: 'Numero' },
+    { id: 'phone', label: 'Telefono' },
   ],
-  "Básicos": [
+  Basicos: [
     { id: 'text', label: 'Texto corto' },
     { id: 'textarea', label: 'Texto largo' },
-    { id: 'number', label: 'Número' },
+    { id: 'number', label: 'Numero' },
     { id: 'checkbox', label: 'Checkbox' },
     { id: 'info', label: 'Texto informativo' },
     { id: 'sum', label: 'Suma (readonly)' },
   ],
-  "Selección": [
+  Seleccion: [
     { id: 'select', label: 'Selector excluyente' },
     { id: 'dropdown', label: 'Lista desplegable' },
     { id: 'radio', label: 'Radio buttons' },
-    { id: 'multiselect', label: 'Selector múltiple' },
+    { id: 'multiselect', label: 'Selector multiple' },
     { id: 'select_with_filter', label: 'Lista con filtro' },
   ],
-  "Avanzados": [
+  Avanzados: [
     { id: 'date', label: 'Fecha' },
     { id: 'time', label: 'Hora' },
     { id: 'slider', label: 'Deslizador' },
-    { id: 'rating', label: 'Calificación' },
+    { id: 'rating', label: 'Calificacion' },
     { id: 'color', label: 'Color' },
     { id: 'currency', label: 'Moneda' },
     { id: 'url', label: 'URL' },
-    { id: 'password', label: 'Contraseña' },
-    { id: 'code', label: 'Código' },
+    { id: 'password', label: 'Contrasena' },
+    { id: 'code', label: 'Codigo' },
     { id: 'tags', label: 'Etiquetas' },
     { id: 'switch', label: 'Interruptor' },
     { id: 'document', label: 'Archivo' },
     { id: 'image', label: 'Imagen' },
-    { id: 'cuit_razon_social', label: 'CUIT y Razón social' },
+    { id: 'cuit_razon_social', label: 'CUIT y Razon social' },
     { id: 'group', label: 'Grupo iterativo' },
   ],
-  "Visuales": [
+  Visuales: [
     { id: 'ui:header', label: 'Encabezado Hero\nImagen + card' },
     { id: 'ui:divider', label: 'Separador' },
     { id: 'ui:banner', label: 'Banner' },
     { id: 'ui:paginator', label: 'Paginador\nWizard/Tabs' },
-    { id: 'ui:relation', label: 'Relación' },
+    { id: 'ui:relation', label: 'Relacion' },
   ],
 };
 
@@ -81,7 +80,7 @@ export default function FieldTypeModal({ isOpen, onClose, onSelect }: FieldTypeM
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
+
         <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
           <div className="space-y-6">
             {Object.entries(FIELD_GROUPS).map(([groupName, fields]) => (
