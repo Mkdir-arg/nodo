@@ -62,6 +62,10 @@ Respuesta:
 - `mode: list` => `results` con campos minimos.
 - `mode: aggregate` => `groups` con resultados agregados.
 
+## Permisos
+
+Los endpoints del DSL requieren el permiso `analitica.use_analitica`.
+
 ## Especificacion DSL
 
 ### Estructura base

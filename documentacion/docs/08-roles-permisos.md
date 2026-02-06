@@ -69,7 +69,18 @@ class Meta:
     ]
 ```
 
-### 4. Módulo Flujos
+Nota: la Analitica DSL utiliza el rol `analitica.use_analitica` para los endpoints
+`/api/legajos/analytics/*` (catalogo, validate, query).
+
+### 4. Modulo Analitica
+```python
+class Meta:
+    permissions = [
+        ('use_analitica', 'Can use analytics'),
+    ]
+```
+
+### 5. Módulo Flujos
 ```python
 class Meta:
     permissions = [
@@ -105,21 +116,21 @@ ADMIN_PERMISSIONS = [
     # Config
     'config.view_system_settings',
     'config.change_system_settings',
-    
+
     # Plantillas
     'plantillas.add_plantilla',
     'plantillas.change_plantilla',
     'plantillas.delete_plantilla',
     'plantillas.view_plantilla',
     'plantillas.publish_plantilla',
-    
+
     # Legajos
     'legajos.add_legajo',
     'legajos.change_legajo',
     'legajos.delete_legajo',
     'legajos.view_legajo',
     'legajos.export_legajo',
-    
+
     # Flujos
     'flows.add_flujo',
     'flows.change_flujo',
@@ -127,7 +138,7 @@ ADMIN_PERMISSIONS = [
     'flows.view_flujo',
     'flows.execute_flujo',
     'flows.monitor_flujo',
-    
+
     # Usuarios
     'auth.add_user',
     'auth.change_user',
@@ -142,12 +153,12 @@ EDITOR_PERMISSIONS = [
     'plantillas.add_plantilla',
     'plantillas.change_plantilla',
     'plantillas.view_plantilla',
-    
+
     # Legajos
     'legajos.add_legajo',
     'legajos.change_legajo',
     'legajos.view_legajo',
-    
+
     # Flujos
     'flows.add_flujo',
     'flows.change_flujo',
@@ -163,7 +174,7 @@ OPERATOR_PERMISSIONS = [
     'legajos.add_legajo',
     'legajos.change_legajo',
     'legajos.view_legajo',
-    
+
     # Flujos
     'flows.view_flujo',
     'flows.execute_flujo',
@@ -210,7 +221,7 @@ class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
     serializer_class = PlantillaSerializer
     permission_classes = [IsAuthenticated, HasPlantillaPermission]
-    
+
     def get_permissions(self):
         """Permisos dinámicos según la acción"""
         if self.action == 'create':
@@ -221,7 +232,7 @@ class PlantillaViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, HasDeletePermission]
         else:
             permission_classes = [IsAuthenticated, HasViewPermission]
-        
+
         return [permission() for permission in permission_classes]
 ```
 
@@ -231,9 +242,9 @@ class LegajoPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         # Solo el creador o admin puede modificar
         if request.method in ['PUT', 'PATCH', 'DELETE']:
-            return (obj.created_by == request.user or 
+            return (obj.created_by == request.user or
                    request.user.has_perm('legajos.change_legajo'))
-        
+
         # Lectura para usuarios con permiso
         return request.user.has_perm('legajos.view_legajo')
 ```
@@ -245,20 +256,20 @@ class LegajoPermission(BasePermission):
 class PermissionMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-    
+
     def __call__(self, request):
         # Verificar permisos antes de procesar request
         if not self.has_permission(request):
             return JsonResponse({'error': 'Permission denied'}, status=403)
-        
+
         response = self.get_response(request)
         return response
-    
+
     def has_permission(self, request):
         # Lógica de verificación de permisos
         if request.path.startswith('/api/admin/'):
             return request.user.is_staff
-        
+
         return True
 ```
 
@@ -273,13 +284,13 @@ class RBACMiddleware:
             'operator': OPERATOR_PERMISSIONS,
             'viewer': VIEWER_PERMISSIONS,
         }
-    
+
     def __call__(self, request):
         if request.user.is_authenticated:
             user_role = self.get_user_role(request.user)
             request.user_role = user_role
             request.user_permissions = self.role_permissions.get(user_role, [])
-        
+
         response = self.get_response(request)
         return response
 ```
@@ -298,7 +309,7 @@ class UserRoleService:
             return True
         except Group.DoesNotExist:
             return False
-    
+
     @staticmethod
     def remove_role(user, role_name):
         """Remueve un rol de un usuario"""
@@ -308,12 +319,12 @@ class UserRoleService:
             return True
         except Group.DoesNotExist:
             return False
-    
+
     @staticmethod
     def get_user_roles(user):
         """Obtiene los roles de un usuario"""
         return [group.name for group in user.groups.all()]
-    
+
     @staticmethod
     def has_role(user, role_name):
         """Verifica si un usuario tiene un rol específico"""
@@ -327,7 +338,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.create_groups()
         self.assign_permissions()
-    
+
     def create_groups(self):
         """Crea los grupos de roles"""
         roles = ['Administrador', 'Editor', 'Operador', 'Visualizador']
@@ -335,7 +346,7 @@ class Command(BaseCommand):
             group, created = Group.objects.get_or_create(name=role)
             if created:
                 self.stdout.write(f"Created group: {role}")
-    
+
     def assign_permissions(self):
         """Asigna permisos a los grupos"""
         # Administrador
@@ -352,22 +363,22 @@ class Command(BaseCommand):
 ```typescript
 const usePermissions = () => {
   const { user } = useAuth()
-  
+
   const hasPermission = (permission: string): boolean => {
     if (!user) return false
     return user.permissions.includes(permission)
   }
-  
+
   const hasRole = (role: string): boolean => {
     if (!user) return false
     return user.groups.includes(role)
   }
-  
+
   const canAccess = (resource: string, action: string): boolean => {
     const permission = `${resource}.${action}`
     return hasPermission(permission)
   }
-  
+
   return { hasPermission, hasRole, canAccess }
 }
 ```
@@ -388,13 +399,13 @@ const ProtectedComponent: React.FC<ProtectedComponentProps> = ({
   children
 }) => {
   const { hasPermission, hasRole } = usePermissions()
-  
+
   const hasAccess = () => {
     if (permission && !hasPermission(permission)) return false
     if (role && !hasRole(role)) return false
     return true
   }
-  
+
   return hasAccess() ? <>{children}</> : <>{fallback}</>
 }
 ```
@@ -405,11 +416,11 @@ const PlantillasList = () => {
   return (
     <div>
       <h1>Plantillas</h1>
-      
+
       <ProtectedComponent permission="plantillas.add_plantilla">
         <Button onClick={createPlantilla}>Crear Plantilla</Button>
       </ProtectedComponent>
-      
+
       <ProtectedComponent role="Administrador">
         <AdminPanel />
       </ProtectedComponent>
@@ -431,7 +442,7 @@ class PermissionAuditLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField()
     user_agent = models.TextField()
-    
+
     class Meta:
         ordering = ['-timestamp']
 ```
@@ -441,10 +452,10 @@ class PermissionAuditLog(models.Model):
 class PermissionAuditMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-    
+
     def __call__(self, request):
         response = self.get_response(request)
-        
+
         # Log permission checks
         if hasattr(request, 'permission_checks'):
             for check in request.permission_checks:
@@ -457,7 +468,7 @@ class PermissionAuditMiddleware:
                     ip_address=self.get_client_ip(request),
                     user_agent=request.META.get('HTTP_USER_AGENT', '')
                 )
-        
+
         return response
 ```
 
@@ -494,17 +505,17 @@ class PermissionTestCase(TestCase):
         self.admin_user = User.objects.create_user('admin', 'admin@test.com', 'pass')
         self.editor_user = User.objects.create_user('editor', 'editor@test.com', 'pass')
         self.viewer_user = User.objects.create_user('viewer', 'viewer@test.com', 'pass')
-        
+
         # Asignar roles
         UserRoleService.assign_role(self.admin_user, 'Administrador')
         UserRoleService.assign_role(self.editor_user, 'Editor')
         UserRoleService.assign_role(self.viewer_user, 'Visualizador')
-    
+
     def test_admin_can_create_plantilla(self):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post('/api/plantillas/', data={})
         self.assertEqual(response.status_code, 201)
-    
+
     def test_viewer_cannot_create_plantilla(self):
         self.client.force_authenticate(user=self.viewer_user)
         response = self.client.post('/api/plantillas/', data={})

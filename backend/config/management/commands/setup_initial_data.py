@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 
 
 class Command(BaseCommand):
@@ -19,6 +19,7 @@ class Command(BaseCommand):
             'Usuarios',
             'Editores',
             'Supervisores',
+            'Analitica',
         ]
 
         for group_name in groups:
@@ -27,5 +28,14 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f'✓ Group created: {group_name}'))
             else:
                 self.stdout.write(self.style.WARNING(f'- Group already exists: {group_name}'))
+
+            if group_name == 'Analitica':
+                perm = Permission.objects.filter(codename='use_analitica').first()
+                if perm:
+                    group.permissions.add(perm)
+                else:
+                    self.stdout.write(
+                        self.style.WARNING('- Permission use_analitica not found (run migrate)')
+                    )
 
         self.stdout.write(self.style.SUCCESS('Initial data setup completed'))

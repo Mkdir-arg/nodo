@@ -22,7 +22,7 @@ def _create_user_with_perm():
     username = f"testuser_{uuid.uuid4().hex[:8]}"
     password = f"testpass_{uuid.uuid4().hex[:12]}"
     user = user_model.objects.create_user(username=username, password=password)
-    perm = Permission.objects.get(codename="view_legajo")
+    perm = Permission.objects.get(codename="use_analitica")
     user.user_permissions.add(perm)
     return user
 

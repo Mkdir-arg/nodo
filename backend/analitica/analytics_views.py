@@ -101,7 +101,7 @@ class AnalyticsCatalogView(APIView):
     )
     def get(self, request, *args, **kwargs):
         """Responde el catalogo de campos; sirve para discovery seguro del DSL."""
-        _require_legajo_view_perm(request)
+        _require_analitica_perm(request)
 
         plantilla = _get_plantilla_from_request(request)
         options = _parse_catalog_options(request)
@@ -131,7 +131,7 @@ class AnalyticsValidateView(APIView):
     )
     def post(self, request, *args, **kwargs):
         """Valida un DSL enviado; sirve para obtener errores tempranos."""
-        _require_legajo_view_perm(request)
+        _require_analitica_perm(request)
 
         payload = request.data or {}
         if not isinstance(payload, Mapping):
@@ -210,7 +210,7 @@ class AnalyticsQueryView(APIView):
     )
     def post(self, request, *args, **kwargs):
         """Ejecuta una consulta list; sirve para obtener filas seguras y paginadas."""
-        _require_legajo_view_perm(request)
+        _require_analitica_perm(request)
 
         payload = request.data or {}
         if not isinstance(payload, Mapping):
@@ -358,7 +358,7 @@ def _parse_bool(value: Any) -> bool:
     return False
 
 
-def _require_legajo_view_perm(request) -> None:
-    """Verifica permiso de lectura; sirve para proteger datos sensibles."""
-    if not request.user.has_perm("legajos.view_legajo"):
-        raise PermissionDenied("User lacks legajos.view_legajo")
+def _require_analitica_perm(request) -> None:
+    """Verifica permiso de analitica; sirve para proteger endpoints del DSL."""
+    if not request.user.has_perm("analitica.use_analitica"):
+        raise PermissionDenied("User lacks analitica.use_analitica")
