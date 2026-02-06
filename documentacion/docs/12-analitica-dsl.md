@@ -62,6 +62,35 @@ Respuesta:
 - `mode: list` => `results` con campos minimos.
 - `mode: aggregate` => `groups` con resultados agregados.
 
+### Chat analitico
+
+`POST /api/legajos/analytics/chat/`
+
+Body:
+
+```
+{
+  "message": "Resumen de legajos por estado",
+  "context": {
+    "plantilla_id": "<UUID>",
+    "source": "Legajos / Lista"
+  }
+}
+```
+
+Respuesta (stub mientras no haya LLM):
+
+```
+{
+  "ok": false,
+  "error": "llm_unavailable",
+  "detail": "LLM no configurado. Integracion pendiente con proveedor externo.",
+  "reply": "LLM no configurado aun. Tu mensaje fue recibido."
+}
+```
+
+Nota: el chat es solo lectura y reutiliza la capa DSL internamente. El usuario no envia DSL manualmente.
+
 ## Permisos
 
 Los endpoints del DSL requieren el permiso `analitica.use_analitica`.
