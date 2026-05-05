@@ -1,5 +1,7 @@
 # Módulo de Flujos (Flows)
 
+> Nota: este archivo queda como resumen del modulo. La referencia canónica, completa y alineada con el recorrido real actual del sistema está en `documentacion/FLUJOS_PUNTA_A_PUNTA.md`.
+
 ## Descripción General
 
 El módulo `flows` implementa un motor de flujos de trabajo (workflow engine) que permite crear, ejecutar y monitorear procesos automatizados. Los flujos pueden incluir formularios, evaluaciones, delays, condiciones y otras acciones personalizadas.
